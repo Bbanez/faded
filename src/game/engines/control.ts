@@ -11,6 +11,7 @@ export function ControlEngine(
 ): ControlEnginePrototype {
   let obj: ControlEngineObject | null = null;
   let state: InputServiceState | null = null;
+  const speed = 0.7;
   const move = {
     x: 0,
     z: 0,
@@ -36,9 +37,9 @@ export function ControlEngine(
       ) {
         acc.b = 0.0;
       } else if (state.keyboard.a) {
-        acc.b = -1.0;
+        acc.b = -speed;
       } else if (state.keyboard.d) {
-        acc.b = 1.0;
+        acc.b = speed;
       }
       if (
         (state.keyboard.w && state.keyboard.s) ||
@@ -46,9 +47,9 @@ export function ControlEngine(
       ) {
         acc.a = 0.0;
       } else if (state.keyboard.w) {
-        acc.a = -1.0;
+        acc.a = -speed;
       } else if (state.keyboard.s) {
-        acc.a = 1.0;
+        acc.a = speed;
       }
 
       move.z =

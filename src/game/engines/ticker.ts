@@ -6,7 +6,7 @@ export interface TickerEnginePrototype {
   destroy(): void;
 }
 
-export function TickerEngine() {
+export function TickerEngine(): TickerEnginePrototype {
   const regs: Array<{
     id: string;
     callback: TickerEngineCallback;

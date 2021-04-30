@@ -100,8 +100,43 @@ export function InputService(): InputServicePrototype {
     st.mouse.x = event.clientX;
     st.mouse.y = event.clientY;
   }
-
+  function keyLatch(key: string): boolean {
+    switch (key) {
+      case 'a':
+        {
+          if (st.keyboard.a) {
+            return true;
+          }
+        }
+        break;
+      case 's':
+        {
+          if (st.keyboard.s) {
+            return true;
+          }
+        }
+        break;
+      case 'd':
+        {
+          if (st.keyboard.d) {
+            return true;
+          }
+        }
+        break;
+      case 'w':
+        {
+          if (st.keyboard.w) {
+            return true;
+          }
+        }
+        break;
+    }
+    return false;
+  }
   window.addEventListener('keydown', (event) => {
+    if (keyLatch(event.key)) {
+      return;
+    }
     setKeyboardCtl(event.key, true);
     trigger(InputServiceSubscriptionType.KEY_DOWN, event);
   });
