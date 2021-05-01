@@ -5,10 +5,14 @@ import type {
   InputServiceState,
 } from '../types';
 import { InputServiceSubscriptionType } from '../types';
+import { Group, Raycaster, Vector3 } from 'three';
 
 export function ControlEngine(
-  inputService: InputServicePrototype
+  inputService: InputServicePrototype,
+  terrainMesh?: Group | null
 ): ControlEnginePrototype {
+  const ray = new Raycaster();
+  const rayDir = new Vector3(0, -1, 0);
   let obj: ControlEngineObject | null = null;
   let state: InputServiceState | null = null;
   const speed = 0.7;
@@ -94,11 +98,22 @@ export function ControlEngine(
     controlObject(object) {
       obj = object;
     },
+    setTerrain(terrain) {
+      terrainMesh = terrain;
+    },
     update() {
       if (obj) {
         calc();
         obj.position.x += move.x;
         obj.position.z += move.z;
+        if (terrainMesh) {
+          ray.set(new Vector3(obj.position.x, 100, obj.position.z), rayDir);
+          const intersect = ray.intersectObject(terrainMesh, true);
+          if (intersect[0]) {
+            obj.position.y = intersect[0].point.y + 2;
+          }
+          // console.log(intersect);
+        }
         obj.rotation.y = latchAngle + angleDelta;
       }
     },

@@ -12,6 +12,7 @@ import {
 } from 'three';
 import { ControlEngine, TickerEngine } from './engines';
 import { CameraService, ConsoleService, InputService } from './services';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 async function main(): Promise<void> {
   const renderer = new WebGLRenderer();
@@ -57,6 +58,17 @@ async function main(): Promise<void> {
   // ]);
   scene.background = new Color(0, 0, 0);
 
+  const modelLoader = new GLTFLoader();
+  modelLoader.load('/assets/models/plane.gltf', (gltf) => {
+    gltf.scene.traverse((c) => {
+      c.receiveShadow = true;
+    });
+    if (controlEngine) {
+      controlEngine.setTerrain(gltf.scene);
+    }
+    scene.add(gltf.scene);
+  });
+
   const consoleService = ConsoleService();
   const inputService = InputService();
   const cameraService = CameraService({ camera, inputService });
@@ -87,30 +99,22 @@ async function main(): Promise<void> {
   box.receiveShadow = true;
   scene.add(box);
 
-  const base = new Mesh(
-    new BoxGeometry(100, 2, 100),
-    new MeshStandardMaterial({ color: 0xffffff })
-  );
-  base.receiveShadow = true;
-  scene.add(base);
+  // const base = new Mesh(
+  //   new BoxGeometry(100, 2, 100),
+  //   new MeshStandardMaterial({ color: 0xffffff })
+  // );
+  // base.receiveShadow = true;
+  // scene.add(base);
 
-  const bb = new Mesh(
-    new BoxGeometry(2, 2, 8),
-    new MeshStandardMaterial({ color: 0x808080 })
-  );
-  bb.position.set(0, 2, 0);
-  scene.add(bb);
+  // const bb = new Mesh(
+  //   new BoxGeometry(2, 2, 8),
+  //   new MeshStandardMaterial({ color: 0x808080 })
+  // );
+  // bb.position.set(0, 2, 0);
+  // scene.add(bb);
 
   cameraService.follow({ object: box, far: 100, near: 50 });
   controlEngine.controlObject(box);
-
-  // const modelLoader = new GLTFLoader();
-  // modelLoader.load('/assets/models/plane.gltf', (gltf) => {
-  //   gltf.scene.traverse((c) => {
-  //     c.receiveShadow = true;
-  //   });
-  //   scene.add(gltf.scene);
-  // });
 
   window.t.engine.ticker.register(() => {
     // light.position.set(

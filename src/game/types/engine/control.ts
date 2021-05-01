@@ -1,4 +1,4 @@
-import type { Vector3, Euler } from 'three';
+import type { Vector3, Euler, Group } from 'three';
 
 export interface ControlEngineObject {
   position: Vector3;
@@ -6,5 +6,6 @@ export interface ControlEngineObject {
 }
 export interface ControlEnginePrototype {
   controlObject(object: ControlEngineObject): void;
+  setTerrain(terrain: Group): void;
   update(): void;
 }
