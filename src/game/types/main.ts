@@ -5,6 +5,7 @@ import type {
 } from './services';
 import type { TickerEnginePrototype } from '../engines';
 import type { ControlEnginePrototype } from './engine';
+import type { LoaderPrototype } from './util';
 
 declare global {
   interface Window {
@@ -17,6 +18,9 @@ declare global {
         console: ConsoleServicePrototype;
         input: InputServicePrototype;
         camera: CameraServicePrototype;
+      };
+      util: {
+        loader: LoaderPrototype;
       };
     };
   }

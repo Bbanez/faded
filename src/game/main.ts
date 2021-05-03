@@ -1,18 +1,19 @@
 import {
   Scene,
   WebGLRenderer,
-  BoxGeometry,
-  Mesh,
   PCFSoftShadowMap,
   DirectionalLight,
-  MeshStandardMaterial,
   Color,
   PerspectiveCamera,
   AmbientLight,
+  Raycaster,
+  Vector3,
+  Group,
 } from 'three';
 import { ControlEngine, TickerEngine } from './engines';
 import { CameraService, ConsoleService, InputService } from './services';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { createEntity } from './components';
+import { Loader } from './util';
 
 async function main(): Promise<void> {
   const renderer = new WebGLRenderer();
@@ -27,47 +28,39 @@ async function main(): Promise<void> {
   gameEl.appendChild(renderer.domElement);
 
   const screenAspectRatio = window.innerWidth / window.innerHeight;
-  const camera = new PerspectiveCamera(30, screenAspectRatio, 10, 1000);
-  camera.position.set(100, 100, 100);
+  const camera = new PerspectiveCamera(30, screenAspectRatio, 1, 1000);
+  camera.position.set(20, 15, 20);
   camera.lookAt(0, 0, 0);
   const scene = new Scene();
 
   const light = new DirectionalLight(0xffffff);
-  light.position.set(100, 100, 0);
+  light.position.set(-59, 100, 35);
   light.castShadow = true;
-  light.shadow.bias = -0.01;
-  light.shadow.mapSize.width = 2048;
-  light.shadow.mapSize.height = 2048;
-  light.shadow.camera.near = 1.0;
-  light.shadow.camera.far = 200;
-  light.shadow.camera.left = 110;
+  light.lookAt(0, 0, 0);
+  // light.shadow.bias = -0.01;
+  light.shadow.mapSize.width = 4096;
+  light.shadow.mapSize.height = 4096;
+  // light.shadow.camera.near = 1.0;
+  // light.shadow.camera.far = 10;
+  light.shadow.camera.left = 100;
   light.shadow.camera.right = -100;
   light.shadow.camera.top = 100;
   light.shadow.camera.bottom = -100;
   scene.add(light);
   scene.add(new AmbientLight(0x404040));
-
-  // const loader = new CubeTextureLoader();
-  // const texture = loader.load([
-  //   '/assets/skybox/front.jpg',
-  //   '/assets/skybox/back.jpg',
-  //   '/assets/skybox/up.jpg',
-  //   '/assets/skybox/down.jpg',
-  //   '/assets/skybox/left.jpg',
-  //   '/assets/skybox/right.jpg',
-  // ]);
   scene.background = new Color(0, 0, 0);
 
-  const modelLoader = new GLTFLoader();
-  modelLoader.load('/assets/models/plane.gltf', (gltf) => {
-    gltf.scene.traverse((c) => {
-      c.receiveShadow = true;
-    });
-    if (controlEngine) {
-      controlEngine.setTerrain(gltf.scene);
-    }
-    scene.add(gltf.scene);
-  });
+  // const modelLoader = new GLTFLoader();
+  // modelLoader.load('/assets/models/map1.gltf', (gltf) => {
+  //   gltf.scene.traverse((c) => {
+  //     c.receiveShadow = true;
+  //   });
+  //   if (controlEngine) {
+  //     controlEngine.setTerrain(gltf.scene);
+  //   }
+  //   addTrees(gltf.scene);
+  //   scene.add(gltf.scene);
+  // });
 
   const consoleService = ConsoleService();
   const inputService = InputService();
@@ -85,48 +78,92 @@ async function main(): Promise<void> {
       ticker: tickerEngine,
       control: controlEngine,
     },
+    util: {
+      loader: Loader,
+    },
   };
 
-  const box = new Mesh(
-    new BoxGeometry(2, 2, 8),
-    new MeshStandardMaterial({
-      color: 0x808080,
-    })
-  );
-  box.rotation.y = Math.PI / 2;
-  box.position.set(0, 2, 0);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  scene.add(box);
+  const terrainGltf = await Loader.gltf('/assets/models/map1.gltf');
+  terrainGltf.scene.traverse((c) => {
+    c.receiveShadow = true;
+  });
+  controlEngine.setTerrain(terrainGltf.scene);
+  scene.add(terrainGltf.scene);
 
-  // const base = new Mesh(
-  //   new BoxGeometry(100, 2, 100),
-  //   new MeshStandardMaterial({ color: 0xffffff })
-  // );
-  // base.receiveShadow = true;
-  // scene.add(base);
+  const character = await createEntity({
+    model: {
+      fbx: {
+        main: '/assets/models/female/character.fbx',
+        animations: {
+          backward: '/assets/models/female/backward.fbx',
+          idle: '/assets/models/female/idle.fbx',
+          left: '/assets/models/female/left.fbx',
+          right: '/assets/models/female/right.fbx',
+          slowRun: '/assets/models/female/slow-run.fbx',
+        },
+        onMainLoad(object) {
+          object.traverse((c) => {
+            c.castShadow = true;
+          });
+          object.scale.setScalar(0.009);
+        },
+      },
+    },
+    dimensions: {
+      width: 0.4,
+      depth: 0.4,
+      height: 1.6,
+    },
+    coordinateDelta: { x: 0, y: 0.7, z: 0 },
+  });
+  character.update();
+  // character.enableBBVisual(scene);
+  character.addToScene(scene);
+  character.playAnimation('idle');
 
-  // const bb = new Mesh(
-  //   new BoxGeometry(2, 2, 8),
-  //   new MeshStandardMaterial({ color: 0x808080 })
-  // );
-  // bb.position.set(0, 2, 0);
-  // scene.add(bb);
+  cameraService.follow({ entity: character, far: 15, near: 2 });
+  controlEngine.controlEntity(character);
+  async function addTrees(terrain: Group) {
+    const ray = new Raycaster();
+    const rayDir = new Vector3(0, -1, 0);
+    const positions: Array<{ x: number; z: number }> = [
+      { x: -1, z: 2 },
+      { x: 5, z: 18 },
+      { x: 10, z: 7 },
+      { x: 9, z: 4 },
+      { x: 11, z: 24 },
+      { x: 6, z: 21 },
+      { x: 29, z: 7 },
+      { x: 17, z: 16 },
+    ];
+    const group = new Group();
+    for (let i = 0; i < positions.length; i++) {
+      const model = await Loader.gltf('/assets/models/map1/tree1.gltf');
+      model.scene.traverse((c) => {
+        c.castShadow = true;
+      });
+      model.scene.scale.setScalar(0.3);
+      const position = positions[i];
+      ray.set(new Vector3(position.x, 1000, position.z), rayDir);
+      const intersect = ray.intersectObject(terrain, true);
+      if (intersect[0]) {
+        model.scene.position.set(position.x, intersect[0].point.y, position.z);
+        group.add(model.scene);
+      }
+    }
+    scene.add(group);
+  }
 
-  cameraService.follow({ object: box, far: 100, near: 50 });
-  controlEngine.controlObject(box);
-
-  window.t.engine.ticker.register(() => {
-    // light.position.set(
-    //   camera.position.x + 10,
-    //   camera.position.y + 10,
-    //   camera.position.z + 10
-    // );
-    // light.lookAt(box.position);
+  window.t.engine.ticker.register((t) => {
     controlEngine.update();
     cameraService.update();
+    character.updateAnimationMixer(t / 1000);
     renderer.render(scene, camera);
   });
+
+  setTimeout(() => {
+    addTrees(terrainGltf.scene);
+  }, 1000);
 }
 
 export const three = {

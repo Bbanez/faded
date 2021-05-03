@@ -1,9 +1,7 @@
-import type { Vector3 } from 'three';
+import type { Entity } from '../components';
 
 export interface CameraFollowConfig {
-  object: {
-    position: Vector3;
-  };
+  entity: Entity;
   near: number;
   far: number;
 }

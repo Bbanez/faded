@@ -1,6 +1,6 @@
 import * as uuid from 'uuid';
 
-export type TickerEngineCallback = () => void;
+export type TickerEngineCallback = (t: number) => void;
 export interface TickerEnginePrototype {
   register(callback: TickerEngineCallback): () => void;
   destroy(): void;
@@ -12,11 +12,13 @@ export function TickerEngine(): TickerEnginePrototype {
     callback: TickerEngineCallback;
   }> = [];
   let stop = false;
+  let time = Date.now();
   function tick() {
     if (!stop) {
       requestAnimationFrame(tick);
+      time = Date.now();
       for (let i = 0; i < regs.length; i++) {
-        regs[i].callback();
+        regs[i].callback(time);
       }
     }
   }

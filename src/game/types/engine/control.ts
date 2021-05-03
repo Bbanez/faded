@@ -1,11 +1,8 @@
-import type { Vector3, Euler, Group } from 'three';
+import type { Group } from 'three';
+import type { Entity } from '../components';
 
-export interface ControlEngineObject {
-  position: Vector3;
-  rotation: Euler;
-}
 export interface ControlEnginePrototype {
-  controlObject(object: ControlEngineObject): void;
+  controlEntity(entity: Entity): void;
   setTerrain(terrain: Group): void;
   update(): void;
 }

@@ -14,8 +14,7 @@ export function CameraService({
   camera: Camera;
   inputService: InputServicePrototype;
 }): CameraServicePrototype {
-  const normalOffset = 100;
-  let currentNormalOffset = 100;
+  let currentNormalOffset = 15;
   let follow: CameraFollowConfig | null = null;
   let zoomLatch = false;
   let zoomFrom = 0;
@@ -27,13 +26,17 @@ export function CameraService({
         x:
           (-camera.position.x +
             currentNormalOffset +
-            follow.object.position.x) /
+            follow.entity.object.position.x) /
           dump,
-        y: (-camera.position.y + currentNormalOffset) / dump,
+        y:
+          (-camera.position.y +
+            currentNormalOffset +
+            follow.entity.object.position.y) /
+          dump,
         z:
           (-camera.position.z +
             currentNormalOffset +
-            follow.object.position.z) /
+            follow.entity.object.position.z) /
           dump,
       };
       return new Vector3(
@@ -48,18 +51,18 @@ export function CameraService({
   inputService.subscribe(
     InputServiceSubscriptionType.MOUSE_MOVE,
     (_type, st) => {
-      if (st.mouse.click.middle) {
+      if (st.mouse.click.middle && follow) {
         if (!zoomLatch) {
           zoomLatch = true;
           zoomFrom = st.mouse.y;
         }
         currentNormalOffset =
-          currentNormalOffset + (zoomFrom - st.mouse.y) / 16;
-        if (currentNormalOffset > normalOffset) {
-          currentNormalOffset = normalOffset;
+          currentNormalOffset + (zoomFrom - st.mouse.y) / 100;
+        if (currentNormalOffset > follow.far) {
+          currentNormalOffset = follow.far;
           zoomFrom = st.mouse.y;
-        } else if (currentNormalOffset < 30) {
-          currentNormalOffset = 30;
+        } else if (currentNormalOffset < follow.near) {
+          currentNormalOffset = follow.near;
           zoomFrom = st.mouse.y;
         }
       } else {
@@ -71,11 +74,16 @@ export function CameraService({
   const self: CameraServicePrototype = {
     follow(config) {
       follow = config;
+      follow.far = (window.innerHeight * follow.far) / 672;
+      follow.near = (window.innerHeight * follow.near) / 672;
+      currentNormalOffset = follow.far;
+      self.update();
     },
     update() {
       if (follow) {
         camera.position.copy(calcPosition());
-        camera.lookAt(follow.object.position);
+        const lookAt = follow.entity.getPosition();
+        camera.lookAt(lookAt.x, lookAt.y + 1, lookAt.z);
       }
     },
   };
