@@ -50,18 +50,6 @@ async function main(): Promise<void> {
   scene.add(new AmbientLight(0x404040));
   scene.background = new Color(0, 0, 0);
 
-  // const modelLoader = new GLTFLoader();
-  // modelLoader.load('/assets/models/map1.gltf', (gltf) => {
-  //   gltf.scene.traverse((c) => {
-  //     c.receiveShadow = true;
-  //   });
-  //   if (controlEngine) {
-  //     controlEngine.setTerrain(gltf.scene);
-  //   }
-  //   addTrees(gltf.scene);
-  //   scene.add(gltf.scene);
-  // });
-
   const consoleService = ConsoleService();
   const inputService = InputService();
   const cameraService = CameraService({ camera, inputService });

@@ -33,7 +33,35 @@ export function ControlEngine(
     y: 0,
   };
   const mouseDeltaConst = Math.PI / (window.innerWidth / 2);
+  const dash: {
+    allow: boolean;
+    perform: boolean;
+    strength: number;
+    multi: number;
+    fnDirection: -1 | 1;
+  } = {
+    allow: true,
+    perform: false,
+    strength: 7,
+    multi: 1,
+    fnDirection: 1,
+  };
 
+  function doDash() {
+    if (dash.perform) {
+      dash.multi += dash.fnDirection;
+      if (dash.multi > dash.strength) {
+        dash.multi = dash.strength;
+        dash.fnDirection = -1;
+      } else if (dash.multi < 1) {
+        dash.multi = 1;
+        dash.fnDirection = 1;
+        dash.perform = false;
+      }
+      acc.a *= dash.multi;
+      acc.b *= dash.multi;
+    }
+  }
   function calc() {
     if (entity && state) {
       if (
@@ -65,6 +93,14 @@ export function ControlEngine(
         }
         acc.b = -speed;
       }
+      if (dash.allow && state.keyboard.shift) {
+        dash.allow = false;
+        dash.perform = true;
+        setTimeout(() => {
+          dash.allow = true;
+        }, 1000);
+      }
+      doDash();
 
       move.z =
         acc.a * Math.cos(entity.object.rotation.y) +
@@ -113,6 +149,12 @@ export function ControlEngine(
     setTerrain(terrain) {
       terrainMesh = terrain;
     },
+    disableDashFor(millis) {
+      dash.allow = false;
+      setTimeout(() => {
+        dash.allow = true;
+      }, millis);
+    },
     update() {
       if (entity) {
         calc();
@@ -127,7 +169,6 @@ export function ControlEngine(
           if (intersect[0]) {
             newPos.y = intersect[0].point.y;
           }
-          // console.log(intersect);
         }
         const newOrientation: PositionVector = {
           x: entity.object.rotation.x,
