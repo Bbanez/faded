@@ -14,7 +14,7 @@ import type {
   BoxDimensions,
   Entity,
   EntityObject,
-  PositionVector,
+  Point3D,
 } from '../types';
 import { BoundingBoxFactory } from '../factories';
 import { Loader } from '../util';
@@ -33,12 +33,12 @@ export async function createEntity(config: {
   };
   bb?: BoundingBox;
   dimensions?: BoxDimensions;
-  coordinateDelta?: PositionVector;
+  coordinateDelta?: Point3D;
 }): Promise<Entity> {
   let object: EntityObject;
   let bb: BoundingBox | undefined;
   let dimensions: BoxDimensions | undefined;
-  let coordinateDelta: PositionVector | undefined;
+  let coordinateDelta: Point3D | undefined;
   let _bbVisual: Object3D | undefined;
   let animMixer: AnimationMixer | undefined;
   let timestamp = Date.now() / 1000;
@@ -56,7 +56,6 @@ export async function createEntity(config: {
         config.model.fbx.onMainLoad(object);
       }
       animMixer = new AnimationMixer(object);
-      // anims['default'] = animMixer.clipAction(object.animations[0]);
       if (config.model.fbx.animations) {
         for (const name in config.model.fbx.animations) {
           const anim = await Loader.fbx(config.model.fbx.animations[name]);

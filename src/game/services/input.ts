@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { InputServiceSubscriptionType } from '../types';
 
-export function InputService(): InputServicePrototype {
+export function createInputService(): InputServicePrototype {
   const st: InputServiceState = {
     keyboard: {
       key: '',
@@ -51,7 +51,7 @@ export function InputService(): InputServicePrototype {
             subs[id].handler('m', st, event);
           }
         } catch (e) {
-          window.t.services.console.error({ payload: e });
+          console.error(e);
         }
       }
     }
@@ -161,7 +161,7 @@ export function InputService(): InputServicePrototype {
     event.preventDefault();
   });
 
-  const self: InputServicePrototype = {
+  return {
     subscribe(type, handler) {
       const id = uuidv4();
       subs[id] = { type, handler };
@@ -170,5 +170,4 @@ export function InputService(): InputServicePrototype {
       };
     },
   };
-  return self;
 }

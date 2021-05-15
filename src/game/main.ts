@@ -6,78 +6,82 @@ import {
   Color,
   PerspectiveCamera,
   AmbientLight,
-  Raycaster,
-  Vector3,
-  Group,
 } from 'three';
-import { ControlEngine, TickerEngine } from './engines';
-import { CameraService, ConsoleService, InputService } from './services';
+import { createTicker, createControls } from './engines';
+import { createCameraService, createInputService } from './services';
 import { createEntity } from './components';
-import { Loader } from './util';
+import { createErrorHandler, DistanceUtil, Loader } from './util';
+import type { ErrorHandlerPrototype } from './types';
 
-async function main(): Promise<void> {
+function createRenderer(el: HTMLElement) {
   const renderer = new WebGLRenderer();
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  const gameEl = document.getElementById('faded-game');
-  if (!gameEl) {
-    throw Error('Failed to find game container.');
-  }
-  gameEl.appendChild(renderer.domElement);
+  el.appendChild(renderer.domElement);
 
+  return renderer;
+}
+function createCamera() {
   const screenAspectRatio = window.innerWidth / window.innerHeight;
   const camera = new PerspectiveCamera(30, screenAspectRatio, 1, 1000);
   camera.position.set(20, 15, 20);
   camera.lookAt(0, 0, 0);
+  return camera;
+}
+function createScene() {
   const scene = new Scene();
-
-  const light = new DirectionalLight(0xffffff);
-  light.position.set(-59, 100, 35);
-  light.castShadow = true;
-  light.lookAt(0, 0, 0);
-  // light.shadow.bias = -0.01;
-  light.shadow.mapSize.width = 4096;
-  light.shadow.mapSize.height = 4096;
-  // light.shadow.camera.near = 1.0;
-  // light.shadow.camera.far = 10;
-  light.shadow.camera.left = 100;
-  light.shadow.camera.right = -100;
-  light.shadow.camera.top = 100;
-  light.shadow.camera.bottom = -100;
-  scene.add(light);
-  scene.add(new AmbientLight(0x404040));
   scene.background = new Color(0, 0, 0);
 
-  const consoleService = ConsoleService();
-  const inputService = InputService();
-  const cameraService = CameraService({ camera, inputService });
-  const tickerEngine = TickerEngine();
-  const controlEngine = ControlEngine(inputService);
+  return scene;
+}
+function createGlobalLights(scene: Scene) {
+  const ambientLight = new AmbientLight(0x404040);
+  scene.add(ambientLight);
 
-  window.t = {
-    services: {
-      console: consoleService,
-      input: inputService,
-      camera: cameraService,
-    },
-    engine: {
-      ticker: tickerEngine,
-      control: controlEngine,
-    },
-    util: {
-      loader: Loader,
-    },
+  const sun = new DirectionalLight(0xffffff);
+  sun.position.set(-59, 100, 35);
+  sun.castShadow = true;
+  sun.lookAt(0, 0, 0);
+  sun.shadow.mapSize.width = 4096;
+  sun.shadow.mapSize.height = 4096;
+  sun.shadow.camera.left = 100;
+  sun.shadow.camera.right = -100;
+  sun.shadow.camera.top = 100;
+  sun.shadow.camera.bottom = -100;
+  scene.add(sun);
+
+  return {
+    ambientLight,
+    sun,
   };
-
-  const terrainGltf = await Loader.gltf('/assets/models/map1.gltf');
-  terrainGltf.scene.traverse((c) => {
+}
+async function createMap(
+  error: ErrorHandlerPrototype,
+  instance: number,
+  scene: Scene
+) {
+  const maps = ['/assets/models/map1.gltf'];
+  if (!maps[instance]) {
+    throw error.break(
+      'createMap',
+      `Map for instance "${instance}"` + ' does not exist',
+      'Available:',
+      maps
+    );
+  }
+  const terrainModel = await Loader.gltf('/assets/models/map1.gltf');
+  terrainModel.scene.traverse((c) => {
     c.receiveShadow = true;
   });
-  controlEngine.setTerrain(terrainGltf.scene);
-  scene.add(terrainGltf.scene);
+  scene.add(terrainModel.scene);
 
+  return {
+    terrainModel,
+  };
+}
+async function createCharacter(scene: Scene) {
   const character = await createEntity({
     model: {
       fbx: {
@@ -105,55 +109,41 @@ async function main(): Promise<void> {
     coordinateDelta: { x: 0, y: 0.7, z: 0 },
   });
   character.update();
-  // character.enableBBVisual(scene);
   character.addToScene(scene);
   character.playAnimation('idle');
 
-  cameraService.follow({ entity: character, far: 15, near: 2 });
-  controlEngine.controlEntity(character);
-  async function addTrees(terrain: Group) {
-    const ray = new Raycaster();
-    const rayDir = new Vector3(0, -1, 0);
-    const positions: Array<{ x: number; z: number }> = [
-      { x: -1, z: 2 },
-      { x: 5, z: 18 },
-      { x: 10, z: 7 },
-      { x: 9, z: 4 },
-      { x: 11, z: 24 },
-      { x: 6, z: 21 },
-      { x: 29, z: 7 },
-      { x: 17, z: 16 },
-    ];
-    const group = new Group();
-    for (let i = 0; i < positions.length; i++) {
-      const model = await Loader.gltf('/assets/models/map1/tree1.gltf');
-      model.scene.traverse((c) => {
-        c.castShadow = true;
-      });
-      model.scene.scale.setScalar(0.3);
-      const position = positions[i];
-      ray.set(new Vector3(position.x, 1000, position.z), rayDir);
-      const intersect = ray.intersectObject(terrain, true);
-      if (intersect[0]) {
-        model.scene.position.set(position.x, intersect[0].point.y, position.z);
-        group.add(model.scene);
-      }
-    }
-    scene.add(group);
-  }
+  return character;
+}
+async function init(el: HTMLElement): Promise<void> {
+  const error = createErrorHandler('Initialize');
+  const renderer = createRenderer(el);
+  const camera = createCamera();
+  const scene = createScene();
+  createGlobalLights(scene);
 
-  window.t.engine.ticker.register((t) => {
-    controlEngine.update();
-    cameraService.update();
+  const input = createInputService();
+  const cam = createCameraService({ camera, input });
+  const ticker = createTicker();
+  const controls = createControls(input);
+
+  const map = await createMap(error, 0, scene);
+  controls.setTerrain(map.terrainModel.scene);
+  renderer.render(scene, camera);
+  DistanceUtil.ground.setGeometry(map.terrainModel.scene);
+
+  const character = await createCharacter(scene);
+  cam.follow({ entity: character, far: 15, near: 2 });
+  controls.controlEntity(character);
+
+  ticker.register((t) => {
+    controls.update();
+    cam.update();
     character.updateAnimationMixer(t / 1000);
     renderer.render(scene, camera);
   });
-
-  setTimeout(() => {
-    addTrees(terrainGltf.scene);
-  }, 1000);
+  ticker.start();
 }
 
 export const three = {
-  init: main,
+  init: init,
 };

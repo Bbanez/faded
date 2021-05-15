@@ -3,12 +3,12 @@ import type {
   Entity,
   InputServicePrototype,
   InputServiceState,
-  PositionVector,
+  Point3D,
 } from '../types';
 import { InputServiceSubscriptionType } from '../types';
 import { Group, Raycaster, Vector3 } from 'three';
 
-export function ControlEngine(
+export function createControls(
   inputService: InputServicePrototype,
   terrainMesh?: Group | null
 ): ControlEnginePrototype {
@@ -16,7 +16,7 @@ export function ControlEngine(
   const rayDir = new Vector3(0, -1, 0);
   let entity: Entity | null = null;
   let state: InputServiceState | null = null;
-  const speed = 0.1;
+  const speed = 0.05;
   const move = {
     x: 0,
     z: 0,
@@ -142,7 +142,7 @@ export function ControlEngine(
     }
   );
 
-  const self: ControlEnginePrototype = {
+  return {
     controlEntity(_entity) {
       entity = _entity;
     },
@@ -158,7 +158,7 @@ export function ControlEngine(
     update() {
       if (entity) {
         calc();
-        const newPos: PositionVector = {
+        const newPos: Point3D = {
           x: entity.object.position.x + move.x,
           y: entity.object.position.y,
           z: entity.object.position.z + move.z,
@@ -170,7 +170,7 @@ export function ControlEngine(
             newPos.y = intersect[0].point.y;
           }
         }
-        const newOrientation: PositionVector = {
+        const newOrientation: Point3D = {
           x: entity.object.rotation.x,
           y: latchAngle + angleDelta,
           z: entity.object.rotation.z,
@@ -179,5 +179,4 @@ export function ControlEngine(
       }
     },
   };
-  return self;
 }

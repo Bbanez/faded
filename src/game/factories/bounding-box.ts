@@ -1,19 +1,19 @@
 import type { Euler, Vector3 } from 'three';
-import type { BoundingBox, BoxDimensions, PositionVector } from '../types';
+import type { BoundingBox, BoxDimensions, Point3D } from '../types';
 import { PI12, PI14, PI34 } from '../const';
 
 export class BoundingBoxFactory {
   static fromDimensions(
     config: {
-      delta: PositionVector;
-      pos: Vector3 | PositionVector;
-      rotation: Euler | PositionVector;
+      delta: Point3D;
+      pos: Vector3 | Point3D;
+      rotation: Euler | Point3D;
     } & BoxDimensions
   ): BoundingBox {
     const a2 = config.width / 2;
     const b2 = config.depth / 2;
     const fi = config.rotation.y;
-    const F: PositionVector = {
+    const F: Point3D = {
       x:
         config.pos.x +
         config.delta.x * a2 * Math.cos(fi) +
@@ -27,22 +27,22 @@ export class BoundingBoxFactory {
     // Y offset
     const YOffset = a2 + config.pos.y + (config.delta.y * config.height) / 2;
     // Top box corners
-    const A: PositionVector = {
+    const A: Point3D = {
       x: F.x - a2 * Math.cos(fi + PI34),
       y: YOffset,
       z: F.z - b2 * Math.sin(fi + PI34),
     };
-    const B: PositionVector = {
+    const B: Point3D = {
       x: F.x + a2 * Math.cos(fi + PI14),
       y: YOffset,
       z: F.z - b2 * Math.sin(fi + PI14),
     };
-    const C: PositionVector = {
+    const C: Point3D = {
       x: F.x + a2 * Math.cos(fi - PI14),
       y: YOffset,
       z: F.z + b2 * Math.sin(fi - PI14),
     };
-    const D: PositionVector = {
+    const D: Point3D = {
       x: F.x - a2 * Math.cos(fi - PI34),
       y: YOffset,
       z: F.z + b2 * Math.sin(fi - PI34),

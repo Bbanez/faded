@@ -1,16 +1,12 @@
 import * as uuid from 'uuid';
+import type { TickerEngineCallback, TickerEnginePrototype } from '../types';
 
-export type TickerEngineCallback = (t: number) => void;
-export interface TickerEnginePrototype {
-  register(callback: TickerEngineCallback): () => void;
-  destroy(): void;
-}
-
-export function TickerEngine(): TickerEnginePrototype {
+export function createTicker(): TickerEnginePrototype {
   const regs: Array<{
     id: string;
     callback: TickerEngineCallback;
   }> = [];
+  let started = false;
   let stop = false;
   let time = Date.now();
   function tick() {
@@ -22,9 +18,8 @@ export function TickerEngine(): TickerEnginePrototype {
       }
     }
   }
-  tick();
 
-  const self: TickerEnginePrototype = {
+  return {
     register(callback) {
       const id = uuid.v4();
       regs.push({ id, callback });
@@ -39,6 +34,12 @@ export function TickerEngine(): TickerEnginePrototype {
     destroy() {
       stop = true;
     },
+    start() {
+      if (started) {
+        return;
+      }
+      started = true;
+      tick();
+    },
   };
-  return self;
 }

@@ -1,4 +1,4 @@
-import type { PositionVector } from '../vector';
+import type { PositionVector } from '../point';
 import type { BoxDimensions } from '../bounding-box';
 
 // eslint-disable-next-line no-shadow
@@ -8,19 +8,19 @@ export enum CharacterRace {
 }
 // eslint-disable-next-line no-shadow
 export enum CharacterClass {
-  RANGER = 'RANGER', // HUMAN, ANKY
+  ROGUE = 'ROGUE', // HUMAN, ANKY
   MEMIST = 'MEMIST', // ANKY
   GLADIATOR = 'GLADIATOR', // HUMAN
-  PROTECTOR = 'PROTECTOR', // HUMAN, ANKY
+  KNIGHT = 'KNIGHT', // HUMAN, ANKY
   SHAMAN = 'SHAMAN', // HUMAN, ANKY
 }
 // eslint-disable-next-line no-shadow
 export enum CharacterSubclass {
   /**
-   * RANGER
+   * ROGUE
    */
-  ARCHER = 'ARCHER', // DPS
-  MARKSMEN = 'MARKSMAN', // BUFF+DPS
+  ARCHER = 'ARCHER', // DPS+RANGE
+  ASSASSIN = 'ASSASSIN', // DPS+MALE
   /**
    * MEMIST
    */
@@ -32,7 +32,7 @@ export enum CharacterSubclass {
   BERSERK = 'BERSERK', // DPS+AOE
   DUELIST = 'DUELIST', // DPS+SINGLE
   /**
-   * PROTECTOR
+   * KNIGHT
    */
   GUARDIAN = 'GUARDIAN', // TANK
   PALADIN = 'PALADIN', // TANK+HEAL

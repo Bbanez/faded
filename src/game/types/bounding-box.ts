@@ -1,4 +1,4 @@
-import type { PositionVector } from './vector';
+import type { Point3D } from './point';
 
 export interface BoxDimensions {
   width: number;
@@ -9,25 +9,25 @@ export interface BoundingBox extends BoxDimensions {
   corners: {
     top: {
       front: {
-        left: PositionVector;
-        right: PositionVector;
+        left: Point3D;
+        right: Point3D;
       };
       back: {
-        left: PositionVector;
-        right: PositionVector;
+        left: Point3D;
+        right: Point3D;
       };
     };
     bottom: {
       front: {
-        left: PositionVector;
-        right: PositionVector;
+        left: Point3D;
+        right: Point3D;
       };
       back: {
-        left: PositionVector;
-        right: PositionVector;
+        left: Point3D;
+        right: Point3D;
       };
     };
   };
-  position: PositionVector;
-  coordinateDelta: PositionVector;
+  position: Point3D;
+  coordinateDelta: Point3D;
 }

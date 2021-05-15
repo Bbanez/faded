@@ -7,12 +7,12 @@ import type {
 } from '../types';
 import { InputServiceSubscriptionType } from '../types';
 
-export function CameraService({
+export function createCameraService({
   camera,
-  inputService,
+  input,
 }: {
   camera: Camera;
-  inputService: InputServicePrototype;
+  input: InputServicePrototype;
 }): CameraServicePrototype {
   let currentNormalOffset = 15;
   let follow: CameraFollowConfig | null = null;
@@ -48,35 +48,31 @@ export function CameraService({
     return camera.position;
   }
 
-  inputService.subscribe(
-    InputServiceSubscriptionType.MOUSE_MOVE,
-    (_type, st) => {
-      if (st.mouse.click.middle && follow) {
-        if (!zoomLatch) {
-          zoomLatch = true;
-          zoomFrom = st.mouse.y;
-        }
-        currentNormalOffset =
-          currentNormalOffset + (zoomFrom - st.mouse.y) / 100;
-        if (currentNormalOffset > follow.far) {
-          currentNormalOffset = follow.far;
-          zoomFrom = st.mouse.y;
-        } else if (currentNormalOffset < follow.near) {
-          currentNormalOffset = follow.near;
-          zoomFrom = st.mouse.y;
-        }
-      } else {
-        zoomLatch = false;
+  input.subscribe(InputServiceSubscriptionType.MOUSE_MOVE, (_type, st) => {
+    if (st.mouse.click.middle && follow) {
+      if (!zoomLatch) {
+        zoomLatch = true;
+        zoomFrom = st.mouse.y;
       }
+      currentNormalOffset = currentNormalOffset + (zoomFrom - st.mouse.y) / 100;
+      if (currentNormalOffset > follow.far) {
+        currentNormalOffset = follow.far;
+        zoomFrom = st.mouse.y;
+      } else if (currentNormalOffset < follow.near) {
+        currentNormalOffset = follow.near;
+        zoomFrom = st.mouse.y;
+      }
+    } else {
+      zoomLatch = false;
     }
-  );
+  });
 
   const self: CameraServicePrototype = {
     follow(config) {
       follow = config;
       follow.far = (window.innerHeight * follow.far) / 672;
       follow.near = (window.innerHeight * follow.near) / 672;
-      currentNormalOffset = follow.far;
+      currentNormalOffset = (follow.far - follow.near) / 2;
       self.update();
     },
     update() {
