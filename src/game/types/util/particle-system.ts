@@ -1,5 +1,6 @@
 import type { Camera, Scene, Vector3, Color } from 'three';
 import type { Point2D } from '../point';
+import type { Texture } from 'three';
 
 export interface Particle {
   position: Vector3;
@@ -11,7 +12,7 @@ export interface Particle {
   angle: Point2D;
 }
 export interface ParticleSystemConfig {
-  texturePath: string;
+  texture: string | Texture;
   onReady?: () => void;
 }
 export interface ParticleSystemPrototype {

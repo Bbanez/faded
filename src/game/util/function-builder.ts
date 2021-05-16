@@ -13,7 +13,6 @@ function functionBuilder(): FunctionBuilderPrototype {
       d2d(points) {
         const k: number[] = [];
         const n: number[] = [];
-        console.log(k, n)
 
         for (let i = 1; i < points.length; i++) {
           k.push(

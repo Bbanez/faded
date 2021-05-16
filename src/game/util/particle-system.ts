@@ -3,7 +3,7 @@ import type {
   ParticleSystemConfig,
   ParticleSystemPrototype,
 } from '../types';
-import type { Camera, Texture } from 'three';
+import { Camera, Texture } from 'three';
 import {
   BufferGeometry,
   Float32BufferAttribute,
@@ -14,7 +14,7 @@ import {
 import { VERTEX_SHADER, FRAGMENT_SHADER } from '../shaders/particle-system';
 import { Loader } from './loader';
 
-export function ParticleSystem(
+export function createParticleSystem(
   config: ParticleSystemConfig
 ): ParticleSystemPrototype {
   let texture: Texture | null = null;
@@ -24,36 +24,48 @@ export function ParticleSystem(
   const geometry = new BufferGeometry();
   const particles: Particle[] = [];
 
-  Loader.texture(config.texturePath)
-    .then((t) => {
-      texture = t;
-      material = new ShaderMaterial({
-        uniforms: {
-          dTexture: {
-            value: texture,
-          },
-          dTextureSize: {
-            value: texture.image.width,
-            // window.innerWidth /
-            // (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0)),
-          },
-        },
-        vertexShader: VERTEX_SHADER,
-        fragmentShader: FRAGMENT_SHADER,
-        blending: NormalBlending,
-        depthTest: true,
-        depthWrite: false,
-        transparent: true,
-        vertexColors: true,
+  if (config.texture instanceof Texture) {
+    texture = config.texture;
+    createMaterial();
+  } else {
+    Loader.texture(config.texture)
+      .then((t) => {
+        texture = t;
+        createMaterial();
+      })
+      .catch((err) => {
+        console.error(err);
       });
-      points = new Points(geometry, material);
-      if (config.onReady) {
-        config.onReady();
-      }
-    })
-    .catch((err) => {
-      console.error(err);
+  }
+
+  function createMaterial() {
+    if (!texture) {
+      return;
+    }
+    material = new ShaderMaterial({
+      uniforms: {
+        dTexture: {
+          value: texture,
+        },
+        dTextureSize: {
+          value: texture.image.width,
+          // window.innerWidth /
+          // (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0)),
+        },
+      },
+      vertexShader: VERTEX_SHADER,
+      fragmentShader: FRAGMENT_SHADER,
+      blending: NormalBlending,
+      depthTest: true,
+      depthWrite: false,
+      transparent: true,
+      vertexColors: true,
     });
+    points = new Points(geometry, material);
+    if (config.onReady) {
+      config.onReady();
+    }
+  }
 
   return {
     updateGeometry() {

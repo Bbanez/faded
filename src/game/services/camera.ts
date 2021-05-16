@@ -6,6 +6,8 @@ import type {
   InputServicePrototype,
 } from '../types';
 import { InputServiceSubscriptionType } from '../types';
+import { FunctionBuilder } from '../util';
+import { PI14 } from '../const';
 
 export function createCameraService({
   camera,
@@ -19,13 +21,25 @@ export function createCameraService({
   let zoomLatch = false;
   let zoomFrom = 0;
   const dump = 10;
+  let mouseXOffset = 0;
+  let cameraOrientation = PI14;
+  const mousePosToAngle = FunctionBuilder.linear.d2d([
+    {
+      x: 0,
+      y: 0,
+    },
+    {
+      x: window.innerWidth / 2,
+      y: Math.PI,
+    },
+  ]);
 
   function calcPosition(): Vector3 {
     if (follow) {
       const offset = {
         x:
           (-camera.position.x +
-            currentNormalOffset +
+            currentNormalOffset * Math.cos(cameraOrientation) +
             follow.entity.object.position.x) /
           dump,
         y:
@@ -35,7 +49,7 @@ export function createCameraService({
           dump,
         z:
           (-camera.position.z +
-            currentNormalOffset +
+            currentNormalOffset * Math.sin(cameraOrientation) +
             follow.entity.object.position.z) /
           dump,
       };
@@ -53,21 +67,30 @@ export function createCameraService({
       if (!zoomLatch) {
         zoomLatch = true;
         zoomFrom = st.mouse.y;
+        mouseXOffset = st.mouse.x;
       }
-      currentNormalOffset = currentNormalOffset + (zoomFrom - st.mouse.y) / 100;
-      if (currentNormalOffset > follow.far) {
-        currentNormalOffset = follow.far;
-        zoomFrom = st.mouse.y;
-      } else if (currentNormalOffset < follow.near) {
-        currentNormalOffset = follow.near;
-        zoomFrom = st.mouse.y;
+      cameraOrientation =
+        cameraOrientation + mousePosToAngle(st.mouse.x - mouseXOffset);
+      if (st.mouse.x === mouseXOffset) {
+        currentNormalOffset =
+          currentNormalOffset + (zoomFrom - st.mouse.y) / 10;
+        if (currentNormalOffset > follow.far) {
+          currentNormalOffset = follow.far;
+        } else if (currentNormalOffset < follow.near) {
+          currentNormalOffset = follow.near;
+        }
       }
+      mouseXOffset = st.mouse.x;
+      zoomFrom = st.mouse.y;
     } else {
       zoomLatch = false;
     }
   });
 
   const self: CameraServicePrototype = {
+    getOrientation() {
+      return cameraOrientation;
+    },
     follow(config) {
       follow = config;
       follow.far = (window.innerHeight * follow.far) / 672;

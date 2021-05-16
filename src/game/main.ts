@@ -6,11 +6,26 @@ import {
   Color,
   PerspectiveCamera,
   AmbientLight,
+  Texture,
+  Vector3,
 } from 'three';
 import { createCameraService, createInputService } from './services';
 import { createEntity } from './components';
-import { createErrorHandler, DistanceUtil, Loader } from './util';
-import type { ErrorHandlerPrototype, Game, GameConfig } from './types';
+import {
+  createErrorHandler,
+  createParticleSystem,
+  DensityMap,
+  DistanceUtil,
+  FunctionBuilder,
+  Loader,
+} from './util';
+import type {
+  ErrorHandlerPrototype,
+  Game,
+  GameConfig,
+  ParticleSystemPrototype,
+  Point2D,
+} from './types';
 import { createTicker } from './ticker';
 import { createControls } from './controls';
 
@@ -63,7 +78,7 @@ async function createMap(
   instance: number,
   scene: Scene
 ) {
-  const maps = ['/assets/models/map1.gltf'];
+  const maps = ['/assets/models/map-1.gltf'];
   if (!maps[instance]) {
     throw error.break(
       'createMap',
@@ -72,7 +87,8 @@ async function createMap(
       maps
     );
   }
-  const terrainModel = await Loader.gltf('/assets/models/map1.gltf');
+  const terrainModel = await Loader.gltf(maps[instance]);
+  terrainModel.scene.scale.setScalar(200);
   terrainModel.scene.traverse((c) => {
     c.receiveShadow = true;
   });
@@ -125,7 +141,7 @@ export async function createGame(config: GameConfig): Promise<Game> {
   const input = createInputService();
   const cam = createCameraService({ camera, input });
   const ticker = createTicker();
-  const controls = createControls(input);
+  const controls = createControls(input, cam);
 
   const map = await createMap(error, 0, scene);
   controls.setTerrain(map.terrainModel.scene);
@@ -133,8 +149,84 @@ export async function createGame(config: GameConfig): Promise<Game> {
   DistanceUtil.ground.setGeometry(map.terrainModel.scene);
 
   const character = await createCharacter(scene);
-  cam.follow({ entity: character, far: 15, near: 2 });
+  cam.follow({ entity: character, far: 150, near: 2 });
   controls.controlEntity(character);
+
+  // const testTree = await Loader.gltf('/assets/models/tadia-tree-1.gltf');
+  // testTree.scene.traverse((c) => {
+  //   c.castShadow = true;
+  //   c.receiveShadow = true;
+  // });
+  // testTree.scene.position.set(0, DistanceUtil.ground.height({ x: 0, y: 0 }), 0);
+  // scene.add(testTree.scene);
+
+  const grassTexture = await Loader.texture('/assets/grass.png');
+  const grassMap = await Loader.texture(`/assets/density-maps/map-0/grass.jpg`);
+  const grassDensityMap = DensityMap.getPixelArray(grassMap, 'g');
+
+  function placeParticlesFromDensityMap(
+    dMap: number[],
+    texture: Texture
+  ): ParticleSystemPrototype {
+    const system = createParticleSystem({
+      texture,
+    });
+    system.useCamera(camera);
+    system.addTo(scene);
+    const mapSize = 199;
+    const stepSize = 2;
+    let z = -mapSize;
+    let x = -mapSize;
+    const grassCountFn = FunctionBuilder.linear.d2d([
+      {
+        x: 0,
+        y: 0,
+      },
+      {
+        x: 100,
+        y: 3,
+      },
+      {
+        x: 255,
+        y: 15,
+      },
+    ]);
+    for (let i = 0; i < dMap.length; i++) {
+      const item = dMap[i];
+      const grassCount = grassCountFn(item);
+      if (grassCount > 0) {
+        const y = DistanceUtil.ground.height({ x, y: z });
+        for (let j = 0; j < grassCount; j++) {
+          const offset: Point2D = {
+            x: Math.random() * 2,
+            y: Math.random() * 2,
+          };
+          system.addParticle({
+            position: new Vector3(x + offset.x, y, z + offset.y),
+            angle: {
+              x: 0,
+              y: 0,
+            },
+            size: 1,
+            color: {
+              value: new Color(1, 1, 1),
+              alpha: 1,
+            },
+          });
+        }
+      }
+      x += stepSize;
+      if (x > mapSize) {
+        x = -mapSize;
+        z += stepSize;
+      }
+    }
+    system.updateParticles();
+    system.updateGeometry();
+
+    return system;
+  }
+  placeParticlesFromDensityMap(grassDensityMap, grassTexture);
 
   ticker.register((t) => {
     controls.update();
@@ -143,6 +235,9 @@ export async function createGame(config: GameConfig): Promise<Game> {
     renderer.render(scene, camera);
   });
   ticker.start();
+  // setInterval(() => {
+  //   console.log(character.getPosition());
+  // }, 1000);
 
   return {
     character,

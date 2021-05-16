@@ -1,4 +1,5 @@
 import type {
+  CameraServicePrototype,
   ControlsPrototype,
   Entity,
   InputServicePrototype,
@@ -7,16 +8,18 @@ import type {
 } from './types';
 import { InputServiceSubscriptionType } from './types';
 import { Group, Raycaster, Vector3 } from 'three';
+import { PI12 } from './const';
 
 export function createControls(
   inputService: InputServicePrototype,
+  camera: CameraServicePrototype,
   terrainMesh?: Group | null
 ): ControlsPrototype {
   const ray = new Raycaster();
   const rayDir = new Vector3(0, -1, 0);
   let entity: Entity | null = null;
   let state: InputServiceState | null = null;
-  const speed = 0.05;
+  const speed = 1.05;
   const move = {
     x: 0,
     z: 0,
@@ -28,6 +31,7 @@ export function createControls(
   let latchMouse = false;
   let latchAngle = 0;
   let angleDelta = 0;
+  let entityOrientation = -camera.getOrientation() - PI12;
   const oldMousePosition = {
     x: 0,
     y: 0,
@@ -108,6 +112,17 @@ export function createControls(
       move.x =
         acc.a * Math.sin(entity.object.rotation.y) +
         acc.b * Math.sin(entity.object.rotation.y + Math.PI / 2);
+      if (acc.a !== 0 || acc.b !== 0) {
+        if (
+          state.mouse.click.middle &&
+          (state.keyboard.w ||
+            state.keyboard.a ||
+            state.keyboard.s ||
+            state.keyboard.d)
+        ) {
+          entityOrientation = -camera.getOrientation() - PI12;
+        }
+      }
       if (acc.a !== 0 && acc.b !== 0) {
         move.x /= 1.5;
         move.z /= 1.5;
@@ -126,15 +141,21 @@ export function createControls(
     InputServiceSubscriptionType.MOUSE_MOVE,
     (_type, st) => {
       if (entity) {
-        if (st.mouse.click.right) {
+        if (
+          st.mouse.click.middle &&
+          (st.keyboard.w || st.keyboard.a || st.keyboard.s || st.keyboard.d)
+        ) {
+          entityOrientation = -camera.getOrientation() - PI12;
+        } else if (st.mouse.click.right) {
           if (!latchMouse) {
             latchAngle = entity.object.rotation.y;
             latchMouse = true;
             oldMousePosition.x = st.mouse.x;
             oldMousePosition.y = st.mouse.y;
           }
-          const delta = st.mouse.x - oldMousePosition.x;
+          const delta = oldMousePosition.x - st.mouse.x;
           angleDelta = mouseDeltaConst * delta;
+          entityOrientation = latchAngle + angleDelta;
         } else {
           latchMouse = false;
         }
@@ -172,7 +193,7 @@ export function createControls(
         }
         const newOrientation: Point3D = {
           x: entity.object.rotation.x,
-          y: latchAngle + angleDelta,
+          y: entityOrientation, // latchAngle + angleDelta,
           z: entity.object.rotation.z,
         };
         entity.update(newPos, newOrientation);

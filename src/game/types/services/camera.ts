@@ -6,6 +6,7 @@ export interface CameraFollowConfig {
   far: number;
 }
 export interface CameraServicePrototype {
+  getOrientation(): number;
   follow(config: CameraFollowConfig): void;
   update(): void;
 }
