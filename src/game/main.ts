@@ -7,11 +7,12 @@ import {
   PerspectiveCamera,
   AmbientLight,
 } from 'three';
-import { createTicker, createControls } from './engines';
 import { createCameraService, createInputService } from './services';
 import { createEntity } from './components';
 import { createErrorHandler, DistanceUtil, Loader } from './util';
-import type { ErrorHandlerPrototype } from './types';
+import type { ErrorHandlerPrototype, Game, GameConfig } from './types';
+import { createTicker } from './ticker';
+import { createControls } from './controls';
 
 function createRenderer(el: HTMLElement) {
   const renderer = new WebGLRenderer();
@@ -114,9 +115,9 @@ async function createCharacter(scene: Scene) {
 
   return character;
 }
-async function init(el: HTMLElement): Promise<void> {
+export async function createGame(config: GameConfig): Promise<Game> {
   const error = createErrorHandler('Initialize');
-  const renderer = createRenderer(el);
+  const renderer = createRenderer(config.htmlElement);
   const camera = createCamera();
   const scene = createScene();
   createGlobalLights(scene);
@@ -142,8 +143,12 @@ async function init(el: HTMLElement): Promise<void> {
     renderer.render(scene, camera);
   });
   ticker.start();
-}
 
-export const three = {
-  init: init,
-};
+  return {
+    character,
+    camera: cam,
+    ticker,
+    input,
+    controls,
+  };
+}

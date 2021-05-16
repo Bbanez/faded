@@ -1,33 +1,15 @@
-// import type {
-//   CameraServicePrototype,
-//   ConsoleServicePrototype,
-//   InputServicePrototype,
-// } from './services';
-// import type { TickerEnginePrototype } from '../engines';
-// import type { ControlEnginePrototype } from './engine';
-// import type {
-//   DistanceUtilPrototype,
-//   FunctionBuilderPrototype,
-//   LoaderPrototype,
-// } from './util';
-//
-// declare global {
-//   interface Window {
-//     t: {
-//       engine: {
-//         ticker: TickerEnginePrototype;
-//         control: ControlEnginePrototype;
-//       };
-//       services: {
-//         console: ConsoleServicePrototype;
-//         input: InputServicePrototype;
-//         camera: CameraServicePrototype;
-//       };
-//       util: {
-//         loader: LoaderPrototype;
-//         functionBuilder: FunctionBuilderPrototype;
-//         distance: DistanceUtilPrototype;
-//       };
-//     };
-//   }
-// }
+import type { CameraServicePrototype, InputServicePrototype } from './services';
+import type { TickerPrototype } from './ticker';
+import type { ControlsPrototype } from './controls';
+import type { Entity } from './components';
+
+export interface GameConfig {
+  htmlElement: HTMLElement;
+}
+export interface Game {
+  ticker: TickerPrototype;
+  controls: ControlsPrototype;
+  character: Entity;
+  camera: CameraServicePrototype;
+  input: InputServicePrototype;
+}

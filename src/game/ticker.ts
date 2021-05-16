@@ -1,10 +1,10 @@
 import * as uuid from 'uuid';
-import type { TickerEngineCallback, TickerEnginePrototype } from '../types';
+import type { TickerCallback, TickerPrototype } from './types';
 
-export function createTicker(): TickerEnginePrototype {
+export function createTicker(): TickerPrototype {
   const regs: Array<{
     id: string;
-    callback: TickerEngineCallback;
+    callback: TickerCallback;
   }> = [];
   let started = false;
   let stop = false;

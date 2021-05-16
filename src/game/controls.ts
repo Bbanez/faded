@@ -1,17 +1,17 @@
 import type {
-  ControlEnginePrototype,
+  ControlsPrototype,
   Entity,
   InputServicePrototype,
   InputServiceState,
   Point3D,
-} from '../types';
-import { InputServiceSubscriptionType } from '../types';
+} from './types';
+import { InputServiceSubscriptionType } from './types';
 import { Group, Raycaster, Vector3 } from 'three';
 
 export function createControls(
   inputService: InputServicePrototype,
   terrainMesh?: Group | null
-): ControlEnginePrototype {
+): ControlsPrototype {
   const ray = new Raycaster();
   const rayDir = new Vector3(0, -1, 0);
   let entity: Entity | null = null;
