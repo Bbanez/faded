@@ -57,7 +57,7 @@ function createGlobalLights(scene: Scene) {
   const ambientLight = new AmbientLight(0x404040);
   scene.add(ambientLight);
 
-  const sun = new DirectionalLight(0xffffff);
+  const sun = new DirectionalLight(0x433d4a);
   sun.position.set(-59, 100, 35);
   sun.castShadow = true;
   sun.lookAt(0, 0, 0);
