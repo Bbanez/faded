@@ -44,7 +44,7 @@ export function createCameraService({
           dump,
         y:
           (-camera.position.y +
-            currentNormalOffset +
+            currentNormalOffset/2 +
             follow.entity.object.position.y) /
           dump,
         z:

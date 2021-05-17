@@ -162,14 +162,13 @@ export async function createGame(config: GameConfig): Promise<Game> {
   // scene.add(testTree.scene);
 
   const grassTexture = await Loader.texture('/assets/grass.png');
-  const grassMap = await Loader.texture(`/assets/density-maps/map-0/grass.jpg`);
+  const grassMap = await Loader.texture(`/assets/density-maps/map-0/grass.png`);
   const grassDensityMap = DensityMap.getPixelArray(grassMap, 'g');
   const treeMap = await Loader.texture(`/assets/density-maps/map-0/tree.jpg`);
   const treeDensityMap = DensityMap.getPixelArray(treeMap, 'r');
 
   async function placeModelsFromMap(dMap: number[]) {
-    let limiter = 0;
-    const _tree = await Loader.gltf('/assets/models/tadia-tree-1.gltf');
+    const _tree = await Loader.gltf('/assets/models/tadia-tree-0.gltf');
     _tree.scene.traverse((c) => {
       c.castShadow = true;
     });
@@ -177,42 +176,33 @@ export async function createGame(config: GameConfig): Promise<Game> {
     const stepSize = 2;
     let z = -mapSize;
     let x = -mapSize;
-    // const treeCountFn = FunctionBuilder.linear.d2d([
-    //   {
-    //     x: 0,
-    //     y: 0,
-    //   },
-    //   {
-    //     x: 200,
-    //     y: 0,
-    //   },
-    //   {
-    //     x: 255,
-    //     y: 1,
-    //   },
-    // ]);
-    let lastTreeIndex = 0;
+    const treeAngleFn = FunctionBuilder.linear.d2d([
+      {
+        x: 0,
+        y: -Math.PI,
+      },
+      {
+        x: 1,
+        y: Math.PI,
+      },
+    ]);
     for (let i = 0; i < dMap.length; i++) {
       const item = dMap[i];
       // const treeCount = treeCountFn(item);
-      if (item > 125 && Math.random() > 0.99 && i - lastTreeIndex > 4) {
-        lastTreeIndex = i;
+      if (item > 253) {
         const y = DistanceUtil.ground.height({ x, y: z });
         for (let j = 0; j < 1; j++) {
           const tree = _tree.scene.clone();
           const offset: Point3D = {
             x: Math.random() * 2,
             y: Math.random() * 2,
-            z: Math.random() + 0.5,
+            z: Math.random() + 2,
           };
           tree.scale.setScalar(offset.z);
-          tree.position.set(x + offset.x, y, z + offset.y);
+          tree.position.set(x, y, z);
+          tree.rotation.y = treeAngleFn(Math.random());
           scene.add(tree);
           console.log('HERE');
-          limiter++;
-          if (limiter > 100) {
-            return;
-          }
         }
       }
       x += stepSize;
