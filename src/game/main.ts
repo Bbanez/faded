@@ -6,8 +6,9 @@ import {
   Color,
   PerspectiveCamera,
   AmbientLight,
-  Texture,
   Vector3,
+  Texture,
+  PointLight,
 } from 'three';
 import { createCameraService, createInputService } from './services';
 import { createEntity } from './components';
@@ -76,19 +77,19 @@ function createGlobalLights(scene: Scene) {
 }
 async function createMap(
   error: ErrorHandlerPrototype,
-  instance: number,
+  mapIndex: number,
   scene: Scene
 ) {
-  const maps = ['/assets/models/map-1.gltf'];
-  if (!maps[instance]) {
+  const maps = [`/assets/map/${mapIndex}/terrain.gltf`];
+  if (!maps[mapIndex]) {
     throw error.break(
       'createMap',
-      `Map for instance "${instance}"` + ' does not exist',
+      `Map with index "${mapIndex}"` + ' does not exist',
       'Available:',
       maps
     );
   }
-  const terrainModel = await Loader.gltf(maps[instance]);
+  const terrainModel = await Loader.gltf(maps[mapIndex]);
   terrainModel.scene.scale.setScalar(200);
   terrainModel.scene.traverse((c) => {
     c.receiveShadow = true;
@@ -103,13 +104,13 @@ async function createCharacter(scene: Scene) {
   const character = await createEntity({
     model: {
       fbx: {
-        main: '/assets/models/female/character.fbx',
+        main: '/assets/character/female/character.fbx',
         animations: {
-          backward: '/assets/models/female/backward.fbx',
-          idle: '/assets/models/female/idle.fbx',
-          left: '/assets/models/female/left.fbx',
-          right: '/assets/models/female/right.fbx',
-          slowRun: '/assets/models/female/slow-run.fbx',
+          backward: '/assets/character/female/backward.fbx',
+          idle: '/assets/character/female/idle.fbx',
+          left: '/assets/character/female/left.fbx',
+          right: '/assets/character/female/right.fbx',
+          slowRun: '/assets/character/female/slow-run.fbx',
         },
         onMainLoad(object) {
           object.traverse((c) => {
@@ -133,6 +134,7 @@ async function createCharacter(scene: Scene) {
   return character;
 }
 export async function createGame(config: GameConfig): Promise<Game> {
+  const mapIndex = 0;
   const error = createErrorHandler('Initialize');
   const renderer = createRenderer(config.htmlElement);
   const camera = createCamera();
@@ -144,16 +146,16 @@ export async function createGame(config: GameConfig): Promise<Game> {
   const ticker = createTicker();
   const controls = createControls(input, cam);
 
-  const map = await createMap(error, 0, scene);
+  const map = await createMap(error, mapIndex, scene);
   controls.setTerrain(map.terrainModel.scene);
   renderer.render(scene, camera);
   DistanceUtil.ground.setGeometry(map.terrainModel.scene);
 
   const character = await createCharacter(scene);
-  cam.follow({ entity: character, far: 150, near: 2 });
+  cam.follow({ entity: character, far: 35, near: 2 });
   controls.controlEntity(character);
 
-  // const testTree = await Loader.gltf('/assets/models/tadia-tree-1.gltf');
+  // const testTree = await Loader.gltf('/assets/character/tadia-terrain.gltf');
   // testTree.scene.traverse((c) => {
   //   c.castShadow = true;
   //   c.receiveShadow = true;
@@ -161,15 +163,28 @@ export async function createGame(config: GameConfig): Promise<Game> {
   // testTree.scene.position.set(0, DistanceUtil.ground.height({ x: 0, y: 0 }), 0);
   // scene.add(testTree.scene);
 
-  const grassTexture = await Loader.texture('/assets/grass.png');
-  const grassMap = await Loader.texture(`/assets/density-maps/map-0/grass.png`);
+  const grassTexture = await Loader.texture(
+    `/assets/map/${mapIndex}/grass.png`
+  );
+  const grassMap = await Loader.texture(
+    `/assets/map/${mapIndex}/masks/grass.png`
+  );
   const grassDensityMap = DensityMap.getPixelArray(grassMap, 'g');
-  const treeMap = await Loader.texture(`/assets/density-maps/map-0/tree.jpg`);
+  const treeMap = await Loader.texture(
+    `/assets/map/${mapIndex}/masks/tree.png`
+  );
   const treeDensityMap = DensityMap.getPixelArray(treeMap, 'r');
 
   async function placeModelsFromMap(dMap: number[]) {
-    const _tree = await Loader.gltf('/assets/models/tadia-tree-0.gltf');
+    const _tree = await Loader.gltf(`/assets/map/${mapIndex}/trees/0.gltf`);
+    const _treeSmall = await Loader.gltf(
+      `/assets/map/${mapIndex}/trees/1.gltf`
+    );
+    const _treeBush = await Loader.gltf(`/assets/map/${mapIndex}/trees/2.gltf`);
     _tree.scene.traverse((c) => {
+      c.castShadow = true;
+    });
+    _treeSmall.scene.traverse((c) => {
       c.castShadow = true;
     });
     const mapSize = 199;
@@ -202,8 +217,34 @@ export async function createGame(config: GameConfig): Promise<Game> {
           tree.position.set(x, y, z);
           tree.rotation.y = treeAngleFn(Math.random());
           scene.add(tree);
-          console.log('HERE');
+          const pointLight = new PointLight(0x00ffff, 0.5, 20);
+          pointLight.position.set(tree.position.x, 10, tree.position.z);
+          scene.add(pointLight);
         }
+      } else if (item > 140 && item < 160) {
+        const y = DistanceUtil.ground.height({ x, y: z });
+        const tree = _treeSmall.scene.clone();
+        const offset: Point3D = {
+          x: Math.random() * 2,
+          y: Math.random() * 2,
+          z: Math.random() + 0.5,
+        };
+        tree.scale.setScalar(offset.z);
+        tree.position.set(x, y, z);
+        tree.rotation.y = treeAngleFn(Math.random());
+        scene.add(tree);
+      } else if (item > 0) {
+        const y = DistanceUtil.ground.height({ x, y: z });
+        const tree = _treeBush.scene.clone();
+        const offset: Point3D = {
+          x: Math.random(),
+          y: Math.random(),
+          z: Math.random() + 0.2,
+        };
+        tree.scale.setScalar(offset.z);
+        tree.position.set(x + offset.x, y, z + offset.y);
+        tree.rotation.y = treeAngleFn(Math.random());
+        scene.add(tree);
       }
       x += stepSize;
       if (x > mapSize) {
