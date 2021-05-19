@@ -6,4 +6,5 @@ export interface DistanceUtilPrototype {
     setGeometry(groundGeometry: Group): void;
     height(point: Point2D): number;
   };
+  heightTo(point: Point2D, group: Group): number;
 }

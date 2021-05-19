@@ -29,6 +29,18 @@ function distanceUtil(): DistanceUtilPrototype {
         return 0;
       },
     },
+    heightTo(point, group) {
+      ray.set(new Vector3(point.x, 100, point.y), rayDir);
+      const intersect = ray.intersectObject(group, true);
+      if (intersect[0]) {
+        return intersect[0].point.y;
+      }
+      console.warn(
+        'No intersection at position' +
+          ` x=${point.x}, y=${point.y} with the ground.`
+      );
+      return 0;
+    },
   };
 }
 export const DistanceUtil = distanceUtil();

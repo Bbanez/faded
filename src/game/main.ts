@@ -6,28 +6,31 @@ import {
   Color,
   PerspectiveCamera,
   AmbientLight,
+  Camera,
   Vector3,
-  Texture,
-  PointLight,
 } from 'three';
-import { createCameraService, createInputService } from './services';
+import {
+  createCameraService,
+  createInputService,
+  createStorage,
+} from './services';
 import { createEntity } from './components';
 import {
   createErrorHandler,
+  createHeightMap,
   createParticleSystem,
   DensityMap,
   DistanceUtil,
   FunctionBuilder,
   Loader,
+  TimeTrackerUtil,
 } from './util';
 import type {
   ErrorHandlerPrototype,
   Game,
   GameConfig,
-  ParticleSystemPrototype,
-  Point2D,
-  Point3D,
-} from './types';
+  HeightMap, Point2D
+} from "./types";
 import { createTicker } from './ticker';
 import { createControls } from './controls';
 
@@ -133,159 +136,61 @@ async function createCharacter(scene: Scene) {
 
   return character;
 }
-export async function createGame(config: GameConfig): Promise<Game> {
-  const mapIndex = 0;
-  const error = createErrorHandler('Initialize');
-  const renderer = createRenderer(config.htmlElement);
-  const camera = createCamera();
-  const scene = createScene();
-  createGlobalLights(scene);
-
-  const input = createInputService();
-  const cam = createCameraService({ camera, input });
-  const ticker = createTicker();
-  const controls = createControls(input, cam);
-
-  const map = await createMap(error, mapIndex, scene);
-  controls.setTerrain(map.terrainModel.scene);
-  renderer.render(scene, camera);
-  DistanceUtil.ground.setGeometry(map.terrainModel.scene);
-
-  const character = await createCharacter(scene);
-  cam.follow({ entity: character, far: 35, near: 2 });
-  controls.controlEntity(character);
-
-  // const testTree = await Loader.gltf('/assets/character/tadia-terrain.gltf');
-  // testTree.scene.traverse((c) => {
-  //   c.castShadow = true;
-  //   c.receiveShadow = true;
-  // });
-  // testTree.scene.position.set(0, DistanceUtil.ground.height({ x: 0, y: 0 }), 0);
-  // scene.add(testTree.scene);
-
-  const grassTexture = await Loader.texture(
-    `/assets/map/${mapIndex}/grass.png`
-  );
+async function createGrass({
+  mapIndex,
+  camera,
+  scene,
+  heightMap,
+}: {
+  mapIndex: number;
+  camera: Camera;
+  scene: Scene;
+  heightMap: HeightMap;
+}) {
+  const texture = await Loader.texture(`/assets/map/${mapIndex}/grass.png`);
   const grassMap = await Loader.texture(
     `/assets/map/${mapIndex}/masks/grass.png`
   );
-  const grassDensityMap = DensityMap.getPixelArray(grassMap, 'g');
-  const treeMap = await Loader.texture(
-    `/assets/map/${mapIndex}/masks/tree.png`
-  );
-  const treeDensityMap = DensityMap.getPixelArray(treeMap, 'r');
+  const dMap = DensityMap.getPixelArray(grassMap, 'g');
 
-  async function placeModelsFromMap(dMap: number[]) {
-    const _tree = await Loader.gltf(`/assets/map/${mapIndex}/trees/0.gltf`);
-    const _treeSmall = await Loader.gltf(
-      `/assets/map/${mapIndex}/trees/1.gltf`
-    );
-    const _treeBush = await Loader.gltf(`/assets/map/${mapIndex}/trees/2.gltf`);
-    _tree.scene.traverse((c) => {
-      c.castShadow = true;
-    });
-    _treeSmall.scene.traverse((c) => {
-      c.castShadow = true;
-    });
-    const mapSize = 199;
-    const stepSize = 2;
-    let z = -mapSize;
-    let x = -mapSize;
-    const treeAngleFn = FunctionBuilder.linear.d2d([
-      {
-        x: 0,
-        y: -Math.PI,
-      },
-      {
-        x: 1,
-        y: Math.PI,
-      },
-    ]);
-    for (let i = 0; i < dMap.length; i++) {
-      const item = dMap[i];
-      // const treeCount = treeCountFn(item);
-      if (item > 253) {
-        const y = DistanceUtil.ground.height({ x, y: z });
-        for (let j = 0; j < 1; j++) {
-          const tree = _tree.scene.clone();
-          const offset: Point3D = {
-            x: Math.random() * 2,
-            y: Math.random() * 2,
-            z: Math.random() + 2,
-          };
-          tree.scale.setScalar(offset.z);
-          tree.position.set(x, y, z);
-          tree.rotation.y = treeAngleFn(Math.random());
-          scene.add(tree);
-          const pointLight = new PointLight(0x00ffff, 0.5, 20);
-          pointLight.position.set(tree.position.x, 10, tree.position.z);
-          scene.add(pointLight);
-        }
-      } else if (item > 140 && item < 160) {
-        const y = DistanceUtil.ground.height({ x, y: z });
-        const tree = _treeSmall.scene.clone();
-        const offset: Point3D = {
-          x: Math.random() * 2,
-          y: Math.random() * 2,
-          z: Math.random() + 0.5,
-        };
-        tree.scale.setScalar(offset.z);
-        tree.position.set(x, y, z);
-        tree.rotation.y = treeAngleFn(Math.random());
-        scene.add(tree);
-      } else if (item > 0) {
-        const y = DistanceUtil.ground.height({ x, y: z });
-        const tree = _treeBush.scene.clone();
-        const offset: Point3D = {
-          x: Math.random(),
-          y: Math.random(),
-          z: Math.random() + 0.2,
-        };
-        tree.scale.setScalar(offset.z);
-        tree.position.set(x + offset.x, y, z + offset.y);
-        tree.rotation.y = treeAngleFn(Math.random());
-        scene.add(tree);
-      }
-      x += stepSize;
-      if (x > mapSize) {
-        x = -mapSize;
-        z += stepSize;
-      }
-    }
-  }
-  function placeParticlesFromDensityMap(
-    dMap: number[],
-    texture: Texture
-  ): ParticleSystemPrototype {
-    const system = createParticleSystem({
-      texture,
-    });
-    system.useCamera(camera);
-    system.addTo(scene);
-    const mapSize = 199;
-    const stepSize = 2;
-    let z = -mapSize;
-    let x = -mapSize;
-    const grassCountFn = FunctionBuilder.linear.d2d([
-      {
-        x: 0,
-        y: 0,
-      },
-      {
-        x: 100,
-        y: 3,
-      },
-      {
-        x: 255,
-        y: 15,
-      },
-    ]);
-    for (let i = 0; i < dMap.length; i++) {
-      const item = dMap[i];
-      const grassCount = grassCountFn(item);
+  const system = createParticleSystem({
+    texture,
+  });
+  system.useCamera(camera);
+  system.addTo(scene);
+  // const mapSize = 200;
+  // const stepSize = 1;
+  // let x = -mapSize;
+  // let z = -mapSize;
+
+  const grassCountFn = FunctionBuilder.linear.d2d([
+    {
+      x: 0,
+      y: 0,
+    },
+    {
+      x: 100,
+      y: 2,
+    },
+    {
+      x: 200,
+      y: 4,
+    },
+    {
+      x: 255,
+      y: 15,
+    },
+  ]);
+  const xs = Object.keys(dMap).map((e) => parseInt(e));
+  for (let i = 0; i < xs.length; i++) {
+    const x = xs[i];
+    const zs = Object.keys(dMap[x]).map((e) => parseInt(e));
+    for (let j = 0; j < zs.length; j++) {
+      const z = zs[j];
+      const grassCount = grassCountFn(dMap[x][z]);
       if (grassCount > 0) {
-        const y = DistanceUtil.ground.height({ x, y: z });
-        for (let j = 0; j < grassCount; j++) {
+        const y = heightMap.get(x, z);
+        for (let k = 0; k < grassCount; k++) {
           const offset: Point2D = {
             x: Math.random() * 2,
             y: Math.random() * 2,
@@ -303,20 +208,316 @@ export async function createGame(config: GameConfig): Promise<Game> {
             },
           });
         }
-      }
-      x += stepSize;
-      if (x > mapSize) {
-        x = -mapSize;
-        z += stepSize;
+        // system.addParticle({
+        //   position: new Vector3(x, y, z),
+        //   angle: {
+        //     x: 0,
+        //     y: 0,
+        //   },
+        //   size: 1,
+        //   color: {
+        //     value: new Color(1, 1, 1),
+        //     alpha: 1,
+        //   },
+        // });
       }
     }
-    system.updateParticles();
-    system.updateGeometry();
-
-    return system;
   }
-  placeParticlesFromDensityMap(grassDensityMap, grassTexture);
-  await placeModelsFromMap(treeDensityMap);
+  // for (let i = 0; i < dMap.length; i++) {
+  //   const item = dMap[i];
+  //   const grassCount = grassCountFn(item);
+  //   if (grassCount > 0) {
+  //     const y = heightMap.get(x, z);
+  //     system.addParticle({
+  //       position: new Vector3(x, y, z),
+  //       angle: {
+  //         x: 0,
+  //         y: 0,
+  //       },
+  //       size: 1,
+  //       color: {
+  //         value: new Color(1, 1, 1),
+  //         alpha: 1,
+  //       },
+  //     });
+  //     // for (let j = 0; j < grassCount; j++) {
+  //     //   const offset: Point2D = {
+  //     //     x: Math.random() * 2,
+  //     //     y: Math.random() * 2,
+  //     //   };
+  //     //   system.addParticle({
+  //     //     position: new Vector3(x + offset.x, y, z + offset.y),
+  //     //     angle: {
+  //     //       x: 0,
+  //     //       y: 0,
+  //     //     },
+  //     //     size: 1,
+  //     //     color: {
+  //     //       value: new Color(1, 1, 1),
+  //     //       alpha: 1,
+  //     //     },
+  //     //   });
+  //     // }
+  //   }
+  //   x += stepSize;
+  //   if (x > mapSize) {
+  //     x = -mapSize;
+  //     z += stepSize;
+  //   }
+  // }
+  system.updateParticles();
+  system.updateGeometry();
+
+  return { system };
+}
+export async function createGame(config: GameConfig): Promise<Game> {
+  const timeOffset = Date.now();
+  const mapIndex = 0;
+  const error = createErrorHandler('Initialize');
+  const storage = createStorage({ prfx: 'faded' });
+  const renderer = await TimeTrackerUtil.track.timeToComplete(
+    'Create renderer',
+    () => createRenderer(config.htmlElement)
+  );
+  const camera = await TimeTrackerUtil.track.timeToComplete(
+    'Create camera',
+    () => createCamera()
+  );
+  const scene = await TimeTrackerUtil.track.timeToComplete('Create scene', () =>
+    createScene()
+  );
+  await TimeTrackerUtil.track.timeToComplete('Create global lights', () =>
+    createGlobalLights(scene)
+  );
+
+  const input = await TimeTrackerUtil.track.timeToComplete(
+    'Create input service',
+    () => createInputService()
+  );
+  const cam = await TimeTrackerUtil.track.timeToComplete(
+    'Create camera service',
+    () => createCameraService({ camera, input })
+  );
+  const ticker = await TimeTrackerUtil.track.timeToComplete(
+    'Create ticker',
+    () => createTicker()
+  );
+  const controls = await TimeTrackerUtil.track.timeToComplete(
+    'Create controls',
+    () => createControls(input, cam)
+  );
+
+  const map = await TimeTrackerUtil.track.timeToComplete(
+    'Create map',
+    async () => await createMap(error, mapIndex, scene)
+  );
+  controls.setTerrain(map.terrainModel.scene);
+  renderer.render(scene, camera);
+  DistanceUtil.ground.setGeometry(map.terrainModel.scene);
+
+  const terrainHeightMap = await TimeTrackerUtil.track.timeToComplete(
+    'Create terrain height map',
+    () =>
+      createHeightMap({
+        id: `map${mapIndex}`,
+        storage,
+        group: map.terrainModel.scene,
+        x: {
+          start: -199,
+          end: 199,
+        },
+        z: {
+          start: -199,
+          end: 199,
+        },
+        stepSize: {
+          x: 1,
+          z: 1,
+        },
+      })
+  );
+  await TimeTrackerUtil.track.timeToComplete(
+    'Create grass',
+    async () =>
+      await createGrass({
+        heightMap: terrainHeightMap,
+        scene,
+        camera,
+        mapIndex,
+      })
+  );
+
+  const character = await TimeTrackerUtil.track.timeToComplete(
+    'Create character',
+    async () => await createCharacter(scene)
+  );
+  cam.follow({ entity: character, far: 150, near: 2 });
+  controls.controlEntity(character);
+
+  console.log(`Game ready in ${(Date.now() - timeOffset) / 1000}s`);
+
+  // const testTree = await Loader.gltf('/assets/character/tadia-terrain.gltf');
+  // testTree.scene.traverse((c) => {
+  //   c.castShadow = true;
+  //   c.receiveShadow = true;
+  // });
+  // testTree.scene.position.set(0, DistanceUtil.ground.height({ x: 0, y: 0 }), 0);
+  // scene.add(testTree.scene);
+
+  // const grassTexture = await Loader.texture(
+  //   `/assets/map/${mapIndex}/grass.png`
+  // );
+  // const grassMap = await Loader.texture(
+  //   `/assets/map/${mapIndex}/masks/grass.png`
+  // );
+  // const grassDensityMap = DensityMap.getPixelArray(grassMap, 'g');
+  // const treeMap = await Loader.texture(
+  //   `/assets/map/${mapIndex}/masks/tree.png`
+  // );
+  // const treeDensityMap = DensityMap.getPixelArray(treeMap, 'r');
+
+  // async function placeModelsFromMap(dMap: number[]) {
+  //   const _tree = await Loader.gltf(`/assets/map/${mapIndex}/trees/0.gltf`);
+  //   const _treeSmall = await Loader.gltf(
+  //     `/assets/map/${mapIndex}/trees/1.gltf`
+  //   );
+  //   const _treeBush = await Loader.gltf(`/assets/map/${mapIndex}/trees/2.gltf`);
+  //   _tree.scene.traverse((c) => {
+  //     c.castShadow = true;
+  //   });
+  //   _treeSmall.scene.traverse((c) => {
+  //     c.castShadow = true;
+  //   });
+  //   const mapSize = 199;
+  //   const stepSize = 2;
+  //   let z = -mapSize;
+  //   let x = -mapSize;
+  //   const treeAngleFn = FunctionBuilder.linear.d2d([
+  //     {
+  //       x: 0,
+  //       y: -Math.PI,
+  //     },
+  //     {
+  //       x: 1,
+  //       y: Math.PI,
+  //     },
+  //   ]);
+  //   for (let i = 0; i < dMap.length; i++) {
+  //     const item = dMap[i];
+  //     // const treeCount = treeCountFn(item);
+  //     if (item > 253) {
+  //       const y = DistanceUtil.ground.height({ x, y: z });
+  //       for (let j = 0; j < 1; j++) {
+  //         const tree = _tree.scene.clone();
+  //         const offset: Point3D = {
+  //           x: Math.random() * 2,
+  //           y: Math.random() * 2,
+  //           z: Math.random() + 2,
+  //         };
+  //         tree.scale.setScalar(offset.z);
+  //         tree.position.set(x, y, z);
+  //         tree.rotation.y = treeAngleFn(Math.random());
+  //         scene.add(tree);
+  //         const pointLight = new PointLight(0x00ffff, 0.5, 20);
+  //         pointLight.position.set(tree.position.x, 10, tree.position.z);
+  //         scene.add(pointLight);
+  //       }
+  //     } else if (item > 140 && item < 160) {
+  //       const y = DistanceUtil.ground.height({ x, y: z });
+  //       const tree = _treeSmall.scene.clone();
+  //       const offset: Point3D = {
+  //         x: Math.random() * 2,
+  //         y: Math.random() * 2,
+  //         z: Math.random() + 0.5,
+  //       };
+  //       tree.scale.setScalar(offset.z);
+  //       tree.position.set(x, y, z);
+  //       tree.rotation.y = treeAngleFn(Math.random());
+  //       scene.add(tree);
+  //     } else if (item > 0) {
+  //       const y = DistanceUtil.ground.height({ x, y: z });
+  //       const tree = _treeBush.scene.clone();
+  //       const offset: Point3D = {
+  //         x: Math.random(),
+  //         y: Math.random(),
+  //         z: Math.random() + 0.2,
+  //       };
+  //       tree.scale.setScalar(offset.z);
+  //       tree.position.set(x + offset.x, y, z + offset.y);
+  //       tree.rotation.y = treeAngleFn(Math.random());
+  //       scene.add(tree);
+  //     }
+  //     x += stepSize;
+  //     if (x > mapSize) {
+  //       x = -mapSize;
+  //       z += stepSize;
+  //     }
+  //   }
+  // }
+  // function placeParticlesFromDensityMap(
+  //   dMap: number[],
+  //   texture: Texture
+  // ): ParticleSystemPrototype {
+  //   const system = createParticleSystem({
+  //     texture,
+  //   });
+  //   system.useCamera(camera);
+  //   system.addTo(scene);
+  //   const mapSize = 199;
+  //   const stepSize = 2;
+  //   let z = -mapSize;
+  //   let x = -mapSize;
+  //   const grassCountFn = FunctionBuilder.linear.d2d([
+  //     {
+  //       x: 0,
+  //       y: 0,
+  //     },
+  //     {
+  //       x: 100,
+  //       y: 3,
+  //     },
+  //     {
+  //       x: 255,
+  //       y: 15,
+  //     },
+  //   ]);
+  //   for (let i = 0; i < dMap.length; i++) {
+  //     const item = dMap[i];
+  //     const grassCount = grassCountFn(item);
+  //     if (grassCount > 0) {
+  //       const y = DistanceUtil.ground.height({ x, y: z });
+  //       for (let j = 0; j < grassCount; j++) {
+  //         const offset: Point2D = {
+  //           x: Math.random() * 2,
+  //           y: Math.random() * 2,
+  //         };
+  //         system.addParticle({
+  //           position: new Vector3(x + offset.x, y, z + offset.y),
+  //           angle: {
+  //             x: 0,
+  //             y: 0,
+  //           },
+  //           size: 1,
+  //           color: {
+  //             value: new Color(1, 1, 1),
+  //             alpha: 1,
+  //           },
+  //         });
+  //       }
+  //     }
+  //     x += stepSize;
+  //     if (x > mapSize) {
+  //       x = -mapSize;
+  //       z += stepSize;
+  //     }
+  //   }
+  //   system.updateParticles();
+  //   system.updateGeometry();
+  //
+  //   return system;
+  // }
+  // placeParticlesFromDensityMap(grassDensityMap, grassTexture);
+  // await placeModelsFromMap(treeDensityMap);
 
   ticker.register((t) => {
     controls.update();

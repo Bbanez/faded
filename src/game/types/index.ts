@@ -5,5 +5,6 @@ export * from './util';
 export * from './bounding-box';
 export * from './controls';
 export * from './main';
+export * from './matrix';
 export * from './point';
 export * from './ticker';
