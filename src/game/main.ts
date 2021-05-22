@@ -297,6 +297,16 @@ async function createTrees({
     }
   }
 }
+async function createSkybox(mapIndex: number, scene: Scene) {
+  scene.background = await Loader.cubeTexture([
+    `/assets/map/${mapIndex}/skybox/xn.png`,
+    `/assets/map/${mapIndex}/skybox/xp.png`,
+    `/assets/map/${mapIndex}/skybox/yp.png`,
+    `/assets/map/${mapIndex}/skybox/yn.png`,
+    `/assets/map/${mapIndex}/skybox/zp.png`,
+    `/assets/map/${mapIndex}/skybox/zn.png`,
+  ]);
+}
 export async function createGame(config: GameConfig): Promise<Game> {
   const timeOffset = Date.now();
   const mapIndex = 0;
@@ -341,6 +351,8 @@ export async function createGame(config: GameConfig): Promise<Game> {
   controls.setTerrain(map.terrainModel.scene);
   renderer.render(scene, camera);
   DistanceUtil.ground.setGeometry(map.terrainModel.scene);
+
+  await createSkybox(mapIndex, scene);
 
   const terrainHeightMap = await TimeTrackerUtil.track.timeToComplete(
     'Create terrain height map',

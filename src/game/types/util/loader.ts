@@ -1,6 +1,7 @@
 import type { Group } from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import type { Texture } from 'three';
+import type { CubeTexture } from 'three';
 
 export type LoaderHandlerType = 'loading' | 'completed';
 export type LoaderHandler = (
@@ -14,4 +15,5 @@ export interface LoaderPrototype {
   fbx(path: string): Promise<Group>;
   gltf(path: string): Promise<GLTF>;
   texture(path: string): Promise<Texture>;
+  cubeTexture(path: string[]): Promise<CubeTexture>;
 }
