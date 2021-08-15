@@ -2,8 +2,11 @@ import type { HeightMap, HeightMapConfig, MatrixXZ } from '../types';
 import { ErrorEventType } from '../types';
 import { DistanceUtil } from './distance';
 import { ErrorManager } from './error';
+import { Loader } from './loader';
 
-export function createHeightMap(config: HeightMapConfig): HeightMap {
+export async function createHeightMap(
+  config: HeightMapConfig
+): Promise<HeightMap> {
   let createMap = false;
   let map: MatrixXZ = {};
 
@@ -19,7 +22,26 @@ export function createHeightMap(config: HeightMapConfig): HeightMap {
       map = lsMap;
     }
   }
-
+  let loaded = 0;
+  const toLoad =
+    (Math.abs(config.x.start) + Math.abs(config.x.end)) *
+    (Math.abs(config.z.start) + Math.abs(config.z.end));
+  let timeOffset = Date.now();
+  async function printLoaded() {
+    loaded++;
+    if (Date.now() - timeOffset > 500) {
+      timeOffset = Date.now();
+      console.log(((loaded / toLoad) * 100).toFixed(2));
+      Loader.trigger(
+        'loading',
+        'Generating height map',
+        (loaded / toLoad) * 100
+      );
+      return await new Promise<void>((resolve) => {
+        setTimeout(() => resolve(), 20);
+      });
+    }
+  }
   /**
    * Create height map points
    */
@@ -43,12 +65,18 @@ export function createHeightMap(config: HeightMapConfig): HeightMap {
         if (z > config.z.end) {
           z = config.z.start;
         }
+        await printLoaded();
       }
       x += config.stepSize.x;
       if (x > config.x.end) {
         x = config.x.start;
       }
     }
+    Loader.trigger(
+      'completed',
+      'Generating height map',
+      (loaded / toLoad) * 100
+    );
     config.storage.set(`hm_${config.id}`, map).catch((err) => {
       ErrorManager.trigger(ErrorEventType.ERROR, {
         jsError: err,

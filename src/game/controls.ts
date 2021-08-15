@@ -19,7 +19,7 @@ export function createControls(
   const rayDir = new Vector3(0, -1, 0);
   let entity: Entity | null = null;
   let state: InputServiceState | null = null;
-  const speed = 1.1;
+  const speed = 0.3;
   const move = {
     x: 0,
     z: 0,

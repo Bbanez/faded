@@ -1,4 +1,4 @@
-import type { DensityMapPrototype, MatrixXZ } from "../types";
+import type { DensityMapPrototype, MatrixXZ } from '../types';
 import type { Texture } from 'three';
 import { createErrorHandler } from './error';
 

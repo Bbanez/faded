@@ -4,5 +4,6 @@ export * from './error';
 export * from './function-builder';
 export * from './height-map';
 export * from './loader';
+export * from './nogo-zone';
 export * from './particle-system';
 export * from './time-tracker';
