@@ -42,7 +42,7 @@
 
 - Meteor location has been found.
 - Meteor was named [The Sphere](#the-sphere) by one of the explorers.
-- Strange forest has started grow around [The Sphere](#the-sphere). This forest will later be named [Tadia](#the-sphere-forest---tadia) by members of [The Cult](#the-cult---ankymans).
+- Strange forest has started growing around [The Sphere](#the-sphere). This forest will later be named [Tadia](#the-sphere-forest---tadia) by members of [The Cult](#the-cult---ankymans).
 
 ### 697-690ba
 
@@ -52,7 +52,7 @@
 
 - All human tools are ineffective. [The Sphere](#the-sphere) could not be mined. Strange trees around it could not be cut.
 - Humans attempted to dig the tree from the ground, but tree roots are enormously deep and entangled.
-- Secret society of the humans proposes a construction of [The Impact Hammer](#the-impact-hammer), which will use some secret technology, able to split [The Sphere](#the-sphere) into parts.
+- Secret society of humans proposes a construction of [The Impact Hammer](#the-impact-hammer), which will use some secret technology, able to split [The Sphere](#the-sphere) into parts.
 
 ### 695ba
 
@@ -80,15 +80,15 @@ It is the meteor which landed on the Earth 700ba. When the meteor hit the atmosp
 
 Because of it shape, the meteor was named The Sphere. It is around 8 meters in diameter with a very dark purple color (something like an obsidian) and geometric lines indented into it, forming some sort of symbol.
 
-![The Sphere](./docs/assets/the-sphere-1.jpg)
+![The Sphere](./docs/assets/the-sphere-1.png)
 
-The Sphere is the core of a planet where Ankys came from. It is very hard and heavy, but for being what it is, The Sphere is actually surprisingly small and inactive. It is still unknown what is the size of a planet where they came from. It landed on the Earth after the explosion of the Ankys home planet, which was destroyed in the war with the [Fade race](#fade-race).
+The Sphere is the core of a planet where [Ankys](#anky) came from. It is very hard and heavy, but for being what it is, The Sphere is actually surprisingly small and inactive. It is still unknown what is the size of a planet where they came from. It landed on the Earth after the explosion of the Ankys home planet, which was destroyed in the war with the [Fade race](#fade-race).
 
 Little is known about The Sphere and how it works, but it can convert energy into matter and matter into energy, which Anky can also do. Anky thought humans how to horniest this power and use it to make weapons and tools.
 
 The Sphere is also the center of knowledge for the Anky. Once Anky is born from a seed of the [Sui tree](#sui-tree), The Sphere will transfer all past knowledge to it, and once an Anky dies, it will take the knowledge back. Anky speak using some sort of telepathy. Thoughts are converted into energy which is sent to the roots of the Tadia forest; via the roots, message is transferred to The Sphere and then to an Anky which is receiving it.
 
-It is known that The Sphere is creating the [Tadia forest](#the-sphere-forest---tadia) around it. After [the impact hammer](#the-impact-hammer) indented it into the Earth, Tadia forest started growing and spread at greater speed. It is hypothesized that, if The Sphere was completely submerged into the Earth, the whole Earth will be covered in the Tadia forest. This fact is concerning some humans and will result is [The Great War](#the-great-war)
+It is known that The Sphere is creating the [Tadia forest](#the-sphere-forest---tadia) around it. After [the impact hammer](#the-impact-hammer) indented it into the Earth, Tadia forest started growing and spread at greater speed. It is hypothesized that, if The Sphere was completely submerged into the Earth, the whole Earth will be covered in the Tadia forest. This fact is concerning some humans and will result in [The Great War](#the-great-war)
 
 ## Anky
 
