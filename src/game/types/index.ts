@@ -1,10 +1,4 @@
-export * from './components';
-export * from './services';
-export * from './util';
-
-export * from './bounding-box';
-export * from './controls';
+export * from './camera';
 export * from './main';
-export * from './matrix';
-export * from './point';
-export * from './ticker';
+export * from './obstacle';
+export * from './player';

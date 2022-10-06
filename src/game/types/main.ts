@@ -1,15 +1,8 @@
-import type { CameraServicePrototype, InputServicePrototype } from './services';
-import type { TickerPrototype } from './ticker';
-import type { ControlsPrototype } from './controls';
-import type { Entity } from './components';
+import type { Svemir, SvemirConfig } from "svemir/types";
 
-export interface GameConfig {
-  htmlElement: HTMLElement;
-}
+export type GameConfig = SvemirConfig;
+
 export interface Game {
-  ticker: TickerPrototype;
-  controls: ControlsPrototype;
-  character: Entity;
-  camera: CameraServicePrototype;
-  input: InputServicePrototype;
+  s: Svemir;
+  destroy(): Promise<void>;
 }
