@@ -70,32 +70,10 @@ async function createEnv() {
   Assets.map.scene.scale.setScalar(200);
   Assets.map.scene.position.set(200, 0, 200);
   Assets.map.scene.traverse((c) => {
-    c.castShadow = true;
     c.receiveShadow = true;
   });
   Scene.scene.add(Assets.map.scene);
 }
-
-// async function initMouseRay(config: { cam: Camera; player: Player }): Promise<{
-//   destroy(): Promise<void>;
-// }> {
-//   const mouseRay = new MouseRay(config.cam.cam, Assets.map.scene);
-//   mouseRay.subscribe((inter) => {
-//     if (inter[0] && !PathFinder.isPointInsideObstacle(inter[0].point)) {
-//       const path = PathFinder.resolve(
-//         new Point2D(config.player.obj.position.x, config.player.obj.position.z),
-//         new Point2D(inter[0].point.x, inter[0].point.z),
-//       );
-//       config.player.setPath(path);
-//     }
-//   });
-
-//   return {
-//     async destroy() {
-//       await mouseRay.destroy();
-//     },
-//   };
-// }
 
 export async function createGame(config: GameConfig): Promise<Game> {
   config.onReady = async () => {

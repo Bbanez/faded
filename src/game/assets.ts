@@ -36,9 +36,10 @@ export async function loadAssets(): Promise<void> {
     },
   ]);
 
-  Loader.onLoaded((item, data) => {
+  const unsub = Loader.onLoaded((item, data) => {
     const key = item.name as keyof Assets;
     Assets[key] = data as never;
   });
   await Loader.run();
+  unsub();
 }

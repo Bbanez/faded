@@ -4,11 +4,20 @@ import type { Camera, CameraConfig } from './types';
 
 export async function createCamera(config: CameraConfig): Promise<Camera> {
   const camOffset = {
-    x: -15,
-    z: 20,
-    y: 30,
+    x: -5,
+    z: 10,
+    y: 15,
   };
-  const camera = new PerspectiveCamera();
+  const fovFn = FunctionBuilder.linear2D([
+    [740 / 130, 10],
+    [1920 / 1080, 50],
+  ]);
+  const camera = new PerspectiveCamera(
+    fovFn(window.innerWidth / window.innerHeight),
+  );
+  window.addEventListener('resize', () => {
+    camera.fov = fovFn(window.innerWidth / window.innerHeight);
+  });
   camera.position.set(
     camOffset.x + config.player.obj.position.x,
     camOffset.y,

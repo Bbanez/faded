@@ -1,0 +1,27 @@
+.assetLoader {
+  display: none;
+  position: fixed;
+  top: 5px;
+  left: 5px;
+  max-width: 350px;
+
+  &_visible {
+    display: flex;
+  }
+
+  &--prec {
+    margin-right: 5px;
+  }
+
+  &--bar {
+    display: flex;
+    width: 50px;
+    padding: 1px;
+    border: 1px solid rgb(var(--light));
+    margin-right: 10px;
+
+    &-progress {
+      background-color: rgb(var(--light));
+    }
+  }
+}
