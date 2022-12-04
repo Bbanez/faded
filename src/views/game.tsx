@@ -24,6 +24,7 @@ const component = defineComponent({
           element: container.value,
           // frameTicker: true,
         });
+        await game.views.charSelection.load('a');
         Panel.addGroup({
           name: 'Ticker',
           extended: true,
@@ -59,8 +60,17 @@ const component = defineComponent({
 
     return () => (
       <div class="main">
+        <button
+          onClick={() => {
+            if (game) {
+              game.views.charSelection.changeCharacter('');
+            }
+          }}
+        >
+          Test
+        </button>
         <div class="faded" ref={container} />
-        {window.location.host.startsWith('localhost:') && <DevPanel />}
+        {window.location.host.startsWith('localhost:1') && <DevPanel />}
         <AssetLoader />
       </div>
     );

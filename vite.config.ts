@@ -9,6 +9,6 @@ export default defineConfig({
     host: '0.0.0.0',
   },
   optimizeDeps: {
-    include: ['three', 'svemir'],
+    include: ['three', 'svemir', '@banez/browser-storage'],
   },
 });

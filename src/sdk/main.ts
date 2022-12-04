@@ -1,6 +1,6 @@
 import { createQueue } from '@banez/queue';
 import { QueueError } from '@banez/queue/types';
-import { createStorage } from '@banez/storage';
+import { createStorage } from '@banez/browser-storage';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import { SocketHandler } from './socket';
@@ -21,7 +21,7 @@ export class Sdk {
   private refreshQueue = createQueue<boolean>();
 
   public storage = createStorage({
-    prfx: 'faded',
+    scope: 'faded',
   });
   public store = createStore();
   public accessTokenRaw: string | null;

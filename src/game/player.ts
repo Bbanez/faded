@@ -5,12 +5,12 @@ import {
   LoopOnce,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   PlaneGeometry,
   Raycaster,
   SkeletonHelper,
   Vector3,
 } from 'three';
-import { Assets } from './assets';
 import type {
   Camera,
   PlayerConfig,
@@ -47,14 +47,15 @@ export class Player extends Entity {
   private movePlane: Mesh;
   private ray = new Raycaster();
   private yRayDir = new Vector3(0, -1, 0);
-  private speed = 0.05;
+  private speed = 0.09;
   private animSpeedFn = FunctionBuilder.linear2D([
     [0, 0],
-    [0.05, 1],
+    [this.speed, 1],
   ]);
+  private ground: Object3D | Group | Mesh;
   private animMixer: AnimationMixer;
   private anims: Animations = {} as never;
-  private activeAnim: keyof PlayerModel = 'idle';
+  private activeAnim: keyof Animations = 'idle';
   private rollAnim = {
     scale: 1.7,
     fadeIn: 0.1,
@@ -95,8 +96,14 @@ export class Player extends Entity {
 
   constructor(config: PlayerConfig) {
     super(config);
+    this.obj.traverse((e) => {
+      e.castShadow = true;
+    });
     Scene.scene.add(this.obj);
+    this.ground = config.ground;
     this.skeleton = new SkeletonHelper(this.obj);
+    const bra = this.obj.children[this.obj.children.length - 1];
+    bra.position.set(100, 100, 100000);
     this.animMixer = new AnimationMixer(this.obj);
     for (const _name in config.model) {
       const name = _name as keyof Animations;
@@ -131,56 +138,60 @@ export class Player extends Entity {
         this.calcYPosition();
         this.animMixer.update(sec);
       }),
-      Keyboard.subscribe(KeyboardEventType.KEY_DOWN, (state) => {
-        if (state.shift) {
-          if (
-            this.dash.count > 0 &&
-            !this.dash.active &&
-            (this.move.x !== 0 || this.move.z !== 0)
-          ) {
-            this.dash.count--;
-            this.dash.active = true;
-            this.dash.ticks = 0;
-            this.dash.multi = this.dash.multiMax;
-            this.anims[this.activeAnim].stop();
-            this.anims.fRoll.reset();
-            this.anims.fRoll.fadeIn(this.rollAnim.fadeIn);
-            this.anims.fRoll.time = this.rollAnim.time;
-            // this.anims.fRoll.fadeOut(this.rollAnim.fadeOut);
-            this.anims.fRoll.play();
-          }
-        }
-        this.setMove(state);
-      }),
-      Keyboard.subscribe(KeyboardEventType.KEY_UP, (state) => {
-        this.setMove(state);
-      }),
-      Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state) => {
-        clearTimeout(mouseMoveDebounce);
-        mouseMoveDebounce = setTimeout(() => {
-          if (this.cam) {
-            const pointer = {
-              x: 0,
-              y: 0,
-            };
-            pointer.x = (state.x / window.innerWidth) * 2 - 1;
-            pointer.y = -(state.y / window.innerHeight) * 2 + 1;
-            this.ray.setFromCamera(pointer, this.cam.cam);
-            const inters = this.ray.intersectObject(this.movePlane);
-            if (inters[0]) {
-              const inter = inters[0];
-              const rx = inter.point.x - this.obj.position.x;
-              const rz = inter.point.z - this.obj.position.z;
-              const d = Math.sqrt(rx * rx + rz * rz);
-              const theta = Math.acos(rx / d);
-              if (!isNaN(theta)) {
-                this.obj.rotation.y = rz < 0 ? theta + PI12 : -theta + PI12;
-              }
+    );
+    if (!config.disableControls) {
+      this.unsub.push(
+        Keyboard.subscribe(KeyboardEventType.KEY_DOWN, (state) => {
+          if (state.shift) {
+            if (
+              this.dash.count > 0 &&
+              !this.dash.active &&
+              (this.move.x !== 0 || this.move.z !== 0)
+            ) {
+              this.dash.count--;
+              this.dash.active = true;
+              this.dash.ticks = 0;
+              this.dash.multi = this.dash.multiMax;
+              this.anims[this.activeAnim].stop();
+              this.anims.fRoll.reset();
+              this.anims.fRoll.fadeIn(this.rollAnim.fadeIn);
+              this.anims.fRoll.time = this.rollAnim.time;
+              // this.anims.fRoll.fadeOut(this.rollAnim.fadeOut);
+              this.anims.fRoll.play();
             }
           }
-        }, 5);
-      }),
-    );
+          this.setMove(state);
+        }),
+        Keyboard.subscribe(KeyboardEventType.KEY_UP, (state) => {
+          this.setMove(state);
+        }),
+        Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state) => {
+          clearTimeout(mouseMoveDebounce);
+          mouseMoveDebounce = setTimeout(() => {
+            if (this.cam) {
+              const pointer = {
+                x: 0,
+                y: 0,
+              };
+              pointer.x = (state.x / window.innerWidth) * 2 - 1;
+              pointer.y = -(state.y / window.innerHeight) * 2 + 1;
+              this.ray.setFromCamera(pointer, this.cam.cam);
+              const inters = this.ray.intersectObject(this.movePlane);
+              if (inters[0]) {
+                const inter = inters[0];
+                const rx = inter.point.x - this.obj.position.x;
+                const rz = inter.point.z - this.obj.position.z;
+                const d = Math.sqrt(rx * rx + rz * rz);
+                const theta = Math.acos(rx / d);
+                if (!isNaN(theta)) {
+                  this.obj.rotation.y = rz < 0 ? theta + PI12 : -theta + PI12;
+                }
+              }
+            }
+          }, 5);
+        }),
+      );
+    }
     Panel.addGroup({
       name: 'Player',
       extended: false,
@@ -346,10 +357,10 @@ export class Player extends Entity {
       new Vector3(this.obj.position.x, 100, this.obj.position.z),
       this.yRayDir,
     );
-    const intersect = this.ray.intersectObject(Assets.map.scene, true);
+    const intersect = this.ray.intersectObject(this.ground, true);
     if (intersect[0]) {
-      const heightOffset = (this.bb.max.y - this.bb.min.y) / 2;
-      this.obj.position.y = intersect[0].point.y + heightOffset;
+      // const heightOffset = (this.bb.max.y - this.bb.min.y) / 2;
+      this.obj.position.y = intersect[0].point.y;
     }
     const newPosition = [0, 0];
     if (this.move.x !== 0) {
@@ -386,13 +397,17 @@ export class Player extends Entity {
         this.anims[this.activeAnim].play();
       }
     }
+    // const bra = this.obj.children[this.obj.children.length - 1];
+    // bra.applyMatrix4(new Matrix4().makeTranslation(-1, -1, -1));
   }
 
   async destroy() {
     this.unsub.forEach((f) => f());
+    Scene.scene.remove(this.obj);
   }
 }
 
+const playerModel: PlayerModel = {} as never;
 export async function createPlayer(
   _config: PlayerCreateConfig,
 ): Promise<Player> {
@@ -402,7 +417,6 @@ export async function createPlayer(
   //     color: 0xaa9900,
   //   }),
   // );
-  const playerModel: PlayerModel = {} as never;
   Loader.register([
     {
       type: 'fbx',
@@ -452,11 +466,13 @@ export async function createPlayer(
   player.traverse((c) => {
     c.castShadow = true;
   });
-  player.scale.setScalar(0.009);
-  player.position.set(110, 0, 285);
+  player.scale.setScalar(0.02);
+  player.position.set(0, 0, 0);
 
   return new Player({
     obj: player,
     model: playerModel,
+    ground: _config.ground,
+    disableControls: _config.disableControls,
   });
 }

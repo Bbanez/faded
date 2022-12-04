@@ -7,7 +7,7 @@ import { Sdk } from './sdk/main';
 
 initSdk(
   new Sdk({
-    apiOrigin: 'http://localhost:1280',
+    apiOrigin: 'http://localhost:1281',
   }),
 );
 

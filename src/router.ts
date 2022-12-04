@@ -57,6 +57,7 @@ const noAuthRoutes = [
   '/sign-up/complete',
   '/forgot-password',
   '/reset-password',
+  '/game'
 ];
 let sdk: Sdk;
 

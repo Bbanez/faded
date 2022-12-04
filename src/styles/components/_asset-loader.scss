@@ -1,16 +1,24 @@
 .assetLoader {
   display: none;
   position: fixed;
-  top: 5px;
-  left: 5px;
+  bottom: 5px;
+  right: 5px;
   max-width: 350px;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 3px 5px;
 
   &_visible {
     display: flex;
   }
 
+  &--file {
+    margin-right: 10px;
+  }
+
   &--prec {
     margin-right: 5px;
+    font-size: 10px;
+    margin: auto 5px auto 0;
   }
 
   &--bar {
@@ -18,7 +26,6 @@
     width: 50px;
     padding: 1px;
     border: 1px solid rgb(var(--light));
-    margin-right: 10px;
 
     &-progress {
       background-color: rgb(var(--light));

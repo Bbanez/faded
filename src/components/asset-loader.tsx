@@ -19,6 +19,7 @@ export const AssetLoader = defineComponent({
 
     return () => (
       <div class={`assetLoader ${show.value ? 'assetLoader_visible' : ''}`}>
+        <div class="assetLoader--file">{file.value}</div>
         <div class="assetLoader--prec">{progress.value}%</div>
         <div class="assetLoader--bar">
           <div
@@ -26,7 +27,6 @@ export const AssetLoader = defineComponent({
             style={{ width: `${progress.value}%` }}
           />
         </div>
-        <div class="assetLoader--file">{file.value}</div>
       </div>
     );
   },

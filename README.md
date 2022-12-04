@@ -12,7 +12,7 @@
 - [Fade race](#fade-race)
 - [Character classes]()
   - [Rogue]()
-    - [Archer]()
+    - [Ranger]()
     - [Assassin]()
   - [Memist]()
     - [Enhancer]()
@@ -23,9 +23,9 @@
   - [Knight]()
     - [Guardian]()
     - [Paladin]()
-  - [Shaman]()
-    - [Ankyman]()
-    - [Caster]()
+  - [Caster]()
+    - [Chaos]()
+    - [Control]()
 
 ## Timeline
 
@@ -124,4 +124,31 @@ Tadia is full of weird trees and plants with [Chorus Crystals](#chorus-crystal) 
 
 ## Character classes
 
-### Ranger
+There are 5 main classes of which every has 2 specializations. Overview of all classes and specializations are provided in the table below.
+
+Class     | Specialization | Type of attack | DPS Rating | Heal Abilities | BUFF/DEBUFF Abilities | Tank ability | Race
+--------- | -------------- | -------------- | ---------- | -------------- | --------------------- | ------------ | ----
+Rogue     | Ranger         | Range          | High       | None           | Simple self/AOE       | Very Low     | Human, Anky
+Rogue     | Assassin       | Melee          | Very High  | None           | Simple self           | Very Low     | Human, Anky
+Memist    | Enhencer       | Magic          | Low        | Medium         | Very High             | Medium       | Human, Anky
+Memist    | Cleric         | Magic          | Low        | Very High      | Medium                | High         | Human, Anky
+Gladiator | Berserk        | Melee          | High       | Low            | Self Medium           | Medium       | Human
+Gladiator | Dualist        | Melee          | High       | Low            | Self Medium           | Low          | Human
+Knight    | Guardian       | Melee          | Low        | Medium         | Low                   | Very High    | Human
+Knight    | Paladin        | Melee          | Low        | High           | High                  | High         | Human
+Caster    | Chaos          | Magic          | Very High  | Very Low       | Self Low              | Very Low     | Anky
+Caster    | Control        | Magic          | High       | Very Low       | Self Medium           | Very Low     | Anky 
+
+### Rogue
+
+Rogue is a high damage dealing class which is very easy to kill because of they're low defense and light armor. Even though whey are week on defense, they are able to do a lot of damage in short time. In addition to this, they are very agile and can escape the battle that they cannot win.
+
+#### Rogue - Ranger
+
+Ranger is a Rogue specialization focused on doing high damage from the distance. They're main weapon is the Bow, but if the battle comes close to them, they can use daggers to injure and confuse the enemy which allows them time to escape. Ranger is deadly from a distance but requires a high level of skill to hit the enemy. Ranger should always stay at a distance, do not allow your enemies to come close, that can be the end of you!
+
+#### Rogue - Assassin
+
+Assassin the highest DPS call in the game but that reputation comes with the cost. Assassin is deadly only if it cannot be seen. They're very agile but fragile. Your role is to do high amount of damage in a short time and escape the danger zone. You could say the this class is "hit and run"!
+
+
