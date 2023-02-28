@@ -1,0 +1,12 @@
+u001:
+  msg: User with ID "%id%" does not exist.
+u002:
+  msg: User with username "%username%" already exists.
+u003:
+  msg: This email has a bounce record, please use a different email address.
+u004:
+  msg: Invalid user ID "%id%".
+u005:
+  msg: Your account is permanently blocked.
+u006:
+  msg: Your account is temporary blocked to %data%

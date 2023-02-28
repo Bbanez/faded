@@ -1,0 +1,8 @@
+ch001:
+  msg: Character with ID "%id%" does not exist.
+ch002:
+  msg: Character race with ID "%id%" does not exist.
+ch003:
+  msg: Character class with ID "%id%" does not exist.
+ch004:
+  msg: Character with name "%name%" already exists.

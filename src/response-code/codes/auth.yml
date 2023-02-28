@@ -1,0 +1,14 @@
+a001:
+  msg: Missing authorization.
+a002:
+  msg: Bad authorization encoding.
+a003:
+  msg: Invalid email and/or password.
+a004:
+  msg: Failed to update User in the database.
+a005:
+  msg: Invalid authorization.
+a006:
+  msg: Cannot access this organization.
+a007:
+  msg: Please verify your email.
