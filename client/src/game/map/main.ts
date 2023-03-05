@@ -1,26 +1,32 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
+import { PlatformChunk, SolidChunk } from '../chunk';
 import { Config } from '../config';
-import { Game } from '../main';
+import { Layers } from '../layers';
 import { FunctionBuilder, type Linear2DFn } from '../math/function-builder';
 import { getMapChunkData } from '../util';
 
 export interface MapChunksOutput {
-  bottomChunk: [number, number] | null;
-  leftChunk: [number, number] | null;
-  rightChunk: [number, number] | null;
-  topChunk: [number, number] | null;
+  bottom: Array<SolidChunk | PlatformChunk | null>;
+  top: Array<SolidChunk | PlatformChunk | null>;
+  left: Array<SolidChunk | PlatformChunk | null>;
+  right: Array<SolidChunk | PlatformChunk | null>;
+  // bottomChunk: SolidChunk | PlatformChunk | null;
+  // leftChunk: SolidChunk | PlatformChunk | null;
+  // rightChunk: SolidChunk | PlatformChunk | null;
+  // leftChunk2: SolidChunk | PlatformChunk | null;
+  // rightChunk2: SolidChunk | PlatformChunk | null;
+  // leftChunk3: SolidChunk | PlatformChunk | null;
+  // rightChunk3: SolidChunk | PlatformChunk | null;
+  // topChunk: SolidChunk | PlatformChunk | null;
 }
 
 export class Map {
-  static container = new Container();
-  static mapContainer = new Container();
+  // static mapContainer = new Container();
   static locked = [false, false];
-  static mapData: {
-    solidChunks: boolean[][];
-    platformChunks: boolean[][];
-    width: number;
-    height: number;
-  };
+  static solidChunks: (SolidChunk | null)[][];
+  static platformChunks: (PlatformChunk | null)[][];
+  static sizeInChunks: [number, number];
+  static sizeInPixels: [number, number];
   static chunkFn: Linear2DFn;
   static bp = new Graphics();
 
@@ -29,82 +35,102 @@ export class Map {
     Map.bp.drawCircle(0, 0, 3);
     Map.bp.endFill();
     Map.destroy();
-    Map.container = new Container();
-    const bg = new Graphics();
-    bg.zIndex = -2;
-    bg.beginFill(0x220055);
-    bg.drawRect(0, 0, window.innerWidth, window.innerHeight);
-    bg.endFill();
-    Map.container.addChild(bg);
+    // Map.mapContainer = new Container();
     const mapData = await getMapChunkData('/map/test.png');
+    const solidLayer = Sprite.from('/map/test-l0.png');
+    const fol1Layer = Sprite.from('/map/test-l1.png');
+    const fol2Layer = Sprite.from('/map/test-l2.png');
+    const fol3Layer = Sprite.from('/map/test-l3.png');
+    Layers[4].addChild(fol3Layer);
+    Layers[3].addChild(fol2Layer);
+    Layers[2].addChild(fol1Layer);
+    Layers[0].addChild(solidLayer);
     if (!mapData) {
       throw Error('Failed to load map data.');
     }
-    Map.mapData = mapData;
+    Map.sizeInChunks = [mapData.width, mapData.height];
+    Map.sizeInPixels = [
+      mapData.width * Config.chunkSize,
+      mapData.height * Config.chunkSize,
+    ];
+    Map.solidChunks = [];
+    Map.platformChunks = [];
     const solidContainer = new Container();
     const platformContainer = new Container();
     for (let y = 0; y < mapData.solidChunks.length; y++) {
+      if (y > 0) {
+        Map.solidChunks.push([]);
+        Map.platformChunks.push([]);
+      }
       for (let x = 0; x < mapData.solidChunks[y].length; x++) {
+        if (!Map.solidChunks[y]) {
+          Map.solidChunks[y] = [];
+          Map.platformChunks[y] = [];
+        }
         const sValue = mapData.solidChunks[y][x];
         const pValue = mapData.platformChunks[y][x];
         if (sValue) {
-          const rect = new Graphics();
-          rect.beginFill(0xff0000);
-          rect.drawRect(
-            x * Config.chunkSize,
-            y * Config.chunkSize,
-            Config.chunkSize,
-            Config.chunkSize,
+          const chunk = new SolidChunk(
+            [x * Config.chunkSize, y * Config.chunkSize],
+            [x, y],
+            solidContainer,
           );
-          rect.endFill();
-          solidContainer.addChild(rect);
+          Map.solidChunks[y].push(chunk);
+          chunk.show();
+        } else {
+          Map.solidChunks[y].push(null);
         }
         if (pValue) {
-          const rect = new Graphics();
-          rect.beginFill(0x0000ff);
-          rect.drawRect(
-            x * Config.chunkSize,
-            y * Config.chunkSize,
-            Config.chunkSize,
-            Config.chunkSize,
+          const chunk = new PlatformChunk(
+            [x * Config.chunkSize, y * Config.chunkSize],
+            [x, y],
+            platformContainer,
           );
-          rect.endFill();
-          platformContainer.addChild(rect);
+          chunk.show();
+          Map.platformChunks[y].push(chunk);
+        } else {
+          Map.platformChunks[y].push(null);
         }
       }
     }
-    Map.container.addChild(solidContainer);
-    Map.container.addChild(platformContainer);
-    Map.mapContainer = new Container();
-    Map.mapContainer.addChild(solidContainer);
-    Map.mapContainer.addChild(platformContainer);
-    Map.mapContainer.addChild(Map.bp);
-    Game.app.stage.addChild(Map.mapContainer);
-    Map.mapContainer.position.set(
-      0,
-      window.innerHeight - mapData.height * Config.chunkSize,
-    );
+    Layers[0].addChild(solidContainer);
+    Layers[0].addChild(platformContainer);
+    Layers[0].addChild(Map.bp);
+    Map.setBgPos(0, window.innerHeight - mapData.height * Config.chunkSize);
+    // Game.app.stage.addChild(Map.mapContainer);
+    // Map.mapContainer.position.set(
+    //   0,
+    //   window.innerHeight - mapData.height * Config.chunkSize,
+    // );
     Map.chunkFn = FunctionBuilder.linear2D([
       [0, 0],
       [Config.chunkSize, 1],
     ]);
   }
 
+  private static setBgPos(x: number, y: number) {
+    Layers[0].position.set(x, y);
+    Layers[2].position.set(x, y);
+    Layers[3].position.set(x, y);
+    Layers[4].position.set(x, y);
+  }
+
   static recalcPosition(x: number, y: number): void {
     const pos = [-x + window.innerWidth / 2, -y + window.innerHeight / 2];
-    Map.mapContainer.x = pos[0];
+    Map.setBgPos(pos[0], pos[1]);
+    // Map.mapContainer.x = pos[0];
     if (
       x > 0 + window.innerWidth / 2 &&
-      x < Map.mapData.width * Config.chunkSize - window.innerWidth / 2
+      x < Map.sizeInPixels[0] - window.innerWidth / 2
     ) {
       Map.locked[0] = false;
     } else {
       Map.locked[0] = true;
     }
-    Map.mapContainer.y = pos[1];
+    // Map.mapContainer.y = pos[1];
     if (
       y > 0 + window.innerHeight / 2 &&
-      y < Map.mapData.height * Config.chunkSize - window.innerHeight / 2
+      y < Map.sizeInPixels[1] - window.innerHeight / 2
     ) {
       Map.locked[1] = false;
     } else {
@@ -116,59 +142,120 @@ export class Map {
     position: [number, number],
     speed: [number, number],
   ): MapChunksOutput {
-    const rawChunks = [
-      Map.chunkFn(position[0]),
-      Map.chunkFn(position[1] + Config.chunkSize * 1.25),
-    ];
-    Map.bp.position.set(position[0], position[1] + Config.chunkSize * 1.25);
-    const atChunk = [
-      parseInt(`${Map.chunkFn(position[0])}`),
-      parseInt(`${Map.chunkFn(position[1] + Config.chunkSize * 2.5)}`),
-    ];
+    // const rawChunks = [
+    //   Map.chunkFn(position[0]),
+    //   Map.chunkFn(position[1] + Config.chunkSize * 1.25),
+    // ];
+    Map.bp.position.set(
+      position[0],
+      position[1] + Config.chunkSize * 1.25 + speed[1],
+    );
     const output: MapChunksOutput = {
-      bottomChunk: null,
-      leftChunk: null,
-      rightChunk: null,
-      topChunk: null,
+      bottom: [],
+      left: [],
+      right: [],
+      top: [],
     };
-    const bottomChunkIndex = atChunk[1] - 1;
-    if (speed[1] >= 0) {
-      if (
-        Map.mapData.solidChunks[bottomChunkIndex] &&
-        Map.mapData.solidChunks[bottomChunkIndex][atChunk[0]]
-      ) {
-        output.bottomChunk = [atChunk[0], bottomChunkIndex];
+    const inChunk = [
+      parseInt(`${Map.chunkFn(position[0])}`),
+      parseInt(
+        `${Map.chunkFn(position[1] + Config.chunkSize * 1.25 - speed[1] - 1)}`,
+      ),
+    ];
+    const bottomLeftPoint = [
+      parseInt(`${Map.chunkFn(position[0] - Config.chunkSize / 2)}`),
+      parseInt(`${Map.chunkFn(position[1] + Config.chunkSize * 2.5)}`) - 1,
+    ];
+    const bottomRightPoint = [
+      parseInt(`${Map.chunkFn(position[0] + Config.chunkSize / 2)}`),
+      parseInt(`${Map.chunkFn(position[1] + Config.chunkSize * 2.5)}`) - 1,
+    ];
+    const topChunkIndex = parseInt(
+      `${Map.chunkFn(position[1] - Config.chunkSize * 1.25)}`,
+    );
+    output.bottom.push(
+      Map.solidChunks[bottomLeftPoint[1]]
+        ? Map.solidChunks[bottomLeftPoint[1]][bottomLeftPoint[0]]
+        : null,
+      Map.solidChunks[bottomRightPoint[1]]
+        ? Map.solidChunks[bottomRightPoint[1]][bottomRightPoint[0]]
+        : null,
+    );
+    output.left.push(
+      Map.solidChunks[inChunk[1]]
+        ? Map.solidChunks[inChunk[1]][inChunk[0] - 1]
+        : null,
+      Map.solidChunks[inChunk[1] - 1]
+        ? Map.solidChunks[inChunk[1] - 1][inChunk[0] - 1]
+        : null,
+      Map.solidChunks[inChunk[1] - 2]
+        ? Map.solidChunks[inChunk[1] - 2][inChunk[0] - 1]
+        : null,
+    );
+    output.right.push(
+      Map.solidChunks[inChunk[1]]
+        ? Map.solidChunks[inChunk[1]][inChunk[0] + 1]
+        : null,
+      Map.solidChunks[inChunk[1] - 1]
+        ? Map.solidChunks[inChunk[1] - 1][inChunk[0] + 1]
+        : null,
+      Map.solidChunks[inChunk[1] - 2]
+        ? Map.solidChunks[inChunk[1] - 2][inChunk[0] + 1]
+        : null,
+    );
+    output.top.push(
+      Map.solidChunks[topChunkIndex]
+        ? Map.solidChunks[topChunkIndex][inChunk[0]]
+        : null,
+    );
+    if (speed[1] >= 0 && !output.bottom[0]) {
+      output.bottom[0] = Map.platformChunks[bottomLeftPoint[1]]
+        ? Map.platformChunks[bottomLeftPoint[1]][bottomLeftPoint[0]]
+        : null;
+    }
+    if (speed[1] >= 0 && !output.bottom[1]) {
+      output.bottom[1] = Map.platformChunks[bottomRightPoint[1]]
+        ? Map.platformChunks[bottomRightPoint[1]][bottomRightPoint[0]]
+        : null;
+    }
+    for (let i = 0; i < output.left.length; i++) {
+      const leftChunk = output.left[i];
+      if (leftChunk && output.bottom[0] && output.bottom[0] === leftChunk) {
+        output.bottom[0] = null;
       }
-      if (!output.bottomChunk) {
-        if (
-          Map.mapData.platformChunks[bottomChunkIndex] &&
-          Map.mapData.platformChunks[bottomChunkIndex][atChunk[0]] &&
-          bottomChunkIndex + Map.chunkFn(speed[1] * 2) > rawChunks[1]
-        ) {
-          output.bottomChunk = [atChunk[0], bottomChunkIndex];
+    }
+    for (let i = 0; i < output.right.length; i++) {
+      const rightChunk = output.right[i];
+      if (rightChunk && output.bottom[1] && output.bottom[1] === rightChunk) {
+        output.bottom[1] = null;
+      }
+    }
+    for (let i = 0; i < Map.solidChunks.length; i++) {
+      for (let j = 0; j < Map.solidChunks[i].length; j++) {
+        const chunk = Map.solidChunks[i][j];
+        const pChunk = Map.platformChunks[i][j];
+        if (chunk) {
+          chunk.disableHighlight();
+        }
+        if (pChunk) {
+          pChunk.disableHighlight();
         }
       }
     }
-    console.log(Map.mapData.solidChunks[atChunk[0] + 1][atChunk[1]]);
-    if (
-      Map.mapData.solidChunks[atChunk[0] + 1] &&
-      Map.mapData.solidChunks[atChunk[0] + 1][atChunk[1]]
-    ) {
-      output.rightChunk = [atChunk[0] + 1, atChunk[1]];
-    }
     for (const _key in output) {
       const key = _key as keyof MapChunksOutput;
-      const value = output[key];
-      if (value) {
-        value[0] = value[0] * Config.chunkSize;
-        value[1] = value[1] * Config.chunkSize;
+      if (output[key]) {
+        output[key].forEach((e) => {
+          if (e) {
+            e.highlight();
+          }
+        });
       }
     }
     return output;
   }
 
   static destroy() {
-    Map.container.destroy();
-    Map.mapContainer.destroy();
+    // Map.mapContainer.destroy();
   }
 }

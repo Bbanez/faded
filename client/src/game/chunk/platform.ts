@@ -1,18 +1,12 @@
-import { Graphics } from 'pixi.js';
-import { Config } from '../config';
+import type { Container } from 'pixi.js';
+import { Chunk } from './main';
 
-export class PlatformChunk {
-  public g: Graphics;
-
-  constructor(public position: [number, number]) {
-    this.g = new Graphics();
-    this.g.beginFill(0x0000ff);
-    this.g.drawRect(
-      this.position[0],
-      this.position[1],
-      Config.chunkSize,
-      Config.chunkSize,
-    );
-    this.g.endFill();
+export class PlatformChunk extends Chunk {
+  constructor(
+    public position: [number, number],
+    public index: [number, number],
+    public container: Container,
+  ) {
+    super('platform', position, index, container, 0x0000ff);
   }
 }
