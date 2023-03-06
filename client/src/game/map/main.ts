@@ -1,6 +1,7 @@
-import { Container, Graphics, Sprite } from 'pixi.js';
+import { BaseTexture, Container, Graphics, Sprite } from 'pixi.js';
 import { Chunk, PlatformChunk, SolidChunk } from '../chunk';
 import { Config } from '../config';
+import type { ChunkSpriteMeta } from '../data';
 import { Layers } from '../layers';
 import { FunctionBuilder, type Linear2DFn } from '../math/function-builder';
 import { getMapChunkData } from '../util';
@@ -27,14 +28,14 @@ export class Map {
     Map.bp.endFill();
     Map.destroy();
     const mapData = await getMapChunkData('/map/test.png');
-    const solidLayer = Sprite.from('/map/test-l0.png');
-    const fol1Layer = Sprite.from('/map/test-l1.png');
-    const fol2Layer = Sprite.from('/map/test-l2.png');
-    const fol3Layer = Sprite.from('/map/test-l3.png');
-    Layers[4].addChild(fol3Layer);
-    Layers[3].addChild(fol2Layer);
+    // const solidLayer = Sprite.from('/map/test-l0.png');
+    const fol1Layer = Sprite.from('/map/bg-test.png');
+    // const fol2Layer = Sprite.from('/map/test-l2.png');
+    // const fol3Layer = Sprite.from('/map/test-l3.png');
+    // Layers[4].addChild(fol3Layer);
+    // Layers[3].addChild(fol2Layer);
     Layers[2].addChild(fol1Layer);
-    Layers[0].addChild(solidLayer);
+    // Layers[0].addChild(solidLayer);
     if (!mapData) {
       throw Error('Failed to load map data.');
     }
@@ -45,6 +46,9 @@ export class Map {
     ];
     Map.solidChunks = [];
     Map.platformChunks = [];
+    const chunkSpiteTexture = BaseTexture.from(
+      '/map/chunk-design-grid-test.png',
+    );
     const solidContainer = new Container();
     const platformContainer = new Container();
     for (let y = 0; y < mapData.solidChunks.length; y++) {
@@ -66,7 +70,7 @@ export class Map {
             solidContainer,
           );
           Map.solidChunks[y].push(chunk);
-          chunk.show();
+          // chunk.show();
         } else {
           Map.solidChunks[y].push(null);
         }
@@ -76,15 +80,33 @@ export class Map {
             [x, y],
             platformContainer,
           );
-          chunk.show();
+          // chunk.show();
           Map.platformChunks[y].push(chunk);
         } else {
           Map.platformChunks[y].push(null);
         }
       }
     }
+    for (let y = 0; y < Map.solidChunks.length; y++) {
+      const row = Map.solidChunks[y];
+      for (let x = 0; x < row.length; x++) {
+        const chunk = row[x];
+        if (chunk) {
+          chunk.setSprite(chunkSpiteTexture, Map.chunkToType(chunk));
+        }
+      }
+    }
+    for (let y = 0; y < Map.platformChunks.length; y++) {
+      const row = Map.platformChunks[y];
+      for (let x = 0; x < row.length; x++) {
+        const chunk = row[x];
+        if (chunk) {
+          chunk.setSprite(chunkSpiteTexture, Map.chunkToType(chunk));
+        }
+      }
+    }
     Layers[0].addChild(solidContainer);
-    Layers[0].addChild(platformContainer);
+    Layers[2].addChild(platformContainer);
     Layers[0].addChild(Map.bp);
     Map.setBgPos(0, window.innerHeight - mapData.height * Config.chunkSize);
     Map.chunkFn = FunctionBuilder.linear2D([
@@ -100,7 +122,51 @@ export class Map {
     Layers[4].position.set(x, y);
   }
 
-  chunkAtIndex(x: number, y: number): Chunk | null {
+  static chunkToType(chunk: Chunk) {
+    const chunkType =
+      chunk instanceof SolidChunk ? 'solidChunks' : 'platformChunks';
+    const lc = Map[chunkType][chunk.index[1]][chunk.index[0] - 1];
+    const rc = Map[chunkType][chunk.index[1]][chunk.index[0] + 1];
+    const tc = Map[chunkType][chunk.index[1] - 1]
+      ? Map[chunkType][chunk.index[1] - 1][chunk.index[0]]
+      : null;
+    const bc = Map[chunkType][chunk.index[1] + 1]
+      ? Map[chunkType][chunk.index[1] + 1][chunk.index[0]]
+      : null;
+    let type: keyof ChunkSpriteMeta;
+    if (chunkType === 'solidChunks') {
+      if (!lc && !tc && rc && bc) {
+        type = 'stl';
+      } else if (lc && !tc && rc && bc) {
+        type = 'stm';
+      } else if (lc && !tc && !rc && bc) {
+        type = 'str';
+      } else if (!lc && tc && rc && bc) {
+        type = 'sml';
+      } else if (lc && tc && rc && bc) {
+        type = 'smm';
+      } else if (lc && tc && !rc && bc) {
+        type = 'smr';
+      } else if (!lc && tc && rc && !bc) {
+        type = 'sbl';
+      } else if (lc && tc && rc && !bc) {
+        type = 'sbm';
+      } else {
+        type = 'sbr';
+      }
+    } else {
+      if (!lc && !tc && rc && !bc) {
+        type = 'pl';
+      } else if (lc && !tc && rc && !bc) {
+        type = 'pm';
+      } else {
+        type = 'pr';
+      }
+    }
+    return type;
+  }
+
+  static chunkAtIndex(x: number, y: number): Chunk | null {
     return Map.solidChunks[y]
       ? Map.solidChunks[y][x]
         ? Map.solidChunks[y][x]
@@ -111,8 +177,6 @@ export class Map {
   }
 
   static recalcPosition(x: number, y: number): void {
-    const pos = [-x + window.innerWidth / 2, -y + window.innerHeight / 2];
-    Map.setBgPos(pos[0], pos[1]);
     // Map.mapContainer.x = pos[0];
     if (
       x > 0 + window.innerWidth / 2 &&
@@ -131,6 +195,8 @@ export class Map {
     } else {
       Map.locked[1] = true;
     }
+    const pos = [-x + window.innerWidth / 2, -y + window.innerHeight / 2];
+    Map.setBgPos(pos[0], pos[1]);
   }
 
   static getChunks(
@@ -225,28 +291,28 @@ export class Map {
         output.bottom[1] = null;
       }
     }
-    for (let i = 0; i < Map.solidChunks.length; i++) {
-      for (let j = 0; j < Map.solidChunks[i].length; j++) {
-        const chunk = Map.solidChunks[i][j];
-        const pChunk = Map.platformChunks[i][j];
-        if (chunk) {
-          chunk.disableHighlight();
-        }
-        if (pChunk) {
-          pChunk.disableHighlight();
-        }
-      }
-    }
-    for (const _key in output) {
-      const key = _key as keyof MapChunksOutput;
-      if (output[key]) {
-        output[key].forEach((e) => {
-          if (e) {
-            e.highlight();
-          }
-        });
-      }
-    }
+    // for (let i = 0; i < Map.solidChunks.length; i++) {
+    //   for (let j = 0; j < Map.solidChunks[i].length; j++) {
+    //     const chunk = Map.solidChunks[i][j];
+    //     const pChunk = Map.platformChunks[i][j];
+    //     if (chunk) {
+    //       chunk.disableHighlight();
+    //     }
+    //     if (pChunk) {
+    //       pChunk.disableHighlight();
+    //     }
+    //   }
+    // }
+    // for (const _key in output) {
+    //   const key = _key as keyof MapChunksOutput;
+    //   if (output[key]) {
+    //     output[key].forEach((e) => {
+    //       if (e) {
+    //         e.highlight();
+    //       }
+    //     });
+    //   }
+    // }
     return output;
   }
 

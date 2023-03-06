@@ -7,6 +7,10 @@ export class MathUtil {
     }
   }
 
+  static randomInInRange(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+  }
+
   static radToDeg(rad: number): number {
     return (180 / rad) * Math.PI;
   }

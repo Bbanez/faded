@@ -1,6 +1,7 @@
 import type { Container } from 'pixi.js';
 import type { Chunk } from './chunk';
 import { Config } from './config';
+import type { ChunkSpriteMeta } from './data';
 import { Keyboard, KeyboardEventType } from './keyboard';
 import { Map, type MapChunksOutput } from './map';
 import {
@@ -95,6 +96,38 @@ export class Player {
       Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {
         const worldPos = screenToWorldSpace(state.x, state.y, this);
         const chunkIndex = worldPositionToChunk(...worldPos);
+        const chunk = Map.solidChunks[chunkIndex[1]][chunkIndex[0]];
+        if (chunk) {
+          const lc = Map.solidChunks[chunk.index[1]][chunk.index[0] - 1];
+          const rc = Map.solidChunks[chunk.index[1]][chunk.index[0] + 1];
+          const tc = Map.solidChunks[chunk.index[1] - 1]
+            ? Map.solidChunks[chunk.index[1] - 1][chunk.index[0]]
+            : null;
+          const bc = Map.solidChunks[chunk.index[1] + 1]
+            ? Map.solidChunks[chunk.index[1] + 1][chunk.index[0]]
+            : null;
+          let type: keyof ChunkSpriteMeta;
+          if (!lc && !tc && rc && bc) {
+            type = 'stl';
+          } else if (lc && !tc && rc && bc) {
+            type = 'stm';
+          } else if (lc && !tc && !rc && bc) {
+            type = 'str';
+          } else if (!lc && tc && rc && bc) {
+            type = 'sml';
+          } else if (lc && tc && rc && bc) {
+            type = 'smm';
+          } else if (lc && tc && !rc && bc) {
+            type = 'smr';
+          } else if (!lc && tc && rc && !bc) {
+            type = 'sbl';
+          } else if (lc && tc && rc && !bc) {
+            type = 'sbm';
+          } else {
+            type = 'sbr';
+          }
+          console.log(type);
+        }
         console.log(worldPos, chunkIndex, isVisible(...worldPos, this));
       }),
     );
