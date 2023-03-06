@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
-import { PlatformChunk, SolidChunk } from '../chunk';
+import { Chunk, PlatformChunk, SolidChunk } from '../chunk';
 import { Config } from '../config';
 import { Layers } from '../layers';
 import { FunctionBuilder, type Linear2DFn } from '../math/function-builder';
@@ -10,18 +10,9 @@ export interface MapChunksOutput {
   top: Array<SolidChunk | PlatformChunk | null>;
   left: Array<SolidChunk | PlatformChunk | null>;
   right: Array<SolidChunk | PlatformChunk | null>;
-  // bottomChunk: SolidChunk | PlatformChunk | null;
-  // leftChunk: SolidChunk | PlatformChunk | null;
-  // rightChunk: SolidChunk | PlatformChunk | null;
-  // leftChunk2: SolidChunk | PlatformChunk | null;
-  // rightChunk2: SolidChunk | PlatformChunk | null;
-  // leftChunk3: SolidChunk | PlatformChunk | null;
-  // rightChunk3: SolidChunk | PlatformChunk | null;
-  // topChunk: SolidChunk | PlatformChunk | null;
 }
 
 export class Map {
-  // static mapContainer = new Container();
   static locked = [false, false];
   static solidChunks: (SolidChunk | null)[][];
   static platformChunks: (PlatformChunk | null)[][];
@@ -35,7 +26,6 @@ export class Map {
     Map.bp.drawCircle(0, 0, 3);
     Map.bp.endFill();
     Map.destroy();
-    // Map.mapContainer = new Container();
     const mapData = await getMapChunkData('/map/test.png');
     const solidLayer = Sprite.from('/map/test-l0.png');
     const fol1Layer = Sprite.from('/map/test-l1.png');
@@ -97,11 +87,6 @@ export class Map {
     Layers[0].addChild(platformContainer);
     Layers[0].addChild(Map.bp);
     Map.setBgPos(0, window.innerHeight - mapData.height * Config.chunkSize);
-    // Game.app.stage.addChild(Map.mapContainer);
-    // Map.mapContainer.position.set(
-    //   0,
-    //   window.innerHeight - mapData.height * Config.chunkSize,
-    // );
     Map.chunkFn = FunctionBuilder.linear2D([
       [0, 0],
       [Config.chunkSize, 1],
@@ -113,6 +98,16 @@ export class Map {
     Layers[2].position.set(x, y);
     Layers[3].position.set(x, y);
     Layers[4].position.set(x, y);
+  }
+
+  chunkAtIndex(x: number, y: number): Chunk | null {
+    return Map.solidChunks[y]
+      ? Map.solidChunks[y][x]
+        ? Map.solidChunks[y][x]
+        : Map.platformChunks[y]
+        ? Map.platformChunks[y][x]
+        : null
+      : null;
   }
 
   static recalcPosition(x: number, y: number): void {

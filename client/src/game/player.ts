@@ -1,25 +1,29 @@
 import type { Container } from 'pixi.js';
-import type { PlatformChunk, SolidChunk } from './chunk';
+import type { Chunk } from './chunk';
 import { Config } from './config';
 import { Keyboard, KeyboardEventType } from './keyboard';
 import { Map, type MapChunksOutput } from './map';
-import { MathUtil } from './math';
+import {
+  isVisible,
+  MathUtil,
+  screenToWorldSpace,
+  worldPositionToChunk,
+} from './math';
 import { FunctionBuilder } from './math/function-builder';
 import { Mouse, MouseEventType } from './mouse';
 import { Ticker } from './ticker';
 
 export class Player {
-  private fallSpeed = 3;
+  private fallSpeed = 1.6;
   private width = 0;
   private height = 0;
   private accDamp: [number, number] = [0, 0];
   private acc: [number, number] = [0, 0];
   private speed: [number, number] = [0, 0];
   private unsubs: Array<() => void> = [];
-  private position: [number, number] = [1, 1];
   private jumpData = {
     ticks: 0,
-    maxTicks: 13,
+    maxTicks: 10,
     strength: 1.1,
     ticksToAccFn: FunctionBuilder.linear2D([
       [0, 1.1],
@@ -29,6 +33,8 @@ export class Player {
     active: false,
   };
   private surroundingChunks: MapChunksOutput | null = null;
+
+  public position: [number, number] = [1, 1];
 
   constructor(
     public container: Container,
@@ -58,9 +64,9 @@ export class Player {
           if (state[' ']) {
             this.jumpData.active = true;
           }
-          if (state.w) {
-            this.acc[1] = -this.ps * 0.4;
-          }
+          // if (state.w) {
+          //   this.acc[1] = -this.ps * 0.4;
+          // }
           if (state.s) {
             this.acc[1] = this.ps * 0.4;
           }
@@ -87,34 +93,11 @@ export class Player {
         this.calcPosition();
       }),
       Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {
-        const clickWorldPos = this.screenToWorldPosition(state.x, state.y);
-        console.log(clickWorldPos);
-        clickWorldPos[2]?.highlight();
+        const worldPos = screenToWorldSpace(state.x, state.y, this);
+        const chunkIndex = worldPositionToChunk(...worldPos);
+        console.log(worldPos, chunkIndex, isVisible(...worldPos, this));
       }),
     );
-  }
-
-  private screenToWorldPosition(
-    x: number,
-    y: number,
-  ): [number, number, SolidChunk | PlatformChunk | null] {
-    const r1x = this.position[0] - window.innerWidth / 2;
-    const r1y = this.position[1] - window.innerHeight / 2;
-    const x2 = r1x + x;
-    const y2 = r1y + y;
-    const chunkIndexX = parseInt(`${Map.chunkFn(x2)}`);
-    const chunkIndexY = parseInt(`${Map.chunkFn(y2)}`);
-    return [
-      x2,
-      y2,
-      Map.solidChunks[chunkIndexY]
-        ? Map.solidChunks[chunkIndexY][chunkIndexX]
-          ? Map.solidChunks[chunkIndexY][chunkIndexX]
-          : Map.platformChunks[chunkIndexY]
-          ? Map.platformChunks[chunkIndexY][chunkIndexX]
-          : null
-        : null,
-    ];
   }
 
   moveBy(x?: number, y?: number): void {
@@ -229,7 +212,7 @@ export class Player {
     ) {
       const chunk =
         this.surroundingChunks.right[0] ||
-        (this.surroundingChunks.right[1] as SolidChunk) ||
+        (this.surroundingChunks.right[1] as Chunk) ||
         this.surroundingChunks.right[2];
       if (this.position[0] + Config.chunkSize / 2 + 1 > chunk.position[0]) {
         this.position[0] = chunk.position[0] - Config.chunkSize / 2 - 1;
@@ -244,7 +227,7 @@ export class Player {
     ) {
       const chunk =
         this.surroundingChunks.left[0] ||
-        (this.surroundingChunks.left[1] as SolidChunk) ||
+        (this.surroundingChunks.left[1] as Chunk) ||
         this.surroundingChunks.left[2];
       if (
         chunk.position[0] + Config.chunkSize >
