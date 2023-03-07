@@ -10,6 +10,7 @@ export default defineComponent({
         Game.create(container.value);
       }
     });
+
     return () => (
       <div class="home">
         <div class="game" ref={container} />

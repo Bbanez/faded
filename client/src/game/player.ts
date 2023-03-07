@@ -1,6 +1,7 @@
 import type { Container } from 'pixi.js';
 import type { Chunk } from './chunk';
 import { Config } from './config';
+import { CHUNK_HALF } from './consts';
 import type { ChunkSpriteMeta } from './data';
 import { Keyboard, KeyboardEventType } from './keyboard';
 import { Map, type MapChunksOutput } from './map';
@@ -25,9 +26,9 @@ export class Player {
   private jumpData = {
     ticks: 0,
     maxTicks: 10,
-    strength: 1.1,
+    strength: 0.5,
     ticksToAccFn: FunctionBuilder.linear2D([
-      [0, 1.1],
+      [0, 0.5],
       [13, 0],
       [14, 0],
     ]),
@@ -36,6 +37,7 @@ export class Player {
   private surroundingChunks: MapChunksOutput | null = null;
 
   public position: [number, number] = [1, 1];
+  public positionOffset: [number, number] = [0, 0];
 
   constructor(
     public container: Container,
@@ -43,8 +45,8 @@ export class Player {
     disableKeyboard?: boolean,
     accDamp?: [number, number],
   ) {
-    this.position[0] = 1350;
-    this.position[1] = 1300;
+    this.position[0] = 900;
+    this.position[1] = 200;
     const bb = this.container.getBounds();
     this.width = bb.width;
     this.height = bb.height;
@@ -68,9 +70,9 @@ export class Player {
           // if (state.w) {
           //   this.acc[1] = -this.ps * 0.4;
           // }
-          if (state.s) {
-            this.acc[1] = this.ps * 0.4;
-          }
+          // if (state.s) {
+          //   this.acc[1] = this.ps * 0.4;
+          // }
         }),
         Keyboard.subscribe(KeyboardEventType.KEY_UP, (state) => {
           if (!state.a && !state.d) {
@@ -80,11 +82,12 @@ export class Player {
           } else if (state.a && !state.d) {
             this.acc[0] = -this.ps;
           }
-          if (!state.w && !state.s) {
-            this.acc[1] = 0;
-          }
+          // if (!state.w && !state.s) {
+          //   this.acc[1] = 0;
+          // }
           if (!state[' ']) {
             this.jumpData.active = false;
+            this.jumpData.ticks = 0;
           }
         }),
       );
@@ -158,14 +161,13 @@ export class Player {
         this.acc[1] = 0;
       }
     } else {
-      if (this.acc[1] === 0) {
+      this.acc[1] = this.fallSpeed;
+      if (this.acc[1] <= 0) {
         this.jumpData.ticks = 0;
-        this.acc[1] = 0;
       }
     }
     this.speed[0] = (this.speed[0] + this.acc[0]) * this.accDamp[0];
-    this.speed[1] =
-      (this.speed[1] + this.acc[1] + this.fallSpeed) * this.accDamp[1];
+    this.speed[1] = (this.speed[1] + this.acc[1]) * this.accDamp[1];
     if (this.speed[0] > 0 && this.surroundingChunks) {
       const chunk = this.surroundingChunks.right.find((e) => e);
       if (
@@ -222,7 +224,13 @@ export class Player {
     this.position[1] += this.speed[1];
     this.position[0] += this.speed[0];
     this.recalcChunks();
-    Map.recalcPosition(...this.position);
+    this.positionOffset = Map.recalcPosition(...this.position);
+    this.container.position.set(
+      -this.positionOffset[0] + window.innerWidth / 2 - CHUNK_HALF,
+      -this.positionOffset[1] +
+        window.innerHeight / 2 -
+        Config.chunkSize * 1.25,
+    );
   }
 
   recalcChunks() {
@@ -311,5 +319,6 @@ export class Player {
 
   destroy() {
     this.unsubs.forEach((e) => e());
+    this.container.destroy();
   }
 }

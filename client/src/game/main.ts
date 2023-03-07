@@ -5,7 +5,7 @@ import { Keyboard } from './keyboard';
 import { Mouse } from './mouse';
 import { Map } from './map';
 import { Config } from './config';
-import { Layers } from './layers';
+import { Layers, layersDestroy } from './layers';
 
 export interface Game {
   destroy(): void;
@@ -58,5 +58,7 @@ export class Game {
 
   static destroy(): void {
     window.removeEventListener('resize', Game.onResize);
+    layersDestroy();
+    this.player.destroy();
   }
 }

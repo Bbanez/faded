@@ -10,6 +10,10 @@ export interface ChunkSpriteMeta {
   sbl: ChunkSpriteMetaItem;
   sbm: ChunkSpriteMetaItem;
   sbr: ChunkSpriteMetaItem;
+  sst: ChunkSpriteMetaItem;
+  ssr: ChunkSpriteMetaItem;
+  ssb: ChunkSpriteMetaItem;
+  ssl: ChunkSpriteMetaItem;
   pl: ChunkSpriteMetaItem;
   pm: ChunkSpriteMetaItem;
   pr: ChunkSpriteMetaItem;
@@ -47,6 +51,22 @@ export const ChunkSpriteMeta: ChunkSpriteMeta = {
   sbm: [
     [264, 476],
     [392, 636],
+  ],
+  sst: [
+    [656, 20],
+    [848, 180],
+  ],
+  ssb: [
+    [868, 52],
+    [1060, 212],
+  ],
+  ssl: [
+    [1080, 20],
+    [1240, 212],
+  ],
+  ssr: [
+    [688, 232],
+    [848, 424],
   ],
   sbr: [
     [476, 476],

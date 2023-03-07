@@ -131,6 +131,38 @@ export class Chunk {
           this.sprite.position.set(this.position[0], this.position[1]);
         }
         break;
+      case 'sst':
+        {
+          this.sprite.position.set(
+            this.position[0] - spriteOverflow,
+            this.position[1] - spriteOverflow,
+          );
+        }
+        break;
+      case 'ssb':
+        {
+          this.sprite.position.set(
+            this.position[0] - spriteOverflow,
+            this.position[1],
+          );
+        }
+        break;
+      case 'ssl':
+        {
+          this.sprite.position.set(
+            this.position[0] - spriteOverflow,
+            this.position[1] - spriteOverflow,
+          );
+        }
+        break;
+      case 'ssr':
+        {
+          this.sprite.position.set(
+            this.position[0],
+            this.position[1] - spriteOverflow,
+          );
+        }
+        break;
       case 'pl':
         {
           this.sprite.position.set(
