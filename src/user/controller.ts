@@ -65,7 +65,6 @@ export const UserController = createController({
         type: 'post',
         preRequestHandler: RouteProtection.bodyCheck(SignUpBodySchema),
         async handler({ body, errorHandler, logger }) {
-            Repo  
           const userWithSameEmail = await Repo.user.methods.findByEmail(
             body.email,
           );

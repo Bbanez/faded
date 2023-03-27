@@ -15,7 +15,8 @@
     "importsNotUsedAsValues": "error",
     "paths": {
       "@faded/*": ["./src/*"],
-      "@bcms/*": ["./bcms/*"]
+      "@bcms/*": ["./bcms/*"],
+      "@client/*": ["_client/*"]
     }
   },
   "include": ["src/**/*", "bcms/types/**/*"],

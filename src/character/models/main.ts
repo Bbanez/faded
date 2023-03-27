@@ -3,16 +3,29 @@ import {
   FSDBEntity,
   FSDBEntitySchema,
 } from '@becomes/purple-cheetah-mod-fsdb/types';
+import { Tuple, TupleSchema } from '@faded/util';
 
 export interface Character extends FSDBEntity {
   name: string;
+  // Selections
   mapId: string;
-  specId?: string;
   classId: string;
   raceId: string;
   userId: string;
-  location: [number, number];
+  // Specialization
+  specId?: string;
+  // Armor
+  bootsId?: string;
+  chestId?: string;
+  glovesId?: string;
+  helmetId?: string;
+  // Weapons
+  mainWeaponId?: string
+  offWeaponId?: string;
+  // Other
+  location: Tuple;
   level: number;
+  exp: number;
 }
 
 export const CharacterFSDBSchema: ObjectSchema = {
@@ -24,10 +37,6 @@ export const CharacterFSDBSchema: ObjectSchema = {
   mapId: {
     __type: 'string',
     __required: true,
-  },
-  specId: {
-    __type: 'string',
-    __required: false,
   },
   classId: {
     __type: 'string',
@@ -41,14 +50,40 @@ export const CharacterFSDBSchema: ObjectSchema = {
     __type: 'string',
     __required: true,
   },
-  location: {
-    __type: 'array',
-    __required: true,
-    __child: {
-      __type: 'number',
-    },
+  specId: {
+    __type: 'string',
+    __required: false,
   },
+  bootsId: {
+    __type: 'string',
+    __required: false,
+  },
+  chestId: {
+    __type: 'string',
+    __required: false,
+  },
+  glovesId: {
+    __type: 'string',
+    __required: false,
+  },
+  helmetId: {
+    __type: 'string',
+    __required: false,
+  },
+  mainWeaponId: {
+    __type: 'string',
+    __required: false,
+  },
+  offWeaponId: {
+    __type: 'string',
+    __required: false,
+  },
+  location: TupleSchema,
   level: {
+    __type: 'number',
+    __required: true,
+  },
+  exp: {
     __type: 'number',
     __required: true,
   },

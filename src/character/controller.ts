@@ -8,7 +8,7 @@ import type {
   FadedCharacterClassEntryMeta,
   FadedCharacterRaceEntryMeta,
 } from '@bcms/types';
-import { BCMS } from '@faded/bcms-client';
+import { BCMSClient } from '@faded/bcms-client';
 import { Config } from '@faded/config';
 import { Repo } from '@faded/repo';
 import { responseCode } from '@faded/response-code';
@@ -111,20 +111,22 @@ export const CharacterController = createController({
           bodySchema: CreateBodySchema,
         }),
         async handler({ jwt, body, errorHandler }) {
-          const race = await BCMS.getEntryMeta<FadedCharacterRaceEntryMeta>({
-            template: Config.cmsRaceTemplate,
-            entry: body.raceId,
-          });
+          const race =
+            await BCMSClient.getEntryMeta<FadedCharacterRaceEntryMeta>({
+              template: Config.cmsRaceTemplate,
+              entry: body.raceId,
+            });
           if (!race) {
             throw errorHandler.occurred(
               HTTPStatus.NOT_FOUNT,
               responseCode('ch002', { id: body.raceId }),
             );
           }
-          const cClass = await BCMS.getEntryMeta<FadedCharacterClassEntryMeta>({
-            template: Config.cmsRaceTemplate,
-            entry: body.classId,
-          });
+          const cClass =
+            await BCMSClient.getEntryMeta<FadedCharacterClassEntryMeta>({
+              template: Config.cmsRaceTemplate,
+              entry: body.classId,
+            });
           if (!cClass) {
             throw errorHandler.occurred(
               HTTPStatus.NOT_FOUNT,

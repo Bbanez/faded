@@ -99,7 +99,6 @@ export class Chunk {
           const angleMulti = parseInt(
             MathUtil.randomInInRange(0, 3).toFixed(0),
           );
-          console.log(angleMulti);
           this.sprite.anchor.set(0.5);
           this.sprite.rotation = PI12 * angleMulti;
           this.sprite.position.set(

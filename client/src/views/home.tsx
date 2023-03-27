@@ -1,4 +1,4 @@
-import { Game } from '@/game';
+import { Game } from '@client/game';
 import { defineComponent, onMounted, ref } from 'vue';
 
 export default defineComponent({

@@ -1,6 +1,5 @@
-import { createBcmsClient } from '@becomes/cms-client';
 import type { BCMSEntryParsed } from '@becomes/cms-client/types';
-import { Config } from './config';
+import { useBcms } from './bcms';
 
 export interface BCMSMetaPlus {
   _id: string;
@@ -8,16 +7,7 @@ export interface BCMSMetaPlus {
   updatedAt: number;
 }
 
-export const bcmsClient = createBcmsClient({
-  cmsOrigin: Config.cmsOrigin,
-  key: {
-    id: Config.cmsApiKeyId,
-    secret: Config.cmsApiKeySecret,
-  },
-  enableCache: true,
-});
-
-export class BCMS {
+export class BCMSClient {
   static async getEntry<Entry extends BCMSEntryParsed = BCMSEntryParsed>(data: {
     template: string;
     entry: string;
@@ -26,6 +16,7 @@ export class BCMS {
     skipCache?: boolean | undefined;
     skipStatusCheck?: boolean | undefined;
   }): Promise<Entry | null> {
+    const bcmsClient = useBcms().client;
     try {
       const result = (await bcmsClient.entry.get(data)) as Entry;
       return result;
@@ -42,7 +33,7 @@ export class BCMS {
     skipCache?: boolean | undefined;
     skipStatusCheck?: boolean | undefined;
   }): Promise<(Meta & BCMSMetaPlus) | null> {
-    const result = await BCMS.getEntry(data);
+    const result = await BCMSClient.getEntry(data);
     return result
       ? {
           ...(result.meta.en as Meta),

@@ -1,3 +1,5 @@
+import { bcmsMediaToUrl } from '@becomes/cms-most/frontend';
+import { SDK } from '@client/sdk';
 import { BaseTexture, Container, Graphics, Sprite } from 'pixi.js';
 import { Chunk, PlatformChunk, SolidChunk } from '../chunk';
 import { Config } from '../config';
@@ -23,12 +25,14 @@ export class Map {
   static bp = new Graphics();
   static currentPosition: [number, number] = [-1000000000, -1];
 
-  static async load(_id: string): Promise<void> {
+  static async load(id: string): Promise<void> {
     Map.bp.beginFill(0x00ff00);
     Map.bp.drawCircle(0, 0, 3);
     Map.bp.endFill();
     Map.destroy();
-    const mapData = await getMapChunkData('/map/0/chunk-placement.png');
+    const mapMeta = await SDK.map.getData(id);
+    console.log(mapMeta.chunk_data);
+    const mapData = await getMapChunkData(bcmsMediaToUrl(mapMeta.chunk_data));
     // const solidLayer = Sprite.from('/map/test-l0.png');
     const fol1Layer = Sprite.from('/map/0/f1.png');
     const fol2Layer = Sprite.from('/map/0/f2.png');

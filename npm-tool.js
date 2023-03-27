@@ -102,9 +102,25 @@ module.exports = createConfig({
           );
         },
       },
+      {
+        title: 'Build client',
+        task: async () => {
+          await ChildProcess.spawn('npm', ['run', 'build'], {
+            cwd: path.join(process.cwd(), 'client'),
+            stdio: 'inherit',
+          });
+        },
+      },
     ],
   },
   custom: {
+    '--start': async () => {
+      ChildProcess.spawn('npm', ['run', 'start'], {
+        cwd: path.join(process.cwd(), 'client'),
+        stdio: 'inherit',
+      });
+      ChildProcess.spawn('npm', ['run', 'start:backend']);
+    },
     '--dev': async () => {
       ChildProcess.spawn('npm', ['run', 'dev'], {
         cwd: path.join(process.cwd(), 'client'),
@@ -112,6 +128,12 @@ module.exports = createConfig({
       });
       ChildProcess.spawn('npm', ['run', 'backend:dev'], {
         cwd: process.cwd(),
+        stdio: 'inherit',
+      });
+    },
+    '--postinstall': async () => {
+      await ChildProcess.spawn('npm', ['i'], {
+        cwd: path.join(process.cwd(), 'client'),
         stdio: 'inherit',
       });
     },

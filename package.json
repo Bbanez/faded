@@ -17,7 +17,8 @@
     "publish": "npm-tool --publish",
     "pack": "npm-tool --pack",
     "lint": "eslint . --ext .ts",
-    "cms:types": "ts-node src/pull-types.ts"
+    "cms:types": "ts-node src/pull-types.ts",
+    "postinstall": "npm-tool --postinstall"
   },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
@@ -25,7 +26,9 @@
     "@banez/object-utility": "^1.0.0",
     "@banez/search": "^1.0.1",
     "@banez/string-utility": "^1.0.1",
+    "@becomes/cms-cli": "^2.5.0",
     "@becomes/cms-client": "^3.3.5",
+    "@becomes/cms-most": "^2.6.9",
     "@becomes/mjml": "^1.0.0",
     "@becomes/purple-cheetah": "^3.5.2",
     "@becomes/purple-cheetah-mod-fsdb": "^1.4.0",
@@ -38,6 +41,7 @@
     "bcrypt": "^5.0.1",
     "cron": "^2.0.0",
     "express": "^4.17.1",
+    "jimp": "^0.22.7",
     "mongoose": "^6.0.8",
     "multer": "^1.4.5-lts.1",
     "uuid": "^8.3.2",

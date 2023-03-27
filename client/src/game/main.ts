@@ -31,7 +31,7 @@ export class Game {
     Game.app.ticker.add(() => {
       Ticker.tick();
     });
-    await Map.load('');
+    await Map.load('test');
     for (let i = Layers.length - 1; i >= 0; i--) {
       const layer = Layers[i];
       Game.app.stage.addChild(layer);

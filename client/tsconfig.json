@@ -6,7 +6,9 @@
     "module": "ES2022",
     "types": ["node"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@faded/*": ["../src/*"],
+      "@bcms/*": ["../bcms/*"],
+      "@client/*": ["./src/*"]
     }
   },
 

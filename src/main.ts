@@ -1,6 +1,8 @@
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import {
   createBodyParserMiddleware,
   createCorsMiddleware,
+  createMiddleware,
   createPurpleCheetah,
   createRequestLoggerMiddleware,
 } from '@becomes/purple-cheetah';
@@ -21,16 +23,31 @@ import { Config } from './config';
 import { createResponseCodes } from './response-code';
 import type { JWTProps } from './security';
 import { createUserRepo, UserController } from './user';
+import { createBcms } from './bcms';
+import { MapController } from './map';
 
 createPurpleCheetah({
   port: process.env.PORT ? parseInt(process.env.PORT, 10) : 1281,
-  controllers: [AuthController, UserController],
+  controllers: [AuthController, UserController, MapController],
   middleware: [
+    createMiddleware({
+      name: 'Proxy',
+      after: true,
+      async handler() {
+        return createProxyMiddleware({
+          target: 'http://localhost:5173',
+          ws: true,
+          changeOrigin: true,
+          timeout: 30000,
+        });
+      },
+    }),
     createCorsMiddleware(),
     createBodyParserMiddleware(),
     createRequestLoggerMiddleware(),
   ],
   modules: [
+    createBcms(),
     Config.fsdb
       ? createFSDB({
           output: 'db/faded',
