@@ -35,7 +35,7 @@ createPurpleCheetah({
       after: true,
       async handler() {
         return createProxyMiddleware({
-          target: 'http://localhost:5173',
+          target: 'http://localhost:1282',
           ws: true,
           changeOrigin: true,
           timeout: 30000,
@@ -63,11 +63,9 @@ createPurpleCheetah({
       scopes: [
         {
           alg: JWTAlgorithm.HMACSHA256,
-          expIn: process.env.JWT_EXP_IN
-            ? parseInt(process.env.JWT_EXP_IN, 10)
-            : 5000,
-          issuer: process.env.JWT_ISSUER || 'localhost',
-          secret: process.env.JWT_SECRET || 'secret',
+          expIn: Config.jwt.expIn,
+          issuer: Config.jwt.issuer,
+          secret: Config.jwt.secret,
         },
       ],
     }),

@@ -1,8 +1,9 @@
 import { ObjectUtility } from '@banez/object-utility';
 import { ObjectSchema, ObjectUtilityError } from '@banez/object-utility/types';
-import { createJwtProtectionPreRequestHandler } from '@becomes/purple-cheetah-mod-jwt';
+import { useJwt } from '@becomes/purple-cheetah-mod-jwt';
 import {
   JWT,
+  JWTError,
   JWTPermissionName,
   JWTRoleName,
 } from '@becomes/purple-cheetah-mod-jwt/types';
@@ -41,14 +42,21 @@ export class RouteProtection {
         permission: JWTPermissionName.READ,
       };
     }
-    const handler = createJwtProtectionPreRequestHandler<JWTProps>(
-      config.roles,
-      config.permission,
-    );
+    const jwt = useJwt();
     return async (data) => {
-      const result = await handler(data);
+      const result = jwt.get<JWTProps>({
+        jwtString: data.request.headers.authorization as string,
+        permissionName: config ? config.permission : JWTPermissionName.READ,
+        roleNames: config ? config.roles : [JWTRoleName.SUDO],
+      });
+      if (result instanceof JWTError) {
+        throw data.errorHandler.occurred(
+          HTTPStatus.UNAUTHORIZED,
+          result.message,
+        );
+      }
       return {
-        jwt: result.accessToken,
+        jwt: result,
       };
     };
   }
@@ -60,12 +68,21 @@ export class RouteProtection {
   }): ControllerMethodPreRequestHandler<
     RouteProtectionJWTAndBodyCheckResult<Body>
   > {
-    const handler = createJwtProtectionPreRequestHandler<JWTProps>(
-      config.roles || [JWTRoleName.ADMIN, JWTRoleName.USER],
-      config.permission || JWTPermissionName.READ,
-    );
+    const jwt = useJwt();
     return async (data) => {
-      const result = await handler(data);
+      const result = jwt.get<JWTProps>({
+        jwtString: data.request.headers.authorization as string,
+        permissionName: config.permission
+          ? config.permission
+          : JWTPermissionName.READ,
+        roleNames: config.roles ? config.roles : [JWTRoleName.SUDO],
+      });
+      if (result instanceof JWTError) {
+        throw data.errorHandler.occurred(
+          HTTPStatus.UNAUTHORIZED,
+          result.message,
+        );
+      }
       const bodyCheck = ObjectUtility.compareWithSchema(
         data.request.body,
         config.bodySchema,
@@ -78,7 +95,7 @@ export class RouteProtection {
         );
       }
       return {
-        jwt: result.accessToken,
+        jwt: result,
         body: data.request.body,
       };
     };

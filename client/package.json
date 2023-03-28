@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 1282 --host 0.0.0.0",
     "build": "run-p type-check build-only",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -15,6 +15,7 @@
     "@banez/queue": "^1.0.0",
     "@banez/vue-array-store": "^1.2.0",
     "@becomes/cms-client": "^3.3.5",
+    "buffer": "^6.0.3",
     "uuid": "^9.0.0",
     "vue": "^3.2.45",
     "vue-router": "^4.1.6"
@@ -33,6 +34,7 @@
     "eslint": "^8.22.0",
     "eslint-plugin-vue": "^9.3.0",
     "npm-run-all": "^4.1.5",
+    "nuxt-plugin-bcms": "^3.0.3",
     "pixi.js": "^7.0.5",
     "prettier": "^2.7.1",
     "sass": "^1.57.1",

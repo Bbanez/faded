@@ -17,7 +17,7 @@ export class UserHandler {
     const result = await SDK.send<{
       item: User;
     }>({
-      url: `${this.base}`,
+      url: `${this.base}/me`,
       method: 'GET',
       headers: {
         Authorization: '',
@@ -103,9 +103,9 @@ export class UserHandler {
         },
       });
       Storage.set('rt', result.refreshToken);
+      Storage.set('at', result.accessToken);
       SDK.accessTokenRaw = result.accessToken;
       SDK.accessToken = SDK.unpackAccessToken(result.accessToken);
-      Storage.set('at', result.accessToken);
     }
   }
 

@@ -1,0 +1,68 @@
+.login {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &--form {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &--or {
+    margin-top: 40px;
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    position: relative;
+
+    .line {
+      position: relative;
+      width: 100%;
+      border-bottom: 1px solid #eee;
+      bottom: 10px;
+    }
+
+    .text {
+      font-size: 16px;
+    }
+  }
+
+  &--social {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    &-item {
+      display: flex;
+      padding: 20px;
+      border: 1px solid #eee;
+      .text {
+        font-size: 12px;
+        margin: auto 0;
+      }
+      .icon {
+        width: 40px;
+        height: 40px;
+        margin-left: auto;
+      }
+    }
+  }
+
+  &--additional {
+    padding-top: 40px;
+    margin-top: auto;
+    display: flex;
+    gap: 20px;
+
+    .text {
+      margin: auto 0;
+    }
+
+    .btn {
+      margin-left: auto;
+    }
+  }
+}

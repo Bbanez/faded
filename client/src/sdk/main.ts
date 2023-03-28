@@ -7,6 +7,7 @@ import { MapHandler } from './map';
 import { SocketHandler } from './socket';
 import type { Jwt } from './types';
 import { UserHandler } from './user';
+import { Buffer } from 'buffer';
 
 export class SDK {
   private static refreshQueue = createQueue<boolean>();
