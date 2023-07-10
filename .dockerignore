@@ -1,2 +1,6 @@
+/db
 /node_modules
-/docs
+/backend/dist
+/backend/node_modules
+/ui/node_modules
+/ui/dist

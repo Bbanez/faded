@@ -1,0 +1,49 @@
+{
+  "name": "backend",
+  "version": "0.1.3",
+  "private": true,
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "dev": "nodemon -r tsconfig-paths/register src/main.ts",
+    "build": "tsc -p .",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "Branislav Vajagić",
+  "license": "MIT",
+  "dependencies": {
+    "@banez/fs": "^1.0.3",
+    "@banez/object-utility": "^1.0.1",
+    "@banez/string-utility": "^1.0.1",
+    "@fastify/multipart": "^7.7.0",
+    "@fastify/static": "^6.10.2",
+    "axios": "^0.27.2",
+    "mongodb": "^5.6.0",
+    "servaljs": "^0.1.4",
+    "servaljs-jwt": "file:jwt.tgz",
+    "servaljs-mongodb": "file:mongodb.tgz",
+    "servaljs-redis": "file:redis.tgz",
+    "servaljs-socket": "^0.0.1"
+  },
+  "devDependencies": {
+    "@fastify/middie": "^8.3.0",
+    "@types/node": "^20.3.1",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.43.0",
+    "fastify": "^4.18.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.7.1",
+    "redis": "^4.6.7",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^4.9.5"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts"
+  }
+}

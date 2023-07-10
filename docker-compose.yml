@@ -1,22 +1,69 @@
 version: '3.9'
 services:
-  faded-ui:
-    hostname: 'faded-ui'
-    build:
-      context: '.'
-      dockerfile: Dockerfile.dev
-    ports:
-      - '5173:5173'
+  faded-redis:
+    hostname: faded-redis
+    image: redis:7-alpine
+  faded-db:
+    hostname: faded-db
+    image: mongo:6
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=test
+      - MONGO_INITDB_ROOT_PASSWORD=test1234
     volumes:
       - type: bind
-        source: ./src
+        source: ./db
+        target: /data/db
+    logging:
+      driver: none
+  faded-backend:
+    depends_on:
+      - faded-redis
+      - faded-db
+    hostname: faded-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    env_file:
+      - ./backend/.env
+    volumes:
+      - type: bind
+        source: ./backend/src
         target: /app/src
       - type: bind
-        source: ./public
+        source: ./backend/logs
+        target: /app/logs
+  faded-ui:
+    depends_on:
+      - faded-backend
+    hostname: faded-ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.dev
+    volumes:
+      - type: bind
+        source: ./ui/src
+        target: /app/src
+      - type: bind
+        source: ./ui/public
         target: /app/public
       - type: bind
-        source: ./index.html
+        source: ./ui/vite.config.ts
+        target: /app/vite.config.ts
+      - type: bind
+        source: ./ui/index.html
         target: /app/index.html
       - type: bind
-        source: ./vite.config.ts
-        target: /app/vite.config.ts
+        source: ./ui/tsconfig.json
+        target: /app/tsconfig.json
+  faded-proxy:
+    depends_on:
+      - faded-backend
+      - faded-ui
+    hostname: faded-proxy
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile
+    ports:
+      - '7000:7000'
+    logging:
+      driver: none

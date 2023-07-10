@@ -1,0 +1,51 @@
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 350px;
+
+  &--messages {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &--message {
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+
+    &_error {
+      background-color: #991111;
+    }
+
+    &_warning {
+      background-color: #775511;
+    }
+
+    &_success {
+      background-color: #117711;
+    }
+
+    &_info {
+      background-color: #444444;
+    }
+
+    &-header {
+      display: flex;
+      padding: 20px 20px 0 20px;
+
+      button {
+        margin-left: auto;
+      }
+    }
+
+    &-label {
+      text-transform: uppercase;
+    }
+
+    &-content {
+      padding: 10px 20px 20px 20px;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+.login {
+  .lLayout--left-content {
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  &--link {
+    display: block;
+    color: var(--c-dark);
+    background-color: var(--c-white);
+    padding: 12px 24px;
+    display: flex;
+    gap: 24px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}

@@ -1,0 +1,19 @@
+.setup {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 40px;
+
+  &--wrapper {
+    margin: auto;
+    max-width: 450px;
+    padding: 40px;
+    background-color: var(--c-darker);
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px
+  }
+}
