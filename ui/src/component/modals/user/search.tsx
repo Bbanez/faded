@@ -53,7 +53,7 @@ export const ModalUserSearch = defineComponent({
     };
 
     async function search() {
-      if (pageData.value.username.length > 3) {
+      if (pageData.value.username.length > 2) {
         await throwable(
           async () => {
             return await api.user.search({ term: pageData.value.username });

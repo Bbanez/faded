@@ -62,6 +62,26 @@ export const UserController = createController({
         },
       }),
 
+      getMany: createControllerMethod<
+        RouteProtectionJwtResult,
+        ControllerItemsResponse<UserPublic>
+      >({
+        path: '/many/:ids',
+        type: 'get',
+        preRequestHandler: RouteProtection.createJwtCheck(),
+        async handler({ request }) {
+          const params = request.params as any;
+          const ids = (params.ids as string).split('-').slice(0, 20);
+          const users = await Repo.user.findAllById(ids);
+          return {
+            items: users.map((e) => UserFactory.toPublic(e)),
+            total: users.length,
+            limit: users.length,
+            offset: 0,
+          };
+        },
+      }),
+
       getMe: createControllerMethod<
         RouteProtectionJwtResult,
         ControllerItemResponse<UserProtected>
@@ -78,7 +98,7 @@ export const UserController = createController({
             );
           }
           return {
-            item: user,
+            item: UserFactory.toProtected(user),
           };
         },
       }),
@@ -99,13 +119,42 @@ export const UserController = createController({
             );
           }
           const users = await Repo.user.findAllBy({
-            friends: { $in: user.friends },
+            _id: { $in: user.friends },
           });
           return {
-            items: users.map((e) => UserFactory.toPublic(e)),
+            items: users
+              .filter((e) => e._id !== user._id)
+              .map((e) => UserFactory.toPublic(e)),
             total: users.length,
             limit: users.length,
             offset: 0,
+          };
+        },
+      }),
+
+      getByUsername: createControllerMethod<
+        RouteProtectionJwtResult,
+        ControllerItemResponse<UserPublic>
+      >({
+        path: '/username/:username',
+        type: 'get',
+        preRequestHandler: RouteProtection.createJwtCheck(),
+        async handler({ request, errorHandler, token }) {
+          const params: any = request.params;
+          const user = await Repo.user.methods.findByUsername(
+            '' + params.username,
+          );
+          if (!user) {
+            throw errorHandler(
+              HttpStatus.NotFound,
+              `User "${params.username}" does not exist.`,
+            );
+          }
+          return {
+            item:
+              user._id === token.payload.userId
+                ? UserFactory.toProtected(user)
+                : UserFactory.toPublic(user),
           };
         },
       }),
@@ -117,7 +166,7 @@ export const UserController = createController({
         path: '/:id',
         type: 'get',
         preRequestHandler: RouteProtection.createJwtCheck(),
-        async handler({ request, errorHandler }) {
+        async handler({ request, errorHandler, token }) {
           const params: any = request.params;
           const user = await Repo.user.findById('' + params.id);
           if (!user) {
@@ -127,7 +176,10 @@ export const UserController = createController({
             );
           }
           return {
-            item: UserFactory.toPublic(user),
+            item:
+              user._id === token.payload.userId
+                ? UserFactory.toProtected(user)
+                : UserFactory.toPublic(user),
           };
         },
       }),
@@ -253,8 +305,10 @@ export const UserController = createController({
         preRequestHandler: RouteProtection.createJwtAndBodyCheck({
           schema: UserSearchBodySchema,
         }),
-        async handler({ body }) {
-          const users = await Repo.user.methods.findAllBySearch(body.term);
+        async handler({ body, token }) {
+          const users = (
+            await Repo.user.methods.findAllBySearch(body.term)
+          ).filter((e) => e._id !== token.payload.userId);
           return {
             items: users.map((e) => UserFactory.toPublic(e)),
             limit: users.length,

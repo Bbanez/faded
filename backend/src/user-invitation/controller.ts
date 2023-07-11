@@ -157,6 +157,7 @@ export const UserInvitationController = createController({
           toUser.friends.push(fromUser._id);
           await Repo.user.update(fromUser);
           await Repo.user.update(toUser);
+          await Repo.userInvitation.deleteById(inv._id);
           return { ok: true };
         },
       }),

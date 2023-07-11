@@ -8,12 +8,12 @@
     margin: auto;
     max-width: 450px;
     padding: 40px;
-    background-color: var(--c-darker);
+    background-color: rgb(var(--c-darker));
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 20px
+    gap: 20px;
   }
 }

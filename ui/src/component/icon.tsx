@@ -25,6 +25,7 @@ export const Icon = defineComponent({
       type: String,
       required: true,
     },
+    title: String,
   },
   setup(props) {
     let srcBuffer = '';
@@ -76,7 +77,14 @@ export const Icon = defineComponent({
     });
 
     return () => {
-      return <div ref={container} class="icon" data-src={props.src} />;
+      return (
+        <div
+          ref={container}
+          class="icon"
+          data-src={props.src}
+          title={props.title}
+        />
+      );
     };
   },
 });

@@ -1,0 +1,19 @@
+.button {
+  &_primary {
+    background-color: rgb(var(--c-white));
+    color: rgb(var(--c-darker));
+    padding: 5px 15px;
+    transition: all 0.3s;
+
+    &:hover {
+      background-color: rgb(var(--c-primary));
+    }
+  }
+
+  &_ghost {
+    transition: all 0.3s;
+    &:hover {
+      color: rgb(var(--c-primary));
+    }
+  }
+}

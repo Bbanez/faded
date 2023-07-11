@@ -38,6 +38,10 @@ export class UserInvitationHandler {
       url: `${this.baseUrl}/accept/${data.invitationId}`,
       method: 'POST',
     });
+    const inv = this.api.store.userInvitation.findById(data.invitationId);
+    if (inv) {
+      await this.api.user.get(inv.from);
+    }
     this.api.store.userInvitation.remove(data.invitationId);
   }
 }

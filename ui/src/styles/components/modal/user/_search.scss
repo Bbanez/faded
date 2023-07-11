@@ -1,0 +1,23 @@
+.modUserSearch {
+  display: flex;
+  flex-direction: column;
+
+  &--result {
+    margin-top: 40px;
+    margin-bottom: 40px;
+
+    p {
+      text-align: center;
+    }
+  }
+
+  &--user {
+    display: flex;
+    gap: 20px;
+
+    &-status {
+      color: rgb(var(--c-grey));
+      font-size: 12px;
+    }
+  }
+}

@@ -33,6 +33,14 @@ const routes: Array<RouteRecordRaw> = [
       import(/* webpackChunkName: "user-me" */ './views/dashboard/user'),
   },
   {
+    path: '/dashboard/user/:username',
+    name: 'UserId',
+    component: () =>
+      import(
+        /* webpackChunkName: "user-id" */ './views/dashboard/user-profile'
+      ),
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'P404',
     meta: {

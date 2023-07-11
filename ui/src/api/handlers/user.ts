@@ -20,9 +20,22 @@ export class UserHandler {
     });
   }
 
+  async getMany(ids: string[]): Promise<UserPublic[]> {
+    const cacheHit = this.api.store.user.findManyById(ids);
+    if (cacheHit.length === ids.length) {
+      return cacheHit;
+    }
+    const res = await this.api.send<ControllerItemsResponse<UserPublic>>({
+      url: `${this.baseUrl}/many/${ids.join('-')}`,
+    });
+    this.api.store.user.set(res.items);
+    return res.items;
+  }
+
   async getFriends(): Promise<UserPublic[]> {
     const user = (await this.api.user.get()) as UserProtected;
-    const cacheHit = this.api.store.user.findManyById(user.friends);
+    console.log({ user });
+    const cacheHit = this.api.store.user.findManyById(user.friends || []);
     if (cacheHit.length === user.friends.length) {
       return cacheHit;
     }
@@ -65,6 +78,20 @@ export class UserHandler {
       ControllerItemResponse<UserPublic | UserProtected>
     >({
       url: `${this.baseUrl}/${id || 'me'}`,
+    });
+    this.api.store.user.set(res.item);
+    return res.item;
+  }
+
+  async getByUsername(username: string): Promise<UserProtected | UserPublic> {
+    const cacheHit = this.api.store.user.find((e) => e.username === username);
+    if (cacheHit) {
+      return cacheHit;
+    }
+    const res = await this.api.send<
+      ControllerItemResponse<UserPublic | UserProtected>
+    >({
+      url: `${this.baseUrl}/username/${username}`,
     });
     this.api.store.user.set(res.item);
     return res.item;

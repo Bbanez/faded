@@ -20,7 +20,7 @@ export const Button = defineComponent({
       <button
         id={props.id}
         style={props.style}
-        class={`button ${props.class || ''}`}
+        class={`button button_${props.kind} ${props.class || ''}`}
         disabled={props.disabled}
         onClick={() => {
           ctx.emit('click');

@@ -115,7 +115,7 @@ export const Modal = defineComponent({
                   props.footer
                 ) : (
                   <>
-                    <Button onClick={cancel}>
+                    <Button kind="ghost" onClick={cancel}>
                       {props.cancelText || 'Cancel'}
                     </Button>
                     <Button onClick={done}>{props.doneText || 'Done'}</Button>

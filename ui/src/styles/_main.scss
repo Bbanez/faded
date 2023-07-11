@@ -17,14 +17,22 @@
 
 :root {
   font-family: 'IBM Plex Mono';
-  --c-dark: #101010;
-  --c-darker: #050505;
-  --c-white: #ffffff;
+  // #101010
+  --c-dark: 16, 16, 16;
+  // #050505
+  --c-darker: 5, 5, 5;
+  // #ffffff
+  --c-white: 255, 255, 255;
+  // #696969
+  --c-grey: 105, 105, 105;
+
+  // #19db94
+  --c-primary: 25, 219, 148;
 }
 
 body {
-  color: var(--c-white);
-  background-color: var(--c-dark);
+  color: rgb(var(--c-white));
+  background-color: rgb(var(--c-dark));
   max-height: 100vh;
   overflow-y: auto;
 }
