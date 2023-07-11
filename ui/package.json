@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "lint": "eslint . --ext .ts,.tsx --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
   },
   "dependencies": {
@@ -17,6 +17,8 @@
     "@banez/vue-array-store": "^1.2.0",
     "axios": "^0.27.2",
     "buffer": "^6.0.3",
+    "svemir": "file:svemir.tgz",
+    "three": "^0.154.0",
     "uuid": "^9.0.0",
     "vue": "^3.3.4",
     "vue-router": "^4.2.2"
@@ -25,6 +27,7 @@
     "@rushstack/eslint-patch": "^1.2.0",
     "@tsconfig/node18": "^2.0.1",
     "@types/node": "^18.16.17",
+    "@types/three": "^0.153.0",
     "@types/uuid": "^9.0.2",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vitejs/plugin-vue-jsx": "^3.0.1",

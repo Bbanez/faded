@@ -12,6 +12,7 @@ import { UserController } from './user/controller';
 import * as FastifyMultipart from '@fastify/multipart';
 import * as FastifyStatic from '@fastify/static';
 import { UserInvitationController } from './user-invitation';
+import { createBcms } from './bcms';
 
 async function main() {
   createServal({
@@ -34,7 +35,8 @@ async function main() {
           async function init() {
             await fastify.register(FastifyMultipart);
             await fastify.register(FastifyStatic, {
-              root: path.join(process.cwd(), 'uploads'),
+              prefix: '/api/public/',
+              root: path.join(process.cwd(), 'public'),
             });
           }
           init()
@@ -42,6 +44,7 @@ async function main() {
             .catch((err) => next(err));
         },
       },
+      createBcms(),
       createJwt({
         scopes: [
           {

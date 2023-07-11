@@ -2,6 +2,8 @@
 /dist
 /doc
 /node_modules
+/bcms
+/public/bcms-media
 
 # Environment
 

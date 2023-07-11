@@ -6,8 +6,9 @@
   "types": "./index.d.ts",
   "scripts": {
     "dev": "nodemon -r tsconfig-paths/register src/main.ts",
-    "build": "tsc -p .",
-    "lint": "eslint . --ext .ts"
+    "build": "bcms --m all && tsc -p .",
+    "build:noEmit": "bcms --m all && tsc -p . --noEmit",
+    "lint": "bcms --m all && eslint . --ext .ts"
   },
   "author": "Branislav Vajagić",
   "license": "MIT",
@@ -15,6 +16,9 @@
     "@banez/fs": "^1.0.3",
     "@banez/object-utility": "^1.0.1",
     "@banez/string-utility": "^1.0.1",
+    "@becomes/cms-cli": "^3.1.8",
+    "@becomes/cms-client": "^3.3.5",
+    "@becomes/cms-most": "^2.7.2",
     "@fastify/multipart": "^7.7.0",
     "@fastify/static": "^6.10.2",
     "axios": "^0.27.2",
