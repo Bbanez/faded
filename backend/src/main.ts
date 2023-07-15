@@ -35,7 +35,7 @@ async function main() {
           async function init() {
             await fastify.register(FastifyMultipart);
             await fastify.register(FastifyStatic, {
-              prefix: '/api/public/',
+              prefix: '/api/public',
               root: path.join(process.cwd(), 'public'),
             });
           }

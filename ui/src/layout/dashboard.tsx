@@ -30,8 +30,8 @@ export const Layout = defineComponent({
         link: '/dashboard/map',
       },
       {
-        name: 'Create map',
-        link: '/dashboard/create-map',
+        name: 'Map maker',
+        link: '/dashboard/map-maker',
       },
     ];
     const api = useApi();

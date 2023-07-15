@@ -240,7 +240,7 @@ export const UserController = createController({
             const fs = createFS({
               base: process.cwd(),
             });
-            await fs.save(['uploads', 'avatar', user._id], buffer);
+            await fs.save(['public', 'avatar', user._id], buffer);
             user.image = `/api/v1/user/avatar/${user._id}?v=${Date.now()}`;
           } catch (error) {
             const err = error as Error;

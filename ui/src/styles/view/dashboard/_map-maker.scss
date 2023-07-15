@@ -1,0 +1,50 @@
+.mapMaker_override {
+  .layout--body {
+    position: fixed;
+    top: 0;
+    left: 280px;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+
+    &-inner {
+      margin: 0;
+      height: 100%;
+    }
+  }
+}
+
+.mapMakerEditor {
+  display: grid;
+  grid-template-columns: 400px auto;
+  height: 100%;
+
+  &--menu {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  &--map {
+    display: grid;
+
+    &-chunk {
+      display: flex;
+      border: 1px solid black;
+
+      &_none {
+        background-color: none;
+      }
+      &_ground {
+        background-color: green;
+      }
+      &_edge {
+        background-color: grey;
+      }
+    }
+  }
+
+  &--editor {
+    background-color: #000000;
+    overflow: hidden;
+  }
+}

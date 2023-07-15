@@ -32,6 +32,9 @@ services:
       - type: bind
         source: ./backend/logs
         target: /app/logs
+      - type: bind
+        source: ./backend/public
+        target: /app/public
   faded-ui:
     depends_on:
       - faded-backend

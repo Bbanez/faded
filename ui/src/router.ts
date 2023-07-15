@@ -41,6 +41,22 @@ const routes: Array<RouteRecordRaw> = [
       ),
   },
   {
+    path: '/dashboard/map-maker',
+    name: 'MapMaker',
+    component: () =>
+      import(
+        /* webpackChunkName: "map-maker" */ './views/dashboard/map-maker/home'
+      ),
+  },
+  {
+    path: '/dashboard/map-maker/:mid',
+    name: 'MapMakerId',
+    component: () =>
+      import(
+        /* webpackChunkName: "map-maker" */ './views/dashboard/map-maker/create'
+      ),
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'P404',
     meta: {
