@@ -1,6 +1,6 @@
 import { defineComponent } from 'vue';
 import { RouterView } from 'vue-router';
-import { ModalConfirm, ModalUserSearch, Toast } from './component';
+import { AssetLeader, ModalConfirm, ModalUserSearch, Toast } from './component';
 
 export const App = defineComponent({
   setup() {
@@ -11,6 +11,7 @@ export const App = defineComponent({
         <Toast />
         <ModalConfirm />
         <ModalUserSearch />
+        <AssetLeader />
       </div>
     );
   },

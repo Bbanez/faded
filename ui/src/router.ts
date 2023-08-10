@@ -57,6 +57,12 @@ const routes: Array<RouteRecordRaw> = [
       ),
   },
   {
+    path: '/dashboard/game/:gameId',
+    name: 'GameId',
+    component: () =>
+      import(/* webpackChunkName: "game" */ './views/dashboard/game'),
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'P404',
     meta: {

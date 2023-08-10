@@ -13,7 +13,7 @@ module.exports = {
     ecmaVersion: 'latest',
   },
   rules: {
-    'no-console': 'warn',
+    'no-console': 'off',
     'no-debugger': 'warn',
     'no-shadow': 'error',
     '@typescript-eslint/no-unused-vars': [
