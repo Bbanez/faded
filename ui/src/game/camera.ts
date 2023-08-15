@@ -46,7 +46,7 @@ export async function createCamera(config: {
   //        min
   //         |  max
   //         |   |  curr
-  const D = [1, 5, 15];
+  const D = [1, 5, 5];
   const fi = degToRad(35);
   let alphaOld = -PI12;
   let alpha = -PI12;
@@ -69,9 +69,9 @@ export async function createCamera(config: {
       wantedPosition[2] !== currentPosition[2] ||
       alpha !== alphaOld
     ) {
-      const dx = (wantedPosition[0] - currentPosition[0]) / 2;
-      const dy = (wantedPosition[1] - currentPosition[1]) / 2;
-      const dz = (wantedPosition[2] - currentPosition[2]) / 2;
+      const dx = (wantedPosition[0] - currentPosition[0]) / 10;
+      const dy = (wantedPosition[1] - currentPosition[1]) / 10;
+      const dz = (wantedPosition[2] - currentPosition[2]) / 10;
       currentPosition[0] += dx;
       currentPosition[1] += dy;
       currentPosition[2] += dz;
