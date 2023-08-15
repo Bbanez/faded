@@ -40,14 +40,13 @@ export async function createCamera(config: {
       if (state.middle && mouseX) {
         const alphaDelta = mouseDistanceFn(state.x - mouseX);
         alpha = alphaOld + alphaDelta;
-        console.log(alpha);
       }
     }),
   ];
   //        min
   //         |  max
   //         |   |  curr
-  const D = [1, 5, 5];
+  const D = [1, 5, 15];
   const fi = degToRad(35);
   let alphaOld = -PI12;
   let alpha = -PI12;
@@ -57,7 +56,7 @@ export async function createCamera(config: {
     config.initPosition.z,
   ];
   const wantedPosition = [
-    currentPosition[0],
+    currentPosition[0] - 0.0001,
     currentPosition[1],
     currentPosition[2],
   ];

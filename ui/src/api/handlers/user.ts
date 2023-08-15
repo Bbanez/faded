@@ -34,7 +34,6 @@ export class UserHandler {
 
   async getFriends(): Promise<UserPublic[]> {
     const user = (await this.api.user.get()) as UserProtected;
-    console.log({ user });
     const cacheHit = this.api.store.user.findManyById(user.friends || []);
     if (cacheHit.length === user.friends.length) {
       return cacheHit;

@@ -190,7 +190,6 @@ export const AuthController = createController({
                   'google',
                   userInfo.id + '',
                 );
-                console.log({ user });
                 if (!user) {
                   user = UserFactory.create({
                     ban: {

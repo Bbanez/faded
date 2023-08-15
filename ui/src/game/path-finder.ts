@@ -3,7 +3,7 @@ import {  BoxGeometry, Mesh, MeshStandardMaterial } from 'three';
 import { Obstacle, ObstacleIntersections } from './obstacle';
 
 export class PathFinder {
-  public static obstacles: Obstacle[] = [];
+  static obstacles: Obstacle[] = [];
 
   static resolve(origin: Point2D, target: Point2D): Point2D[] {
     const p: Point2D[] = [origin, target];
@@ -109,7 +109,7 @@ export class PathFinder {
           let corner: Point2D;
           if (q.intersections[0]) {
             corner = q.q.getClosestCorner(q.intersections[0]);
-            if (PathFinder.isPointInsideObstacle(corner)) {
+            if (this.isPointInsideObstacle(corner)) {
               for (let k = 0; k < q.q.corners.length; k++) {
                 const c = q.q.corners[k];
                 if (c.isEqual(corner)) {
@@ -124,7 +124,7 @@ export class PathFinder {
             }
           } else if (q.intersections[1]) {
             corner = q.q.getClosestCorner(q.intersections[1]) as Point2D;
-            if (PathFinder.isPointInsideObstacle(corner)) {
+            if (this.isPointInsideObstacle(corner)) {
               for (let k = 0; k < q.q.corners.length; k++) {
                 const c = q.q.corners[k];
                 if (c.isEqual(corner)) {

@@ -12,9 +12,8 @@ export default defineComponent({
         game = await createGame({
           canvas: canvas.value,
           mapId: '0',
-          camLookAt: new Point2D(20, 85),
+          camLookAt: new Point2D(30, 85),
         });
-        console.log(game);
       }
     });
 

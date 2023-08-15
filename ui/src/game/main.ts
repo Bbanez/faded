@@ -12,7 +12,6 @@ import {
   AmbientLight,
   CubeTexture,
   DirectionalLight,
-  Material,
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
@@ -21,11 +20,12 @@ import {
 } from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 // import { Water } from 'three/examples/jsm/objects/Water';
-import { Sky } from 'three/examples/jsm/objects/Sky';
+// import { Sky } from 'three/examples/jsm/objects/Sky';
 import { Assets } from './assets';
 import { createCamera } from './camera';
 import { createCharacter } from './character';
 import { MouseRay } from './mouse-ray';
+import { Nogo } from './nogo';
 
 export interface Game {
   svemir: Svemir;
@@ -60,6 +60,11 @@ export async function createGame(config: {
     ],
     type: 'cubeTexture',
   });
+  Loader.register({
+    name: 'nogo',
+    path: `/assets/maps/${config.mapId}/nogo.jpg`,
+    type: 'texture',
+  });
   unsubs.push(
     Loader.onLoaded((item, data) => {
       if (item.name === 'ground') {
@@ -73,7 +78,6 @@ export async function createGame(config: {
         // (
         //   (Assets.ground.children[0] as Mesh).material as Material
         // ).opacity = 0.5;
-        console.log(Assets.ground);
         Assets.ground.scale.set(50, 50, 50);
         // Assets.ground.position.set(100, 0, 100);
       } else if (item.name === 'waterNormals') {
@@ -81,6 +85,8 @@ export async function createGame(config: {
         Assets.waterNormals.wrapS = Assets.waterNormals.wrapT = RepeatWrapping;
       } else if (item.name === 'skybox') {
         Assets.skybox = data as CubeTexture;
+      } else if (item.name === 'nogo') {
+        Assets.nogo = data as Texture;
       }
     }),
   );
@@ -104,6 +110,23 @@ export async function createGame(config: {
   });
   Scene.scene.add(Assets.ground);
 
+  const nogo = new Nogo(Assets.nogo, new Point2D(100, 100));
+  // for (let z = 0; z < nogo.obstacles.length; z++) {
+  //   for (let x = 0; x < nogo.obstacles[z].length; x++) {
+  //     const obstacle = nogo.obstacles[z][x];
+  //     if (obstacle) {
+  //       const g = new Mesh(
+  //         new BoxGeometry(obstacle.qa, 1, obstacle.qb),
+  //         new MeshBasicMaterial({
+  //           color: 0xffffff,
+  //         }),
+  //       );
+  //       g.position.set(obstacle.q.x, 0, obstacle.q.z);
+  //       Scene.scene.add(g);
+  //     }
+  //   }
+  // }
+
   Scene.scene.background = Assets.skybox;
 
   const sun = new DirectionalLight(0xffffff);
@@ -120,15 +143,15 @@ export async function createGame(config: {
   const ambientLight = new AmbientLight(0xffffff, 0);
   Scene.scene.add(ambientLight);
 
-  const sky = new Sky();
-  sky.position.set(50, 0, 50);
-  sky.scale.setScalar(100);
-  Scene.scene.add(sky);
-  const skyUniforms = sky.material.uniforms;
-  skyUniforms['turbidity'].value = 10;
-  skyUniforms['rayleigh'].value = 2;
-  skyUniforms['mieCoefficient'].value = 0.005;
-  skyUniforms['mieDirectionalG'].value = 0.8;
+  // const sky = new Sky();
+  // sky.position.set(50, 0, 50);
+  // sky.scale.setScalar(100);
+  // Scene.scene.add(sky);
+  // const skyUniforms = sky.material.uniforms;
+  // skyUniforms['turbidity'].value = 10;
+  // skyUniforms['rayleigh'].value = 2;
+  // skyUniforms['mieCoefficient'].value = 0.005;
+  // skyUniforms['mieDirectionalG'].value = 0.8;
 
   const water = new Mesh(
     new PlaneGeometry(100, 100),
@@ -166,21 +189,35 @@ export async function createGame(config: {
   });
   Renderer.setCamera(camera.cam);
 
+  // const plane = new Mesh(
+  //   new PlaneGeometry(100, 100),
+  //   new MeshLambertMaterial({ map: Assets.nogo }),
+  //   // new MeshBasicMaterial({ color: 0xffffff }),
+  // );
+  // plane.rotation.x = -PI12;
+  // plane.position.set(50, 10, 50);
+  // Scene.scene.add(plane);
+
   const mouseRay = new MouseRay(camera.cam, [Assets.ground]);
   unsubs.push(
     mouseRay.subscribe((inter) => {
       if (inter[0]) {
-        char.setPosition(new Point2D(inter[0].point.x, inter[0].point.z));
+        const p = new Point2D(inter[0].point.x, inter[0].point.z);
+        char.setPosition(p);
+        // nogo.aStar(char.position(), p);
       }
     }),
   );
 
   const char = await createCharacter({
+    nogo,
     position: config.camLookAt,
     id: 'archer',
   });
   unsubs.push(
     Ticker.subscribe((_t, d) => {
+      // camera.cam.lookAt(50, 0, 50);
+      // camera.cam.position.set(50, 120, 50);
       camera.update();
       camera.setPosition(char.position());
       char.update(d / 500);
@@ -193,6 +230,8 @@ export async function createGame(config: {
   //   water.material.uniforms['sunDirection'].value.copy(sun).normalize();
   // }
   // updateSun();
+
+  // await nogo.aStar(config.camLookAt, new Point2D(35, 85));
 
   return {
     svemir,

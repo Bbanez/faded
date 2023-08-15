@@ -2,7 +2,7 @@ import { Loader, Point2D, Scene } from 'svemir';
 import { AnimationMixer } from 'three';
 import { Assets } from './assets';
 import { Distance } from './distance';
-import { PathFinder } from './path-finder';
+import { Nogo } from './nogo';
 
 export type CharacterAnimations = 'idle' | 'run' | 'death';
 
@@ -14,6 +14,7 @@ export interface Character {
 }
 
 export async function createCharacter(config: {
+  nogo: Nogo;
   position: Point2D;
   id: string;
 }): Promise<Character> {
@@ -77,6 +78,7 @@ export async function createCharacter(config: {
   function calculateNewPosition() {
     if (!wantedPosition && path.length > 0) {
       wantedPosition = path.pop();
+      console.log(wantedPosition, path.length);
       if (wantedPosition) {
         if (!move) {
           anim[activeAnimation].fadeOut(0.2);
@@ -102,11 +104,12 @@ export async function createCharacter(config: {
       );
       if (currPoss.isEqual(wantedPosition, speed)) {
         wantedPosition = path.pop();
+        console.log(wantedPosition, path.length);
       } else {
         const x12 = wantedPosition.x - Assets.char.position.x;
         const z12 = wantedPosition.z - Assets.char.position.z;
         const D = Math.sqrt(x12 * x12 + z12 * z12);
-        let alpha = Math.acos(x12 / D);
+        let alpha = parseFloat(Math.acos(x12 / D).toFixed(2));
         // if (x12 < 0 && z12 > 0) {
         //   alpha = Math.PI - alpha;
         if ((x12 < 0 && z12 < 0) || (x12 > 0 && z12 < 0)) {
@@ -150,10 +153,11 @@ export async function createCharacter(config: {
 
     setPosition(point) {
       wantedPosition = undefined;
-      path = PathFinder.resolve(
+      path = config.nogo.aStar(
         new Point2D(Assets.char.position.x, Assets.char.position.z),
-        point,
+        config.nogo.closestValidNode(point),
       );
+      console.log([...path]);
     },
 
     update(t) {

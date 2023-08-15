@@ -8,4 +8,5 @@ export class Assets {
   static charDeath: Group;
   static waterNormals: Texture;
   static skybox: CubeTexture;
+  static nogo: Texture;
 }
