@@ -7,4 +7,6 @@ export * from './button';
 export * from './default-props';
 export * from './icon';
 export * from './link';
+export * from './map-card';
+export * from './scrollable';
 export * from './toast';

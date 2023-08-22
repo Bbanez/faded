@@ -41,19 +41,19 @@ const routes: Array<RouteRecordRaw> = [
       ),
   },
   {
-    path: '/dashboard/map-maker',
-    name: 'MapMaker',
+    path: '/dashboard/map-explorer',
+    name: 'MapExplorer',
     component: () =>
       import(
-        /* webpackChunkName: "map-maker" */ './views/dashboard/map-maker/home'
+        /* webpackChunkName: "map-explorer" */ './views/dashboard/map-explorer'
       ),
   },
   {
-    path: '/dashboard/map-maker/:mid',
+    path: '/dashboard/map-explorer/:mapId',
     name: 'MapMakerId',
     component: () =>
       import(
-        /* webpackChunkName: "map-maker" */ './views/dashboard/map-maker/create'
+        /* webpackChunkName: "map-explorer" */ './views/dashboard/map-details'
       ),
   },
   {

@@ -1,33 +1,20 @@
-import { FunctionBuilder, PI12, Point2D, Scene } from 'svemir';
-import { Linear2DFn } from 'svemir/types';
-import {
-  BufferGeometry,
-  Line,
-  LineBasicMaterial,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneGeometry,
-  Texture,
-  Vector3,
-} from 'three';
-import { Obstacle } from './obstacle';
-import { getPixelMatrixFromTexture, linear } from './util';
+import { linear, Linear, Obstacle, Point2D } from './math';
 
 export class Nogo {
   obstacles: Array<Array<Obstacle | null>> = [];
-  xTrans: Linear2DFn;
+  xTrans: Linear;
   xStep: number;
-  zTrans: Linear2DFn;
+  zTrans: Linear;
   zStep: number;
 
-  constructor(public nogoMap: Texture, public mapSize: Point2D) {
-    const pInfo = getPixelMatrixFromTexture(nogoMap, 0);
-    this.xTrans = FunctionBuilder.linear2D([
+  constructor(public nogoMap: number[][], public mapSize: Point2D) {
+    const pInfo = nogoMap;
+    this.xTrans = linear([
       [0, 0],
       [mapSize.x, pInfo[0].length],
     ]);
     this.xStep = this.xTrans.inverse(1);
-    this.zTrans = FunctionBuilder.linear2D([
+    this.zTrans = linear([
       [0, 0],
       [mapSize.z, pInfo.length],
     ]);
@@ -36,7 +23,7 @@ export class Nogo {
       this.obstacles.push([]);
       for (let x = 0; x < pInfo[z].length; x++) {
         const value = pInfo[z][x];
-        if (value > 200) {
+        if (value > 150) {
           this.obstacles[z].push(
             new Obstacle(
               new Point2D(this.xTrans.inverse(x), this.zTrans.inverse(z)),
@@ -46,30 +33,11 @@ export class Nogo {
               0,
             ),
           );
-          // this.cPlane(
-          //   0,
-          //   this.xTrans.inverse(x),
-          //   this.zTrans.inverse(z),
-          //   this.xStep,
-          // );
         } else {
           this.obstacles[z].push(null);
         }
       }
     }
-  }
-
-  cPlane(color: number, x: number, z: number, size: number) {
-    const plane = new Mesh(
-      new PlaneGeometry(size, size),
-      new MeshBasicMaterial({ color }),
-    );
-    plane.rotation.x = -PI12;
-    plane.position.set(x, 1, z);
-    Scene.scene.add(plane);
-    // setTimeout(() => {
-    //   Scene.scene.remove(plane);
-    // }, 2000);
   }
 
   closestValidNode(point: Point2D): Point2D {
@@ -132,34 +100,10 @@ export class Nogo {
       fromZ = p[1].z;
       toZ = p[0].z;
     }
-    const a = new Mesh(
-      new PlaneGeometry(10, 10),
-      new MeshBasicMaterial({ color: 0xff0000 }),
-    );
-    a.position.set(0, 1, pFn(0));
-    Scene.scene.add(a);
-    const line = new Line(
-      new BufferGeometry().setFromPoints([
-        new Vector3(0, 1, pFn(0)),
-        new Vector3(100, 1, pFn(100)),
-      ]),
-      new LineBasicMaterial({ color: 0xff0000 }),
-    );
-    setTimeout(() => {
-      Scene.scene.remove(line);
-      Scene.scene.remove(a);
-    }, 2000);
-    Scene.scene.add(line);
     for (let z = fromZ; z <= toZ; z++) {
       for (let x = fromX; x <= toX; x++) {
         if (this.obstacles[z] && this.obstacles[z][x]) {
           const obs = this.obstacles[z][x] as Obstacle;
-          this.cPlane(
-            0xff0000,
-            this.xTrans.inverse(x),
-            this.zTrans.inverse(z),
-            this.xStep,
-          );
           const inter = obs.doesIntersects(pFn);
           if (inter) {
             return obs;
@@ -171,15 +115,6 @@ export class Nogo {
   }
 
   aStar(origin: Point2D, target: Point2D): Point2D[] {
-    let timeOffset = Date.now();
-    // async function delay(t: number) {
-    //   await new Promise<void>((resolve) => {
-    //     setTimeout(() => {
-    //       resolve();
-    //     }, t);
-    //   });
-    // }
-
     const p: Point2D[] = [
       new Point2D(
         parseInt('' + this.xTrans(origin.x)),
@@ -190,21 +125,6 @@ export class Nogo {
         parseInt('' + this.zTrans(target.z)),
       ),
     ];
-    // if (!this.intersectsObstacle(p[0], p[1])) {
-    //   return [target];
-    // }
-    // this.cPlane(
-    //   0x00ff00,
-    //   this.xTrans.inverse(p[0].x),
-    //   this.zTrans.inverse(p[0].z),
-    //   this.xStep,
-    // );
-    // this.cPlane(
-    //   0x0000ff,
-    //   this.xTrans.inverse(p[1].x),
-    //   this.zTrans.inverse(p[1].z),
-    //   this.xStep,
-    // );
     type Node = [
       // X
       number,
@@ -238,7 +158,6 @@ export class Nogo {
       [-1, 0, 1],
       [-1, -1, 1.4],
     ];
-
     function lowestF(nodes: Node[]): Node {
       let lowestIdx = -1;
       let lowestFh = 10000000000000;
@@ -251,7 +170,6 @@ export class Nogo {
       }
       return nodes.splice(lowestIdx, 1)[0];
     }
-
     function isInSet(nodes: Node[], x: number, z: number): boolean {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
@@ -261,9 +179,6 @@ export class Nogo {
       }
       return false;
     }
-
-    console.log('t1', Date.now() - timeOffset);
-    timeOffset = Date.now();
     while (openSet.length > 0) {
       const current = lowestF(openSet);
       if (current[0] === p[1].x && current[1] === p[1].z) {
@@ -305,12 +220,6 @@ export class Nogo {
               neighborIdx = neighbors.length - 1;
             }
             if (!isInSet(openSet, neighbor[0], neighbor[1])) {
-              // this.cPlane(
-              //   0xff00ff,
-              //   this.xTrans.inverse(neighbor[0]),
-              //   this.zTrans.inverse(neighbor[1]),
-              //   this.xStep,
-              // );
               openSet.push(neighbor);
             }
           } else {
@@ -321,31 +230,15 @@ export class Nogo {
       if (neighbors[neighborIdx]) {
         const neighbor = neighbors[neighborIdx] as Node;
         neighbor[4] = current;
-        // this.cPlane(
-        //   0xff0000,
-        //   this.xTrans.inverse(neighbor[0]),
-        //   this.zTrans.inverse(neighbor[1]),
-        //   this.xStep,
-        // );
-
         if (!isInSet(openSet, neighbor[0], neighbor[1])) {
           openSet.push(neighbor);
         }
       }
-      // await delay(100);
     }
-    console.log('t2', Date.now() - timeOffset);
-    timeOffset = Date.now();
     let loop = true;
     let nextNode = closedSet[closedSet.length - 1];
     cameFrom.push(nextNode);
     while (loop) {
-      // this.cPlane(
-      //   0x00ff00,
-      //   this.xTrans.inverse(nextNode[0]),
-      //   this.zTrans.inverse(nextNode[1]),
-      //   this.xStep,
-      // );
       if ((nextNode[0] === p[0].x && nextNode[1] === p[0].z) || !nextNode[4]) {
         loop = false;
       } else {
@@ -353,16 +246,12 @@ export class Nogo {
         cameFrom.push(nextNode);
       }
     }
-    console.log('t3', Date.now() - timeOffset);
-    timeOffset = Date.now();
     const points = cameFrom.slice(1, cameFrom.length - 2).map((node) => {
       return new Point2D(
         this.xTrans.inverse(node[0]),
         this.zTrans.inverse(node[1]),
       );
     });
-    console.log('t4', Date.now() - timeOffset);
-    timeOffset = Date.now();
     return [target, ...points];
   }
 }

@@ -16,6 +16,7 @@
     "noUnusedParameters": true,
     "paths": {
       "@backend/*": ["./*"],
+      "@bcms": ["../bcms/types"],
       "@bcms/*": ["../bcms/types/*"]
     }
   },

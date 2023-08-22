@@ -26,12 +26,8 @@ export const Layout = defineComponent({
         link: '/dashboard/start-game',
       },
       {
-        name: 'Maps explorer',
-        link: '/dashboard/map',
-      },
-      {
-        name: 'Map maker',
-        link: '/dashboard/map-maker',
+        name: 'Map explorer',
+        link: '/dashboard/map-explorer',
       },
     ];
     const api = useApi();

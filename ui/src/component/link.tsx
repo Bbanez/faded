@@ -1,4 +1,4 @@
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
 import { useRouter } from 'vue-router';
 import { DefaultComponentProps } from './default-props';
 
@@ -9,11 +9,7 @@ export const Link = defineComponent({
       type: String,
       required: true,
     },
-  },
-  emits: {
-    click: (_ev: Event) => {
-      return true;
-    },
+    onClick: Function as PropType<(event: Event) => void | Promise<void>>,
   },
   setup(props, ctx) {
     const router = useRouter();
@@ -29,12 +25,14 @@ export const Link = defineComponent({
             props.href.startsWith('http') ||
             props.href.startsWith('mailto')
           ) {
-            ctx.emit('click', event);
-            return;
+            if (props.onClick) {
+              props.onClick(event);
+              return;
+            }
           }
           event.preventDefault();
           if (props.onClick) {
-            ctx.emit('click', event);
+            props.onClick(event);
           } else {
             router.push(props.href);
           }

@@ -9,6 +9,7 @@ import { AuthHandler } from './handlers/auth';
 import { UserHandler } from './handlers/user';
 import { Store, useStore } from '@ui/store';
 import { UserInvitationHandler } from './handlers/user-invitation';
+import { MapHandler } from './handlers/map';
 
 export class Api {
   public apiOrigin = '';
@@ -20,6 +21,7 @@ export class Api {
   public auth = new AuthHandler(this);
   public user = new UserHandler(this);
   public userInvitation = new UserInvitationHandler(this);
+  public map = new MapHandler(this);
 
   constructor(public store: Store) {
     this.accessTokenRaw = Storage.get('at');

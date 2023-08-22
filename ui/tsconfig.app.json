@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.vue", "../backend/**/*.ts"],
+  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.tsx", "../backend/types/**/*.ts"],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "composite": true,
@@ -11,7 +11,7 @@
     "rootDir": "../",
     "paths": {
       "@ui/*": ["./src/*"],
-      "@backend/*": ["../backend/src/*"]
+      "@backend/*": ["../backend/types/*"]
     }
   }
 }

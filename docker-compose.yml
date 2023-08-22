@@ -35,6 +35,12 @@ services:
       - type: bind
         source: ./backend/public
         target: /app/public
+      - type: bind
+        source: ./backend/bcms
+        target: /app/bcms
+      - type: bind
+        source: ./backend/tsconfig.json
+        target: /app/tsconfig.json
   faded-ui:
     depends_on:
       - faded-backend

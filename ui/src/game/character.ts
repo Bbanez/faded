@@ -78,7 +78,6 @@ export async function createCharacter(config: {
   function calculateNewPosition() {
     if (!wantedPosition && path.length > 0) {
       wantedPosition = path.pop();
-      console.log(wantedPosition, path.length);
       if (wantedPosition) {
         if (!move) {
           anim[activeAnimation].fadeOut(0.2);
@@ -104,7 +103,6 @@ export async function createCharacter(config: {
       );
       if (currPoss.isEqual(wantedPosition, speed)) {
         wantedPosition = path.pop();
-        console.log(wantedPosition, path.length);
       } else {
         const x12 = wantedPosition.x - Assets.char.position.x;
         const z12 = wantedPosition.z - Assets.char.position.z;
@@ -153,11 +151,12 @@ export async function createCharacter(config: {
 
     setPosition(point) {
       wantedPosition = undefined;
+      const timeOffset = Date.now();
       path = config.nogo.aStar(
         new Point2D(Assets.char.position.x, Assets.char.position.z),
         config.nogo.closestValidNode(point),
       );
-      console.log([...path]);
+      console.log(Date.now() - timeOffset);
     },
 
     update(t) {

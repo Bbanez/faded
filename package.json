@@ -7,7 +7,8 @@
     "postinstall": "npm-tool --postinstall",
     "setup": "npm-tool --setup",
     "pre:commit": "npm-tool --pre-commit",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build:types": "npm-tool --build-types"
   },
   "keywords": [],
   "author": "",

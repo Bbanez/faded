@@ -13,6 +13,8 @@ import * as FastifyMultipart from '@fastify/multipart';
 import * as FastifyStatic from '@fastify/static';
 import { UserInvitationController } from './user-invitation';
 import { createBcms } from './bcms';
+import { MapController } from './map';
+import { AssetController } from './asset';
 
 async function main() {
   createServal({
@@ -27,7 +29,13 @@ async function main() {
       },
     },
     middleware: [IPMiddleware],
-    controllers: [AuthController, UserController, UserInvitationController],
+    controllers: [
+      AuthController,
+      UserController,
+      UserInvitationController,
+      MapController,
+      AssetController,
+    ],
     modules: [
       {
         name: 'Fastify modules',

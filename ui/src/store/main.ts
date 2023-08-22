@@ -1,3 +1,4 @@
+import { FddMapEntryMeta } from '@backend/bcms-types';
 import type { UserProtected, UserPublic } from '@backend/user';
 import { UserInvitation } from '@backend/user-invitation';
 import { createArrayStore } from '@banez/vue-array-store';
@@ -24,6 +25,8 @@ export class Store {
   });
 
   userInvitation = createArrayStore<UserInvitation>('_id', []);
+
+  map = createArrayStore<FddMapEntryMeta>('slug', []);
 }
 
 let store: Store;

@@ -22,12 +22,13 @@
     "@fastify/multipart": "^7.7.0",
     "@fastify/static": "^6.10.2",
     "axios": "^0.27.2",
+    "jimp": "^0.22.10",
     "mongodb": "^5.6.0",
-    "servaljs": "^0.1.4",
-    "servaljs-jwt": "file:jwt.tgz",
-    "servaljs-mongodb": "file:mongodb.tgz",
-    "servaljs-redis": "file:redis.tgz",
-    "servaljs-socket": "^0.0.1"
+    "servaljs": "file:packs/servaljs.tgz",
+    "servaljs-jwt": "file:packs/jwt.tgz",
+    "servaljs-mongodb": "file:packs/mongodb.tgz",
+    "servaljs-redis": "file:packs/redis.tgz",
+    "servaljs-socket": "file:packs/socket.tgz"
   },
   "devDependencies": {
     "@fastify/middie": "^8.3.0",

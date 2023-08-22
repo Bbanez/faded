@@ -62,7 +62,7 @@ export async function createGame(config: {
   });
   Loader.register({
     name: 'nogo',
-    path: `/assets/maps/${config.mapId}/nogo.jpg`,
+    path: `/assets/maps/${config.mapId}/nogo-150x150.jpg`,
     type: 'texture',
   });
   unsubs.push(
@@ -191,8 +191,8 @@ export async function createGame(config: {
 
   // const plane = new Mesh(
   //   new PlaneGeometry(100, 100),
-  //   new MeshLambertMaterial({ map: Assets.nogo }),
-  //   // new MeshBasicMaterial({ color: 0xffffff }),
+  //   // new MeshLambertMaterial({ map: Assets.nogo }),
+  //   new MeshBasicMaterial({ color: 0xffffff }),
   // );
   // plane.rotation.x = -PI12;
   // plane.position.set(50, 10, 50);
@@ -231,7 +231,7 @@ export async function createGame(config: {
   // }
   // updateSun();
 
-  // await nogo.aStar(config.camLookAt, new Point2D(35, 85));
+  // await nogo.aStar(new Point2D(10, 10), new Point2D(85, 85));
 
   return {
     svemir,

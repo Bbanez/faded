@@ -1,5 +1,5 @@
-import { Point2D } from 'svemir';
-import type { Linear2DFn } from 'svemir/types';
+import type { Linear } from './functions';
+import { Point2D } from './point';
 
 export type ObstacleIntersections = [Point2D | null, Point2D | null];
 
@@ -62,7 +62,7 @@ export class Obstacle {
     }
   }
 
-  getIntersections(origin: Point2D, lineFn: Linear2DFn): ObstacleIntersections {
+  getIntersections(origin: Point2D, lineFn: Linear): ObstacleIntersections {
     let ax = -1;
     let az = -1;
     const ax1 = this.corners[0].x;
@@ -206,7 +206,7 @@ export class Obstacle {
     return output;
   }
 
-  doesIntersects(lineFn: Linear2DFn): boolean {
+  doesIntersects(lineFn: Linear): boolean {
     let z = lineFn(this.corners[1].x);
     if (z >= this.corners[1].z && z <= this.corners[2].z) {
       return true;
