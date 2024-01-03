@@ -1,1 +1,5 @@
-export { default as AssetLoader } from './asset-loader.vue';
+export * from './icons';
+export * from './inputs';
+
+export * from './button';
+export * from './link';
