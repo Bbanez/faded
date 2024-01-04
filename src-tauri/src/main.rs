@@ -38,7 +38,6 @@ fn main() {
                 (4.0, 4.0),
                 (3200.0, 3200.0),
                 BaseStats::new(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0),
-                (100.0, 100.0),
             ),
         })))
         .invoke_handler(tauri::generate_handler![
@@ -48,7 +47,7 @@ fn main() {
             game::player::player_load,
             game::player::player_motion,
             game::player::player_get,
-            game::player::player_pointing_at,
+            game::player::player_set_wanted_position,
             game::on_tick::on_tick,
             // game::enemy::enemy_create,
             // game::enemy::enemy_get,

@@ -15,21 +15,21 @@ pub struct Store {
 }
 
 impl Store {
-    pub fn find_map(&mut self, map_id: &str) -> &FddMapEntryMetaItem {
-        self.maps.iter().find(|item| item.slug == map_id).unwrap()
+    pub fn find_map(&mut self, map_slug: &str) -> &FddMapEntryMetaItem {
+        self.maps.iter().find(|item| item.slug == map_slug).unwrap()
     }
 
-    pub fn find_enemy_data(&mut self, enemy_data_id: &str) -> &FddEnemyEntryMetaItem {
+    pub fn find_enemy_data(&mut self, enemy_data_slug: &str) -> &FddEnemyEntryMetaItem {
         self.enemies_data
             .iter()
-            .find(|item| item.slug == enemy_data_id)
+            .find(|item| item.slug == enemy_data_slug)
             .unwrap()
     }
 
-    pub fn find_character(&mut self, character_id: &str) -> Option<&FddCharacterEntryMetaItem> {
+    pub fn find_character(&mut self, character_slug: &str) -> Option<&FddCharacterEntryMetaItem> {
         self.characters
             .iter()
-            .find(|item| item.slug == character_id)
+            .find(|item| item.slug == character_slug)
     }
 
     // pub fn find_enemy(&mut self, enemy_id: &str) -> Option<&Enemy> {

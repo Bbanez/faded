@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export interface TickerCallback {
-  (cTime: number, deltaTime: number): void;
+  (cTime: number, deltaTime: number): Promise<void>;
 }
 
 export interface TickerUnsubscribe {
@@ -14,12 +14,12 @@ export class Ticker {
   private static timeDelta = 0;
   private static paused = false;
 
-  static tick() {
+  static async tick() {
     if (Ticker.paused === false) {
       Ticker.timeDelta = Date.now() - Ticker.time;
       Ticker.time = Date.now();
       for (let i = 0; i < Ticker.subs.length; i++) {
-        Ticker.subs[i].callback(Ticker.time, Ticker.timeDelta);
+        await Ticker.subs[i].callback(Ticker.time, Ticker.timeDelta);
       }
     }
   }

@@ -20,17 +20,16 @@ export interface KeyboardUnsubscribe {
 }
 
 export class Keyboard {
-  private static subs: {
-    [id: string]: {
-      type: KeyboardEventType;
-      cb: KeyboardEventCallback;
-    };
-  } = {};
+  private static subs: Array<{
+    id: string;
+    type: KeyboardEventType;
+    cb: KeyboardEventCallback;
+  }> = [];
   static state: KeyboardState = {};
 
   private static trigger(type: KeyboardEventType, event: KeyboardEvent) {
-    for (const id in Keyboard.subs) {
-      const sub = Keyboard.subs[id];
+    for (let i = 0; i < Keyboard.subs.length; i++) {
+      const sub = Keyboard.subs[i];
       if (sub.type === type || sub.type === KeyboardEventType.ALL) {
         sub.cb(Keyboard.state, event);
       }
@@ -60,15 +59,22 @@ export class Keyboard {
   }
   static subscribe(
     type: KeyboardEventType,
-    callback: KeyboardEventCallback
+    callback: KeyboardEventCallback,
   ): KeyboardUnsubscribe {
     const id = uuidv4();
-    Keyboard.subs[id] = {
+    Keyboard.subs.push({
+      id,
       type,
       cb: callback,
-    };
+    });
     return () => {
-      delete Keyboard.subs[id];
+      for (let i = 0; i < Keyboard.subs.length; i++) {
+        const sub = Keyboard.subs[i];
+        if (sub.id === id) {
+          Keyboard.subs.splice(i, 1);
+          break;
+        }
+      }
     };
   }
 }

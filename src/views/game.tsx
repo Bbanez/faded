@@ -2,15 +2,6 @@ import { defineComponent, onMounted, onUnmounted, ref } from 'vue';
 import { Link } from '../components';
 import { Game } from '../game';
 import { invoke } from '@tauri-apps/api';
-import {
-  BoxGeometry,
-  Color,
-  Mesh,
-  MeshBasicMaterial,
-  PerspectiveCamera,
-  Scene,
-  WebGLRenderer,
-} from 'three';
 
 export const GameView = defineComponent({
   setup() {

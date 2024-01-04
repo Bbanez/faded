@@ -9,4 +9,6 @@ export interface RustPlayer {
   map_size: [number, number];
   pointing_at: [number, number];
   pointing_at_angle: [number, number];
+  wanted_positions: Array<[number, number]>;
+  wanted_position: [number, number] | null;
 }

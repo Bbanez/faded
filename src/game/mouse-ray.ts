@@ -43,13 +43,14 @@ export interface MouseUnsubscribe {
 export class MouseRay {
   private unsubs: Array<MouseUnsubscribe> = [];
   private ray = new Raycaster();
-  private subs: {
-    [id: string]: (intersections: Intersection<Object3D>[]) => void;
-  } = {};
+  private subs: Array<{
+    id: string;
+    callback: (intersections: Intersection<Object3D>[]) => void;
+  }> = [];
 
   constructor(
     private cam: PerspectiveCamera,
-    private objects: Object3D[] | Group
+    private objects: Object3D[] | Group,
   ) {
     this.unsubs.push(
       Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {
@@ -65,22 +66,31 @@ export class MouseRay {
             this.objects instanceof Array
               ? this.ray.intersectObjects(this.objects)
               : this.ray.intersectObject(this.objects);
-          for (const id in this.subs) {
-            const sub = this.subs[id];
-            sub(res);
+          for (let i = 0; i < this.subs.length; i++) {
+            const sub = this.subs[i];
+            sub.callback(res);
           }
         }
-      })
+      }),
     );
   }
 
   subscribe(
-    callback: (intersections: Intersection<Object3D>[]) => void
+    callback: (intersections: Intersection<Object3D>[]) => void,
   ): () => void {
     const id = uuidv4();
-    this.subs[id] = callback;
+    this.subs.push({
+      id,
+      callback,
+    });
     return () => {
-      delete this.subs[id];
+      for (let i = 0; i < this.subs.length; i++) {
+        const sub = this.subs[i];
+        if (sub.id) {
+          this.subs.splice(i, 1);
+          break;
+        }
+      }
     };
   }
 

@@ -1,4 +1,11 @@
-import { ShadowMapType } from 'three';
+import {
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Scene,
+  ShadowMapType,
+  WebGLRenderer,
+} from 'three';
+import { Ticker } from './ticker';
 
 export interface RendererConfig {
   shadowMapType?: ShadowMapType;
@@ -7,10 +14,6 @@ export interface RendererConfig {
     height: number;
   };
 }
-
-import { PCFSoftShadowMap, WebGLRenderer } from 'three';
-import type { PerspectiveCamera, Scene } from 'three';
-import { Ticker } from './ticker';
 
 export class Renderer {
   r = new WebGLRenderer();
@@ -24,7 +27,7 @@ export class Renderer {
     el: HTMLElement,
     public scene: Scene,
     private camera: PerspectiveCamera,
-    config?: RendererConfig
+    config?: RendererConfig,
   ) {
     if (!config) {
       config = {};
@@ -48,9 +51,9 @@ export class Renderer {
     }
     el.appendChild(this.r.domElement);
     this.unsubs.push(
-      Ticker.subscribe(() => {
+      Ticker.subscribe(async () => {
         this.render();
-      })
+      }),
     );
   }
 

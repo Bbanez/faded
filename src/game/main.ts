@@ -19,7 +19,8 @@ import { invoke } from '@tauri-apps/api';
 import { AssetLoader } from './asset-loader';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { PI12 } from './consts';
-import { Camera, createCamera } from './camera';
+import { Camera } from './camera';
+import { Player, createPlayer } from './player';
 
 export interface GameConfig {
   el: HTMLElement;
@@ -39,6 +40,7 @@ export class Game {
     skybox: CubeTexture;
   } = {} as never;
   camera: Camera;
+  player: Player | null = null;
 
   private unsubs: Array<() => void> = [];
 
@@ -47,30 +49,30 @@ export class Game {
     this.el = config.el;
     this.scene = new Scene();
     this.scene.background = new Color(0, 0, 0);
-    this.camera = createCamera(this, {
-      initPosition: [30, 85],
-    });
+    this.camera = new Camera(this, [30, 85]);
     this.renderer = new Renderer(
       config.el,
       this.scene,
       this.camera.cam,
-      config.renderer
+      config.renderer,
     );
     Mouse.init();
     Keyboard.init();
-    function frameTick() {
-      requestAnimationFrame(frameTick);
-      Ticker.tick();
-    }
-    if (config.frameTicker) {
-      frameTick();
-    }
+
     Ticker.reset();
     this.unsubs.push(
       Ticker.subscribe(async () => {
         await invoke('on_tick');
-      })
+      }),
     );
+
+    async function frameTick() {
+      await Ticker.tick();
+      requestAnimationFrame(frameTick);
+    }
+    if (config.frameTicker) {
+      frameTick().catch((err) => console.error(err));
+    }
   }
 
   async run() {
@@ -97,7 +99,7 @@ export class Game {
           mapData.skybox.zn.src,
         ],
         type: 'cubeTexture',
-      }
+      },
     );
     const loaderUnsub = AssetLoader.onLoaded((item, data) => {
       if (item.name === 'ground') {
@@ -136,12 +138,18 @@ export class Game {
         color: 0x00aaff,
         transparent: true,
         opacity: 0.5,
-      })
+      }),
     );
     water.rotation.x = -PI12;
     water.position.set(50, -0.2, 50);
     this.scene.add(water);
     this.renderer.onResize();
+
+    this.player = await createPlayer(this, 'demo');
+    console.log(this.player.rust)
+    this.scene.add(this.player.model);
+    this.player.animation.play('run');
+    this.camera.follow(this.player);
   }
 
   destroy() {

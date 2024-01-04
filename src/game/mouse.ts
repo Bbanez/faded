@@ -25,7 +25,8 @@ export interface MouseEventCallback {
 }
 
 export interface MouseSubscription {
-  [id: string]: MouseEventCallback;
+  id: string;
+  callback: MouseEventCallback;
 }
 
 export interface MouseUnsubscribe {
@@ -45,23 +46,25 @@ export class Mouse {
     },
   };
   private static subs: {
-    [MouseEventType.ALL]: MouseSubscription;
-    [MouseEventType.MOUSE_DOWN]: MouseSubscription;
-    [MouseEventType.MOUSE_MOVE]: MouseSubscription;
-    [MouseEventType.MOUSE_UP]: MouseSubscription;
+    [MouseEventType.ALL]: MouseSubscription[];
+    [MouseEventType.MOUSE_DOWN]: MouseSubscription[];
+    [MouseEventType.MOUSE_MOVE]: MouseSubscription[];
+    [MouseEventType.MOUSE_UP]: MouseSubscription[];
   } = {
-    [MouseEventType.ALL]: {},
-    [MouseEventType.MOUSE_DOWN]: {},
-    [MouseEventType.MOUSE_MOVE]: {},
-    [MouseEventType.MOUSE_UP]: {},
+    [MouseEventType.ALL]: [],
+    [MouseEventType.MOUSE_DOWN]: [],
+    [MouseEventType.MOUSE_MOVE]: [],
+    [MouseEventType.MOUSE_UP]: [],
   };
 
   private static trigger(type: MouseEventType, event: MouseEvent) {
-    for (const id in Mouse.subs[type]) {
-      Mouse.subs[type][id](Mouse.state, event);
+    for (let i = 0; i < Mouse.subs[type].length; i++) {
+      const sub = Mouse.subs[type][i];
+      sub.callback(Mouse.state, event);
     }
-    for (const id in Mouse.subs[MouseEventType.ALL]) {
-      Mouse.subs[MouseEventType.ALL][id](Mouse.state, event);
+    for (let i = 0; i < Mouse.subs[MouseEventType.ALL].length; i++) {
+      const sub = Mouse.subs[MouseEventType.ALL][i];
+      sub.callback(Mouse.state, event);
     }
   }
   private static onMouseDown(event: MouseEvent) {
@@ -107,7 +110,7 @@ export class Mouse {
     Mouse.state.y = event.clientY;
     Mouse.trigger(MouseEventType.MOUSE_MOVE, event);
   }
-  private static onContext(event: MouseEvent) {
+  private static onContext(_event: MouseEvent) {
     // event.preventDefault();
   }
 
@@ -125,13 +128,19 @@ export class Mouse {
   }
   static subscribe(
     type: MouseEventType,
-    callback: MouseEventCallback
+    callback: MouseEventCallback,
   ): () => void {
     const id = uuidv4();
-    Mouse.subs[type][id] = callback;
+    Mouse.subs[type].push({ id, callback });
 
     return () => {
-      delete Mouse.subs[type][id];
+      for (let i = 0; i < Mouse.subs[type].length; i++) {
+        const sub = Mouse.subs[type][i];
+        if (sub.id === id) {
+          Mouse.subs[type].splice(i, 1);
+          break;
+        }
+      }
     };
   }
 }

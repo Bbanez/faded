@@ -11,31 +11,36 @@ impl Math {
     }
 
     pub fn get_angle(position: (f32, f32), target: (f32, f32)) -> f32 {
-        let a = target.0 - position.0;
-        let b = target.1 - position.1;
-        let mut angle = 0.0;
-        if b == 0.0 {
-            if a > 0.0 {
-                angle = 0.0;
-            } else if a < 0.0 {
-                angle = PI;
-            }
-        } else if a == 0.0 {
-            if b > 0.0 {
-                angle = PI12;
-            } else if b < 0.0 {
+        let dx = target.0 - position.0;
+        let dz = target.1 - position.1;
+        let mut angle: f32 = 0.0;
+        if dx == 0.0 {
+            angle = PI12;
+            if dz < 0.0 {
                 angle = PI32;
             }
+        } else if dz == 0.0 {
+            if dx < 0.0 {
+                angle = PI;
+            }
         } else {
-            angle = (b / a).tan();
-            if a < 0.0 && b > 0.0 {
-                angle = PI - angle;
-            } else if a < 0.0 && b < 0.0 {
+            angle = (dz / dx).atan();
+            if dx < 0.0 && dz > 0.0 {
                 angle = PI + angle;
-            } else if a > 0.0 && b < 0.0 {
-                angle = 2.0 * PI - angle;
+            } else if dx < 0.0 && dz < 0.0 {
+                angle = PI + angle;
+            } else if dx > 0.0 && dz < 0.0 {
+                angle = 2.0 * PI + angle
             }
         }
         angle
+    }
+
+    pub fn rad_to_deg(rad: f32) -> f32 {
+        180.0 * rad / PI
+    }
+
+    pub fn deg_to_rad(deg: f32) -> f32 {
+        PI * deg / 180.0
     }
 }
