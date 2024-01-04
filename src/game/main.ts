@@ -8,6 +8,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
   Scene,
+  Texture,
 } from 'three';
 import { Renderer, RendererConfig } from './renderer';
 import { Mouse } from './mouse';
@@ -21,6 +22,7 @@ import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { PI12 } from './consts';
 import { Camera } from './camera';
 import { Player, createPlayer } from './player';
+import { getImageData } from './util';
 
 export interface GameConfig {
   el: HTMLElement;
@@ -100,16 +102,32 @@ export class Game {
         ],
         type: 'cubeTexture',
       },
+      {
+        name: 'nogo',
+        path: this.mapData.nogo.src,
+        type: 'texture',
+      },
     );
-    const loaderUnsub = AssetLoader.onLoaded((item, data) => {
+    const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
       if (item.name === 'ground') {
         this.assets.ground = (data as GLTF).scene;
         this.assets.ground.traverse((o) => {
           o.receiveShadow = true;
         });
-        this.assets.ground.scale.set(50, 50, 50);
+        this.assets.ground.scale.set(mapData.width / 2, 50, mapData.height / 2);
       } else if (item.name === 'skybox') {
         this.assets.skybox = data as CubeTexture;
+      } else if (item.name === 'nogo') {
+        const imageData = getImageData(data as Texture);
+        const pixels: number[] = [];
+        for (let i = 0; i < imageData.data.length; i++) {
+          const pixel = imageData.data[i];
+          pixels.push(pixel);
+        }
+        await invoke('nogo_set', {
+          pixels,
+          mapSlug: this.mapSlug,
+        });
       }
     });
     await AssetLoader.run();
@@ -121,7 +139,7 @@ export class Game {
     const sun = new DirectionalLight(0xffffff);
     sun.position.set(-0, 10, 0);
     sun.castShadow = true;
-    sun.target.position.set(100, 0, 100);
+    sun.target.position.set(mapData.width, 0, mapData.height);
     sun.shadow.mapSize.width = 8000;
     sun.shadow.mapSize.height = 8000;
     sun.shadow.camera.left = 100;
@@ -133,7 +151,7 @@ export class Game {
     this.scene.add(ambientLight);
 
     const water = new Mesh(
-      new PlaneGeometry(100, 100),
+      new PlaneGeometry(mapData.width, mapData.height),
       new MeshBasicMaterial({
         color: 0x00aaff,
         transparent: true,
@@ -141,12 +159,12 @@ export class Game {
       }),
     );
     water.rotation.x = -PI12;
-    water.position.set(50, -0.2, 50);
+    water.position.set(mapData.width / 2, -0.2, mapData.height / 2);
     this.scene.add(water);
     this.renderer.onResize();
 
     this.player = await createPlayer(this, 'demo');
-    console.log(this.player.rust)
+    console.log(this.player.rust);
     this.scene.add(this.player.model);
     this.player.animation.play('run');
     this.camera.follow(this.player);

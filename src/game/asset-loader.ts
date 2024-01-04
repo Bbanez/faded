@@ -1,10 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import Axios from 'axios';
-import type { CubeTexture, Group, Texture } from 'three';
-import { CubeTextureLoader, TextureLoader } from 'three';
-import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import {
+  TextureLoader,
+  type CubeTexture,
+  type Group,
+  type Texture,
+  CubeTextureLoader,
+} from 'three';
+import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export interface AssetLoaderCallbackData {
   type: 'progress' | 'started' | 'done';
@@ -18,7 +22,7 @@ export interface AssetLoaderCallbackData {
 }
 
 export interface AssetLoaderCallback {
-  (data: AssetLoaderCallbackData): void;
+  (data: AssetLoaderCallbackData): Promise<void>;
 }
 
 export interface AssetLoaderItem {
@@ -35,7 +39,7 @@ export type AssetLoaderOnLoadedData =
   | string;
 
 export interface AssetLoaderOnLoadedCallback {
-  (item: AssetLoaderItem, data: AssetLoaderOnLoadedData): void;
+  (item: AssetLoaderItem, data: AssetLoaderOnLoadedData): Promise<void>;
 }
 
 export class AssetLoader {
@@ -54,10 +58,10 @@ export class AssetLoader {
   private static items: AssetLoaderItem[] = [];
   private static loadedItemsCount = 0;
 
-  private static trigger(type: 'started' | 'done') {
+  private static async trigger(type: 'started' | 'done') {
     for (let i = 0; i < this.subs.length; i++) {
       const sub = this.subs[i];
-      sub.cb({
+      await sub.cb({
         items: this.items.map((e) => e.path),
         type,
         loadedItemsCount: this.loadedItemsCount,
@@ -65,10 +69,13 @@ export class AssetLoader {
     }
   }
 
-  private static triggerProgress(item: AssetLoaderItem, progress: number) {
+  private static async triggerProgress(
+    item: AssetLoaderItem,
+    progress: number,
+  ) {
     for (let i = 0; i < this.subs.length; i++) {
       const sub = this.subs[i];
-      sub.cb({
+      await sub.cb({
         items: this.items.map((e) => e.path),
         type: 'progress',
         loadedItemsCount: this.loadedItemsCount,
@@ -81,100 +88,112 @@ export class AssetLoader {
     }
   }
 
-  private static triggerOnLoaded(
+  private static async triggerOnLoaded(
     item: AssetLoaderItem,
-    data: AssetLoaderOnLoadedData
+    data: AssetLoaderOnLoadedData,
   ) {
     for (let i = 0; i < this.onLoadedSubs.length; i++) {
       const sub = this.onLoadedSubs[i];
-      sub.cb(item, data);
+      await sub.cb(item, data);
     }
   }
 
   private static async loadFbx(item: AssetLoaderItem): Promise<Group> {
-    this.triggerProgress(item, 0);
+    await this.triggerProgress(item, 0);
     return new Promise<Group>((resolve, reject) => {
       this.fbxLoader.load(
         item.path as string,
-        (fbx) => {
-          this.triggerProgress(item, 100);
+        async (fbx) => {
+          await this.triggerProgress(item, 100);
           resolve(fbx);
         },
-        (progress) => {
-          this.triggerProgress(item, (progress.loaded / progress.total) * 100);
+        async (progress) => {
+          await this.triggerProgress(
+            item,
+            (progress.loaded / progress.total) * 100,
+          );
         },
-        (err) => {
-          this.triggerProgress(item, 100);
+        async (err) => {
+          await this.triggerProgress(item, 100);
           reject(err);
-        }
+        },
       );
     });
   }
 
   private static async loadGltf(item: AssetLoaderItem): Promise<GLTF> {
-    this.triggerProgress(item, 0);
+    await this.triggerProgress(item, 0);
     return new Promise<GLTF>((resolve, reject) => {
       this.gltfLoader.load(
         item.path as string,
-        (gltf) => {
-          this.triggerProgress(item, 100);
+        async (gltf) => {
+          await this.triggerProgress(item, 100);
           resolve(gltf);
         },
-        (progress) => {
-          this.triggerProgress(item, (progress.loaded / progress.total) * 100);
+        async (progress) => {
+          await this.triggerProgress(
+            item,
+            (progress.loaded / progress.total) * 100,
+          );
         },
-        (err) => {
-          this.triggerProgress(item, 100);
+        async (err) => {
+          await this.triggerProgress(item, 100);
           reject(err);
-        }
+        },
       );
     });
   }
 
   private static async loadTexture(item: AssetLoaderItem): Promise<Texture> {
-    this.triggerProgress(item, 0);
+    await this.triggerProgress(item, 0);
     return new Promise<Texture>((resolve, reject) => {
       this.textureLoader.load(
         item.path as string,
-        (texture) => {
-          this.triggerProgress(item, 100);
+        async (texture) => {
+          await this.triggerProgress(item, 100);
           resolve(texture);
         },
-        (progress) => {
-          this.triggerProgress(item, (progress.loaded / progress.total) * 100);
+        async (progress) => {
+          await this.triggerProgress(
+            item,
+            (progress.loaded / progress.total) * 100,
+          );
         },
-        (err) => {
-          this.triggerProgress(item, 100);
+        async (err) => {
+          await this.triggerProgress(item, 100);
           reject(err);
-        }
+        },
       );
     });
   }
 
   private static async loadCubeTexture(
-    item: AssetLoaderItem
+    item: AssetLoaderItem,
   ): Promise<CubeTexture> {
-    this.triggerProgress(item, 0);
+    await this.triggerProgress(item, 0);
     return new Promise<CubeTexture>((resolve, reject) => {
       this.cubeTextureLoader.load(
         item.path as string[],
-        (texture) => {
-          this.triggerProgress(item, 100);
+        async (texture) => {
+          await this.triggerProgress(item, 100);
           resolve(texture);
         },
-        (progress) => {
-          this.triggerProgress(item, (progress.loaded / progress.total) * 100);
+        async (progress) => {
+          await this.triggerProgress(
+            item,
+            (progress.loaded / progress.total) * 100,
+          );
         },
-        (err) => {
-          this.triggerProgress(item, 100);
+        async (err) => {
+          await this.triggerProgress(item, 100);
           reject(err);
-        }
+        },
       );
     });
   }
 
   private static async loadString(item: AssetLoaderItem): Promise<string> {
-    this.triggerProgress(item, 0);
+    await this.triggerProgress(item, 0);
     const result = await Axios({
       url: item.path as string,
       method: 'get',

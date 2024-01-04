@@ -76,7 +76,7 @@ impl Player {
     fn calc_position(&mut self) {
         if self.motion.0 != 0.0 || self.motion.1 != 0.0 {
             if self.motion.0 != 0.0 {
-                self.angle += 0.1 * self.motion.0;
+                self.angle += 0.02 * self.motion.0;
             }
             if self.motion.1 != 0.0 {
                 let old_position = self.obj.get_position();
@@ -90,10 +90,8 @@ impl Player {
                 Some(wanted_position) => {
                     let old_position = self.obj.get_position();
                     self.obj.set_position((
-                        old_position.0
-                            + self.base_stats.move_speed * self.angle.cos(),
-                        old_position.1
-                            + self.base_stats.move_speed * self.angle.sin(),
+                        old_position.0 + self.base_stats.move_speed * self.angle.cos(),
+                        old_position.1 + self.base_stats.move_speed * self.angle.sin(),
                     ));
                     if Math::are_points_near(
                         self.obj.get_position(),
@@ -144,6 +142,8 @@ pub fn player_get(state: tauri::State<GameState>) -> Player {
 #[tauri::command]
 pub fn player_set_wanted_position(state: tauri::State<GameState>, wanted_position: (f32, f32)) {
     let mut state_guard = state.0.lock().unwrap();
-    state_guard.player.wanted_positions = vec![wanted_position];
+    state_guard.player.wanted_positions = state_guard
+        .nogo
+        .a_star(state_guard.player.obj.clone().get_position(), wanted_position);
     state_guard.player.wanted_position = None;
 }

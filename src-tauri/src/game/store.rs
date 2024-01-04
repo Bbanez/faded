@@ -3,7 +3,7 @@ use crate::bcms::entry::{
     fdd_map::FddMapEntryMetaItem,
 };
 
-use super::{player::Player, projectile::Projectile};
+use super::{nogo::Nogo, player::Player, projectile::Projectile};
 
 #[derive(Debug)]
 pub struct Store {
@@ -12,24 +12,24 @@ pub struct Store {
     pub maps: Vec<FddMapEntryMetaItem>,
     pub enemies_data: Vec<FddEnemyEntryMetaItem>,
     pub projectiles: Vec<Projectile>,
+    pub nogo: Nogo,
 }
 
 impl Store {
-    pub fn find_map(&mut self, map_slug: &str) -> &FddMapEntryMetaItem {
-        self.maps.iter().find(|item| item.slug == map_slug).unwrap()
+    pub fn find_map(&mut self, map_slug: &str) -> Option<&FddMapEntryMetaItem> {
+        self.maps.iter().find(|item| item.slug == map_slug).clone()
     }
 
-    pub fn find_enemy_data(&mut self, enemy_data_slug: &str) -> &FddEnemyEntryMetaItem {
+    pub fn find_enemy_data(&mut self, enemy_data_slug: &str) -> Option<&FddEnemyEntryMetaItem> {
         self.enemies_data
             .iter()
-            .find(|item| item.slug == enemy_data_slug)
-            .unwrap()
+            .find(|item| item.slug == enemy_data_slug).clone()
     }
 
     pub fn find_character(&mut self, character_slug: &str) -> Option<&FddCharacterEntryMetaItem> {
         self.characters
             .iter()
-            .find(|item| item.slug == character_slug)
+            .find(|item| item.slug == character_slug).clone()
     }
 
     // pub fn find_enemy(&mut self, enemy_id: &str) -> Option<&Enemy> {

@@ -1,0 +1,260 @@
+use serde::{Deserialize, Serialize};
+
+use super::nogo::Nogo;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PathFindingNode {
+    pub g: usize, // Distance from the start
+    pub h: usize, // Distance from the end
+    pub f: usize, // g + h
+    pub position: (usize, usize),
+    pub parent_idx: Option<usize>,
+    pub neighbor_idx: (
+        // tl
+        usize,
+        // tm
+        usize,
+        // tr
+        usize,
+        // mr
+        usize,
+        // br
+        usize,
+        // bm
+        usize,
+        // bl
+        usize,
+        // ml
+        usize,
+    ),
+    pub valid: bool,
+}
+
+impl PathFindingNode {
+    pub fn new(
+        start: (usize, usize),
+        position: (usize, usize),
+        end: (usize, usize),
+        parent_idx: Option<usize>,
+        neighbor_idx: (
+            // tl
+            usize,
+            // tm
+            usize,
+            // tr
+            usize,
+            // mr
+            usize,
+            // br
+            usize,
+            // bm
+            usize,
+            // bl
+            usize,
+            // ml
+            usize,
+        ),
+        valid: bool,
+    ) -> PathFindingNode {
+        let g = distance_between_points(start, position);
+        let h = distance_between_points(position, end);
+        PathFindingNode {
+            g,
+            h,
+            f: g + h,
+            position,
+            parent_idx,
+            neighbor_idx,
+            valid,
+        }
+    }
+}
+
+fn lowest_f(nodes: &Vec<PathFindingNode>) -> (PathFindingNode, usize) {
+    let mut lowest_idx = 0;
+    let mut lowest_f_vel: usize = 1000000000000;
+    for i in 0..nodes.len() {
+        if nodes[i].f < lowest_f_vel {
+            lowest_f_vel = nodes[i].f;
+            lowest_idx = i;
+        }
+    }
+    (nodes[lowest_idx].clone(), lowest_idx)
+}
+
+fn is_in_set(node: &PathFindingNode, nodes: &Vec<PathFindingNode>) -> bool {
+    for i in 0..nodes.len() {
+        if nodes[i].position.0 == node.position.0 && nodes[i].position.1 == node.position.1 {
+            return true;
+        }
+    }
+    false
+}
+
+fn set_node_params(
+    start: &PathFindingNode,
+    end: &PathFindingNode,
+    node: &PathFindingNode,
+) -> PathFindingNode {
+    let mut n = node.clone();
+    n.f = distance_between_points(start.position, node.position);
+    n.h = distance_between_points(node.position, end.position);
+    n.g = node.f + node.h;
+    n
+}
+
+fn get_neighbor_nodes(
+    start: &PathFindingNode,
+    end: &PathFindingNode,
+    neighbor_idx: (
+        // tl
+        usize,
+        // tm
+        usize,
+        // tr
+        usize,
+        // mr
+        usize,
+        // br
+        usize,
+        // bm
+        usize,
+        // bl
+        usize,
+        // ml
+        usize,
+    ),
+    nodes: &Vec<PathFindingNode>,
+) -> Vec<PathFindingNode> {
+    let mut res: Vec<PathFindingNode> = vec![];
+    if neighbor_idx.0 < 100000 {
+        let node = &nodes[neighbor_idx.0];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.1 < 100000 {
+        let node = &nodes[neighbor_idx.1];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.2 > 100000 {
+        let node = &nodes[neighbor_idx.2];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.3 > 100000 {
+        let node = &nodes[neighbor_idx.3];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.4 > 100000 {
+        let node = &nodes[neighbor_idx.4];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.5 > 100000 {
+        let node = &nodes[neighbor_idx.5];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.6 > 100000 {
+        let node = &nodes[neighbor_idx.6];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    if neighbor_idx.7 > 100000 {
+        let node = &nodes[neighbor_idx.7];
+        if node.valid {
+            res.push(set_node_params(start, end, &node));
+        }
+    }
+    res
+}
+
+fn distance_between_points(start: (usize, usize), end: (usize, usize)) -> usize {
+    let x = end.0.abs_diff(start.0);
+    let z = end.1.abs_diff(start.1);
+    if x > z {
+        return 14 * z + 10 * (x - z);
+    }
+    return 14 * x + 10 * (z - x);
+}
+
+fn resolve_path(
+    start_node: &PathFindingNode,
+    end_node: &PathFindingNode,
+    nogo: &Nogo,
+) -> Vec<(f32, f32)> {
+    let mut output: Vec<(f32, f32)> = vec![];
+    
+    output.reverse();
+    output
+}
+
+pub fn path_finding(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Vec<(f32, f32)> {
+    let start_node_opt = nogo.get_valid_node(map_start);
+    match start_node_opt {
+        Some(start_node) => {
+            let end_node_opt = nogo.get_valid_node(map_end);
+            match end_node_opt {
+                Some(end_node) => {
+                    let mut open_set: Vec<PathFindingNode> = vec![start_node.clone()];
+                    let mut closed_set: Vec<PathFindingNode> = vec![];
+                    while open_set.len() > 0 {
+                        let current_node = lowest_f(&open_set);
+                        open_set.remove(current_node.1);
+                        closed_set.push(current_node.0.clone());
+                        if current_node.0.position.0 == end_node.position.0
+                            && current_node.0.position.1 == end_node.position.1
+                        {
+                            break;
+                        }
+                        let mut neighbor_nodes = get_neighbor_nodes(
+                            &start_node,
+                            &end_node,
+                            current_node.0.neighbor_idx,
+                            &nogo.nodes,
+                        );
+                        for i in 0..neighbor_nodes.len() {
+                            neighbor_nodes[i].parent_idx = Some(current_node.1);
+                            if is_in_set(&neighbor_nodes[i], &closed_set) == false {
+                                let new_move_cost = current_node.0.g
+                                    + distance_between_points(
+                                        current_node.0.position,
+                                        neighbor_nodes[i].position,
+                                    );
+                                if new_move_cost < neighbor_nodes[i].g
+                                    || is_in_set(&neighbor_nodes[i], &open_set)
+                                {
+                                    neighbor_nodes[i].g = new_move_cost;
+                                    neighbor_nodes[i].h = distance_between_points(
+                                        neighbor_nodes[i].position,
+                                        end_node.position,
+                                    );
+                                    neighbor_nodes[i].f = neighbor_nodes[i].g + neighbor_nodes[i].h;
+                                    if is_in_set(&neighbor_nodes[i], &open_set) {
+                                        open_set.push(neighbor_nodes[i].clone());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                None => {
+                    println!("PF: failed to find end node for {:?}", map_end);
+                }
+            }
+        }
+        None => {
+            println!("PF: failed to find start node for {:?}", map_start);
+        }
+    }
+    vec![]
+}

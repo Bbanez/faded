@@ -59,7 +59,7 @@ export class Camera {
     window.addEventListener('resize', () => {
       this.mouseDistanceFn = FunctionBuilder.linear2D([
         [0, 0],
-        [window.innerWidth / 2, PI_2],
+        [window.innerWidth / 2, PI12],
       ]);
     });
     this.unsubs.push(
@@ -67,7 +67,7 @@ export class Camera {
         if (state.middle) {
           this.mouseDistanceFn = FunctionBuilder.linear2D([
             [state.x, 0],
-            [state.x + window.innerWidth / 2, PI_2],
+            [state.x + window.innerWidth / 2, PI12],
           ]);
           this.alpha.old = this.alpha.curr;
         }

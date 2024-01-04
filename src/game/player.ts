@@ -147,7 +147,7 @@ export async function createPlayer(
     },
   );
   const playerAnim: { [key: string]: Group } = {};
-  const loaderUnsub = AssetLoader.onLoaded((item, data) => {
+  const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
     playerAnim[item.name] = data as Group;
   });
   await AssetLoader.run();

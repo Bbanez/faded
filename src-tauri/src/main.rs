@@ -10,6 +10,8 @@ use bcms::entry::{
 };
 use game::object::BaseStats;
 
+use crate::bcms::entry::fdd_map::FDD_MAP_META_ITEMS;
+
 pub mod bcms;
 pub mod game;
 pub mod storage;
@@ -22,13 +24,14 @@ fn report_error(err: &str) {
 }
 
 fn main() {
-    let maps: Vec<FddMapEntryMetaItem> = serde_json::from_str(FDD_ENEMY_META_ITEMS).unwrap();
+    let maps: Vec<FddMapEntryMetaItem> = serde_json::from_str(FDD_MAP_META_ITEMS).unwrap();
     let characters: Vec<FddCharacterEntryMetaItem> =
         serde_json::from_str(FDD_CHARACTER_META_ITEMS).unwrap();
     let enemies_data: Vec<FddEnemyEntryMetaItem> =
         serde_json::from_str(FDD_ENEMY_META_ITEMS).unwrap();
     tauri::Builder::default()
         .manage(GameState(Mutex::new(game::store::Store {
+            nogo: game::nogo::Nogo::new(vec![], 0, 0, 0, 0),
             maps,
             characters,
             enemies_data,
@@ -49,8 +52,7 @@ fn main() {
             game::player::player_get,
             game::player::player_set_wanted_position,
             game::on_tick::on_tick,
-            // game::enemy::enemy_create,
-            // game::enemy::enemy_get,
+            game::nogo::nogo_set,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
