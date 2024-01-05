@@ -152,6 +152,9 @@ export async function createPlayer(
   });
   await AssetLoader.run();
   loaderUnsub();
+  playerAnim.t_pose.traverse((m) => {
+    m.castShadow = true;
+  });
   playerAnim.t_pose.scale.set(0.003, 0.003, 0.003);
   game.scene.add(playerAnim.t_pose);
   return new Player(game, rust, playerAnim.t_pose, {

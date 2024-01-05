@@ -23,6 +23,7 @@ import { PI12 } from './consts';
 import { Camera } from './camera';
 import { Player, createPlayer } from './player';
 import { getImageData } from './util';
+import type { RustNogo } from '../types';
 
 export interface GameConfig {
   el: HTMLElement;
@@ -43,6 +44,7 @@ export class Game {
   } = {} as never;
   camera: Camera;
   player: Player | null = null;
+  nogo: RustNogo | null = null;
 
   private unsubs: Array<() => void> = [];
 
@@ -113,6 +115,7 @@ export class Game {
         this.assets.ground = (data as GLTF).scene;
         this.assets.ground.traverse((o) => {
           o.receiveShadow = true;
+          o.castShadow = true;
         });
         this.assets.ground.scale.set(mapData.width / 2, 50, mapData.height / 2);
       } else if (item.name === 'skybox') {
@@ -120,11 +123,11 @@ export class Game {
       } else if (item.name === 'nogo') {
         const imageData = getImageData(data as Texture);
         const pixels: number[] = [];
-        for (let i = 0; i < imageData.data.length; i++) {
+        for (let i = 0; i < imageData.data.length; i += 4) {
           const pixel = imageData.data[i];
           pixels.push(pixel);
         }
-        await invoke('nogo_set', {
+        this.nogo = await invoke<RustNogo>('nogo_set', {
           pixels,
           mapSlug: this.mapSlug,
         });
@@ -134,20 +137,33 @@ export class Game {
     loaderUnsub();
     this.scene.add(this.assets.ground);
     this.scene.background = this.assets.skybox;
-    // this.scene.background = new Color(255, 0, 0);
 
-    const sun = new DirectionalLight(0xffffff);
-    sun.position.set(-0, 10, 0);
+    const sun = new DirectionalLight(0xffffff, 1);
+    sun.position.set(0, 50, 0);
     sun.castShadow = true;
-    sun.target.position.set(mapData.width, 0, mapData.height);
-    sun.shadow.mapSize.width = 8000;
-    sun.shadow.mapSize.height = 8000;
-    sun.shadow.camera.left = 100;
-    sun.shadow.camera.right = 0;
-    sun.shadow.camera.top = -100;
-    sun.shadow.camera.bottom = 0;
+    const sunRes = 2000;
+    const sunGroundSize = 20;
+    sun.shadow.mapSize.width = sunRes;
+    sun.shadow.mapSize.height = sunRes;
+    sun.shadow.camera.left = sunGroundSize;
+    sun.shadow.camera.right = -sunGroundSize;
+    sun.shadow.camera.top = sunGroundSize;
+    sun.shadow.camera.bottom = -sunGroundSize;
+    sun.target.position.set(30, 0, 85);
     this.scene.add(sun);
-    const ambientLight = new AmbientLight(0xffffff, 0);
+    this.scene.add(sun.target);
+    this.unsubs.push(
+      Ticker.subscribe(async () => {
+        if (this.player) {
+          sun.target.position.set(
+            this.player.model.position.x,
+            this.player.model.position.y,
+            this.player.model.position.z,
+          );
+        }
+      }),
+    );
+    const ambientLight = new AmbientLight(0xffffff, 1.5);
     this.scene.add(ambientLight);
 
     const water = new Mesh(

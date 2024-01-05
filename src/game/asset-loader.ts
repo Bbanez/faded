@@ -248,7 +248,7 @@ export class AssetLoader {
   static async run(): Promise<void> {
     try {
       this.loadedItemsCount = 0;
-      this.trigger('started');
+      await this.trigger('started');
       let loop = true;
       while (loop) {
         const item = this.items.pop();
@@ -258,34 +258,34 @@ export class AssetLoader {
           switch (item.type) {
             case 'fbx':
               {
-                this.triggerOnLoaded(item, await this.loadFbx(item));
+                await this.triggerOnLoaded(item, await this.loadFbx(item));
               }
               break;
             case 'gltf':
               {
-                this.triggerOnLoaded(item, await this.loadGltf(item));
+                await this.triggerOnLoaded(item, await this.loadGltf(item));
               }
               break;
             case 'texture':
               {
-                this.triggerOnLoaded(item, await this.loadTexture(item));
+                await this.triggerOnLoaded(item, await this.loadTexture(item));
               }
               break;
             case 'cubeTexture':
               {
-                this.triggerOnLoaded(item, await this.loadCubeTexture(item));
+                await this.triggerOnLoaded(item, await this.loadCubeTexture(item));
               }
               break;
             case 'string':
               {
-                this.triggerOnLoaded(item, await this.loadString(item));
+                await this.triggerOnLoaded(item, await this.loadString(item));
               }
               break;
           }
           this.loadedItemsCount++;
         }
       }
-      this.trigger('done');
+      await this.trigger('done');
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);

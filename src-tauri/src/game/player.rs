@@ -5,6 +5,7 @@ use crate::{bcms::group::fdd_base_stats::FddBaseStatsGroup, GameState};
 use super::{
     math::Math,
     object::{BaseStats, CharacterStats, GameObject},
+    path_finding,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -142,8 +143,12 @@ pub fn player_get(state: tauri::State<GameState>) -> Player {
 #[tauri::command]
 pub fn player_set_wanted_position(state: tauri::State<GameState>, wanted_position: (f32, f32)) {
     let mut state_guard = state.0.lock().unwrap();
-    state_guard.player.wanted_positions = state_guard
-        .nogo
-        .a_star(state_guard.player.obj.clone().get_position(), wanted_position);
+    let path = path_finding::a_star(
+        state_guard.player.obj.clone().get_position(),
+        wanted_position,
+        &state_guard.nogo,
+    );
+    println!("Path: {:?}", path);
+    state_guard.player.wanted_positions = vec![wanted_position];
     state_guard.player.wanted_position = None;
 }

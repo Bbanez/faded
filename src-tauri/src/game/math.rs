@@ -24,7 +24,7 @@ impl MathFnLinear2D {
         let mut best_section_idx = 0;
         let len = self.points.len() - 1;
         if x >= self.points[len].0 {
-            best_section_idx = len;
+            best_section_idx = len - 1;
         } else {
             for i in 0..len {
                 if x >= self.points[i].0 && x <= self.points[i + 1].0 {
@@ -40,7 +40,7 @@ impl MathFnLinear2D {
         let mut best_section_idx = 0;
         let len = self.points.len() - 1;
         if y >= self.points[len].1 {
-            best_section_idx = len;
+            best_section_idx = len - 1;
         } else {
             for i in 0..len {
                 if y >= self.points[i].1 && y < self.points[i + 1].1 {
