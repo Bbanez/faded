@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import {
   AmbientLight,
   Color,
@@ -34,6 +35,7 @@ export interface GameConfig {
 }
 
 export class Game {
+  id = uuidv4();
   scene: Scene;
   renderer: Renderer;
   el: HTMLElement;
@@ -46,6 +48,11 @@ export class Game {
   camera: Camera;
   player: Player | null = null;
   nogo: Nogo | null = null;
+  frameTicker: boolean;
+  frameTimeFn = FunctionBuilder.linear2D([
+    [500, 2],
+    [1000, 1],
+  ]);
 
   private unsubs: Array<() => void> = [];
 
@@ -71,12 +78,20 @@ export class Game {
       }),
     );
 
-    async function frameTick() {
-      await Ticker.tick();
-      requestAnimationFrame(frameTick);
-    }
     if (config.frameTicker) {
-      frameTick().catch((err) => console.error(err));
+      this.frameTicker = true;
+      this.frameTick().catch((err) => console.error(err));
+    } else {
+      this.frameTicker = false;
+    }
+  }
+
+  private async frameTick() {
+    await Ticker.tick();
+    if (this.frameTicker) {
+      requestAnimationFrame(async () => {
+        await this.frameTick();
+      });
     }
   }
 
@@ -224,5 +239,11 @@ export class Game {
     this.scene.clear();
     this.renderer.destroy();
     this.el.innerHTML = '';
+    this.player?.destroy();
+    this.camera.destroy();
+    Mouse.destroy();
+    Keyboard.destroy();
+    Ticker.clear();
+    this.frameTicker = false;
   }
 }

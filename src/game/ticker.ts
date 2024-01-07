@@ -14,6 +14,14 @@ export class Ticker {
   private static timeDelta = 0;
   private static paused = false;
 
+  static getTime() {
+    return Ticker.time;
+  }
+
+  static getTimeDelta() {
+    return Ticker.timeDelta;
+  }
+
   static async tick() {
     if (Ticker.paused === false) {
       Ticker.timeDelta = Date.now() - Ticker.time;

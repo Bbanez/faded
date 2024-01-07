@@ -27,18 +27,22 @@ export class Camera {
     curr: -PI12,
     old: 0,
   };
-  fi = degToRad(35);
+  fi = degToRad(45);
 
-  private mouseDistanceFn = FunctionBuilder.linear2D([
+  private angleChangeFn = FunctionBuilder.linear2D([
     [0, 0],
     [window.innerWidth / 2, PI_2],
+  ]);
+  private distanceChangeFn = FunctionBuilder.linear2D([
+    [0, 0],
+    [0, 0],
   ]);
   private unsubs: Array<() => void> = [];
   // ---- Camera distance ----
   //          min
   //           |  max
-  //           |  |  curr
-  private D = [1, 5, 5];
+  //           |  |   curr
+  private D = [1, 150, 5];
 
   constructor(
     private game: Game,
@@ -57,15 +61,20 @@ export class Camera {
       this.position.wanted = [...this.position.curr];
     }
     window.addEventListener('resize', () => {
-      this.mouseDistanceFn = FunctionBuilder.linear2D([
+      this.angleChangeFn = FunctionBuilder.linear2D([
         [0, 0],
         [window.innerWidth / 2, PI12],
       ]);
     });
     this.unsubs.push(
-      Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {
+      Mouse.subscribe(MouseEventType.MOUSE_DOWN, async (state) => {
         if (state.middle) {
-          this.mouseDistanceFn = FunctionBuilder.linear2D([
+          this.distanceChangeFn = FunctionBuilder.linear2D([
+            [0, this.D[0]],
+            [state.y, this.D[2]],
+            [window.innerHeight, this.D[1]],
+          ]);
+          this.angleChangeFn = FunctionBuilder.linear2D([
             [state.x, 0],
             [state.x + window.innerWidth / 2, PI12],
           ]);
@@ -80,8 +89,9 @@ export class Camera {
       Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state, event) => {
         event.preventDefault();
         if (state.middle) {
-          const alphaDelta = this.mouseDistanceFn(state.x);
+          const alphaDelta = this.angleChangeFn(state.x);
           this.alpha.curr = this.alpha.old + alphaDelta;
+          this.D[2] = this.distanceChangeFn(state.y);
         }
       }),
       Ticker.subscribe(async () => {
