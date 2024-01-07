@@ -263,6 +263,11 @@ pub fn a_star(
             let end_node_opt = nogo.get_valid_node(map_end);
             match end_node_opt.0 {
                 Some(end_node) => {
+                    if start_node.position.0 == end_node.position.0
+                        && start_node.position.1 == end_node.position.1
+                    {
+                        return (Some(vec![]), true);
+                    }
                     let mut open_set: Vec<PathFindingNode> = vec![start_node.clone()];
                     let mut closed_set: Vec<PathFindingNode> = vec![];
                     let mut loops = 0;
