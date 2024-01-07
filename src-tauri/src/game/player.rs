@@ -155,10 +155,12 @@ pub fn player_set_wanted_position(state: tauri::State<GameState>, wanted_positio
         wanted_position,
         &state_guard.nogo,
     );
-    match path_opt {
+    match path_opt.0 {
         Some(p) => {
             let mut path = p.clone();
-            path.push(wanted_position);
+            if path_opt.1 == true {
+                path.push(wanted_position);
+            }
             state_guard.player.wanted_positions = path;
             state_guard.player.wanted_position = None;
         }

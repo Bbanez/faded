@@ -23,7 +23,8 @@ import { PI12 } from './consts';
 import { Camera } from './camera';
 import { Player, createPlayer } from './player';
 import { getImageData } from './util';
-import type { RustNogo } from '../types';
+import type { Nogo, RustNogo } from '../types';
+import { FunctionBuilder } from './math';
 
 export interface GameConfig {
   el: HTMLElement;
@@ -44,7 +45,7 @@ export class Game {
   } = {} as never;
   camera: Camera;
   player: Player | null = null;
-  nogo: RustNogo | null = null;
+  nogo: Nogo | null = null;
 
   private unsubs: Array<() => void> = [];
 
@@ -127,10 +128,21 @@ export class Game {
           const pixel = imageData.data[i];
           pixels.push(pixel);
         }
-        this.nogo = await invoke<RustNogo>('nogo_set', {
+        const rustNogo = await invoke<RustNogo>('nogo_set', {
           pixels,
           mapSlug: this.mapSlug,
         });
+        this.nogo = {
+          ...rustNogo,
+          map_x_trans: FunctionBuilder.linear2D([
+            [0, 0],
+            [rustNogo.width, rustNogo.map_width],
+          ]),
+          map_z_trans: FunctionBuilder.linear2D([
+            [0, 0],
+            [rustNogo.height, rustNogo.map_height],
+          ]),
+        };
       }
     });
     await AssetLoader.run();

@@ -99,16 +99,46 @@ impl Nogo {
         }
     }
 
-    pub fn get_valid_node(&self, map_position: (f32, f32)) -> Option<&PathFindingNode> {
+    pub fn get_valid_node(
+        &self,
+        map_position: (f32, f32),
+    ) -> (
+        Option<&PathFindingNode>, // Node
+        bool,                     // Is node found at target position or close to target
+    ) {
         let x = self.map_x_trans.calc(map_position.0) as usize;
         let z = self.map_z_trans.calc(map_position.1) as usize;
         let chunk_idx = x + self.width as usize * z;
         if chunk_idx < self.nodes.len() {
             if self.nodes[chunk_idx].valid {
-                return Some(&self.nodes[chunk_idx]);
+                return (Some(&self.nodes[chunk_idx]), true);
+            } else {
+                let mut offset: (i32, i32) = (-1, 1);
+                let mut do_loop = true;
+                while do_loop {
+                    let mut found_valid_node = false;
+                    for x_offs in offset.0..offset.1 {
+                        for z_offs in offset.0..offset.1 {
+                            let x = self.nodes[chunk_idx].position.0 as i32 + x_offs;
+                            let z = self.nodes[chunk_idx].position.1 as i32 + z_offs;
+                            let node_idx = (x as usize) + (self.width as usize * z as usize);
+                            if node_idx < self.nodes.len() {
+                                found_valid_node = true;
+                                if self.nodes[node_idx].valid == true {
+                                    return (Some(&self.nodes[node_idx]), false);
+                                }
+                            }
+                        }
+                    }
+                    if found_valid_node == false {
+                        do_loop = false;
+                    }
+                    offset.0 -= 1;
+                    offset.1 += 1;
+                }
             }
         }
-        None
+        (None, false)
     }
 
     pub fn get_node_at_position(&self, position: (usize, usize)) -> Option<PathFindingNode> {
