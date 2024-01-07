@@ -99,7 +99,14 @@ impl Player {
                         wanted_position,
                         (self.stats.move_speed, self.stats.move_speed),
                     ) {
-                        self.wanted_position = None;
+                        if self.wanted_positions.len() > 0 {
+                            self.wanted_position = Some(self.wanted_positions[0]);
+                            self.angle =
+                                Math::get_angle(self.obj.get_position(), self.wanted_positions[0]);
+                            self.wanted_positions.remove(0);
+                        } else {
+                            self.wanted_position = None;
+                        }
                     }
                 }
                 None => {
@@ -143,12 +150,20 @@ pub fn player_get(state: tauri::State<GameState>) -> Player {
 #[tauri::command]
 pub fn player_set_wanted_position(state: tauri::State<GameState>, wanted_position: (f32, f32)) {
     let mut state_guard = state.0.lock().unwrap();
-    let path = path_finding::a_star(
+    let path_opt = path_finding::a_star(
         state_guard.player.obj.clone().get_position(),
         wanted_position,
         &state_guard.nogo,
     );
-    println!("Path: {:?}", path);
-    state_guard.player.wanted_positions = vec![wanted_position];
-    state_guard.player.wanted_position = None;
+    match path_opt {
+        Some(p) => {
+            let mut path = p.clone();
+            path.push(wanted_position);
+            state_guard.player.wanted_positions = path;
+            state_guard.player.wanted_position = None;
+        }
+        None => {
+            println!("Path not found")
+        }
+    }
 }

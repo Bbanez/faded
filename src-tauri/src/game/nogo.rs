@@ -31,10 +31,15 @@ impl Nogo {
         let mut z = 0;
         let map_x_trans = MathFnLinear2D::new(vec![(0.0, 0.0), (map_width as f32, width as f32)]);
         let map_z_trans = MathFnLinear2D::new(vec![(0.0, 0.0), (map_height as f32, height as f32)]);
+        let map_node_width = map_x_trans.inverse(1.0);
+        let map_node_height = map_z_trans.inverse(1.0);
         while i < pixels.len() {
             let mut node = PathFindingNode {
                 position: (x, z),
-                map_position: (map_x_trans.inverse(x as f32), map_z_trans.inverse(z as f32)),
+                map_position: (
+                    map_x_trans.inverse(x as f32) + map_node_width / 2.0,
+                    map_z_trans.inverse(z as f32) + map_node_height / 2.0,
+                ),
                 valid: false,
                 neighbor_idx: (
                     1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000,
@@ -52,19 +57,19 @@ impl Nogo {
             if z > 0 {
                 node.neighbor_idx.1 = ((x - 0) + (width * (z - 1))) as usize;
             }
-            if x < width && z > 0 {
+            if x < width - 1 && z > 0 {
                 node.neighbor_idx.2 = ((x + 1) + (width * (z - 1))) as usize;
             }
-            if x < width {
+            if x < width - 1 {
                 node.neighbor_idx.3 = ((x + 1) + (width * (z - 0))) as usize;
             }
-            if x < width && z < height {
+            if x < width - 1 && z < height - 1 {
                 node.neighbor_idx.4 = ((x + 1) + (width * (z + 1))) as usize;
             }
-            if z < height {
+            if z < height - 1 {
                 node.neighbor_idx.5 = ((x - 0) + (width * (z + 1))) as usize;
             }
-            if x > 0 && z < height {
+            if x > 0 && z < height - 1 {
                 node.neighbor_idx.6 = ((x - 1) + (width * (z + 1))) as usize;
             }
             if x > 0 {
@@ -76,6 +81,9 @@ impl Nogo {
             if x == width {
                 x = 0;
                 z += 1;
+                if z == height {
+                    break;
+                }
             }
         }
         Nogo {
@@ -84,8 +92,8 @@ impl Nogo {
             height: height as u32,
             map_width: map_width as u32,
             map_height: map_height as u32,
-            map_node_width: map_x_trans.inverse(1.0),
-            map_node_height: map_z_trans.inverse(1.0),
+            map_node_width,
+            map_node_height,
             map_x_trans,
             map_z_trans,
         }
@@ -119,10 +127,10 @@ pub fn nogo_set(state: tauri::State<GameState>, pixels: Vec<u8>, map_slug: &str)
         Some(map_data) => {
             state_guard.nogo = Nogo::new(
                 pixels,
-                map_data.width as usize,
-                map_data.height as usize,
                 map_data.nogo.width as usize,
                 map_data.nogo.height as usize,
+                map_data.width as usize,
+                map_data.height as usize,
             );
             return state_guard.nogo.clone();
         }

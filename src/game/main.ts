@@ -53,7 +53,7 @@ export class Game {
     this.el = config.el;
     this.scene = new Scene();
     this.scene.background = new Color(0, 0, 0);
-    this.camera = new Camera(this, [30, 85]);
+    this.camera = new Camera(this, [50, 50]);
     this.renderer = new Renderer(
       config.el,
       this.scene,
@@ -115,7 +115,7 @@ export class Game {
         this.assets.ground = (data as GLTF).scene;
         this.assets.ground.traverse((o) => {
           o.receiveShadow = true;
-          o.castShadow = true;
+          // o.castShadow = true;
         });
         this.assets.ground.scale.set(mapData.width / 2, 50, mapData.height / 2);
       } else if (item.name === 'skybox') {
@@ -184,6 +184,28 @@ export class Game {
     this.scene.add(this.player.model);
     this.player.animation.play('run');
     this.camera.follow(this.player);
+
+    // const nogo = this.nogo as RustNogo;
+    // console.log('nogo', nogo);
+    // for (let i = 0; i < nogo.nodes.length; i++) {
+    //   const node = nogo.nodes[i];
+    //   const plane = new Mesh(
+    //     new PlaneGeometry(nogo.map_node_width, nogo.map_node_height),
+    //     new MeshBasicMaterial({
+    //       color: node.valid ? 0x000000 : 0xffffff,
+    //     }),
+    //   );
+    //   plane.rotation.x = -PI12;
+    //   plane.position.set(node.map_position[0], 9, node.map_position[1]);
+    //   this.scene.add(plane);
+    // }
+
+    // await PathFinding.a_star(
+    //   this,
+    //   nogo.nodes[0],
+    //   nogo.nodes[64],
+    //   nogo,
+    // );
   }
 
   destroy() {

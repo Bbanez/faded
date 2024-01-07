@@ -75,7 +75,7 @@ impl PathFindingNode {
     }
 }
 
-fn lowest_f(nodes: &Vec<PathFindingNode>) -> (PathFindingNode, usize, usize) {
+fn lowest_f(nodes: &Vec<PathFindingNode>, nogo: &Nogo) -> (PathFindingNode, usize, usize) {
     let mut lowest_idx = 0;
     let mut lowest_f_vel: usize = 1000000000000;
     for i in 0..nodes.len() {
@@ -86,7 +86,7 @@ fn lowest_f(nodes: &Vec<PathFindingNode>) -> (PathFindingNode, usize, usize) {
     }
     (
         nodes[lowest_idx].clone(),
-        nodes[lowest_idx].position.0 + nodes[lowest_idx].position.0 * nodes[lowest_idx].position.1,
+        nodes[lowest_idx].position.0 + (nogo.width as usize) * nodes[lowest_idx].position.1,
         lowest_idx,
     )
 }
@@ -243,10 +243,11 @@ fn resolve_path(
         }
     }
     output.reverse();
-    output
+    let to = output.len() - 1;
+    output[1..to].to_vec()
 }
 
-pub fn a_star(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Vec<(f32, f32)> {
+pub fn a_star(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Option<Vec<(f32, f32)>> {
     let start_node_opt = nogo.get_valid_node(map_start);
     match start_node_opt {
         Some(start_node) => {
@@ -256,19 +257,20 @@ pub fn a_star(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Vec<(f
                     let mut open_set: Vec<PathFindingNode> = vec![start_node.clone()];
                     let mut closed_set: Vec<PathFindingNode> = vec![];
                     let mut loops = 0;
-                    println!(
-                        "Start: {:?} - {:?}\nEnd: {:?} - {:?}\n\n",
-                        map_start, start_node, map_end, end_node
-                    );
                     while open_set.len() > 0 {
                         loops += 1;
-                        let current_node = lowest_f(&open_set);
+                        let current_node = lowest_f(&open_set, nogo);
                         open_set.remove(current_node.2);
                         closed_set.push(current_node.0.clone());
                         if current_node.0.position.0 == end_node.position.0
                             && current_node.0.position.1 == end_node.position.1
                         {
-                            return resolve_path(&current_node.0, start_node, nogo, &closed_set);
+                            return Some(resolve_path(
+                                &current_node.0,
+                                start_node,
+                                nogo,
+                                &closed_set,
+                            ));
                         }
                         let mut neighbor_nodes = get_neighbor_nodes(
                             &start_node,
@@ -299,7 +301,10 @@ pub fn a_star(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Vec<(f
                             }
                         }
                     }
-                    println!("PF: no path found {:?},\n\n{:?},\n\n{:?}", open_set, closed_set, loops);
+                    println!(
+                        "PF: no path found {:?},\n\n{:?},\n\n{:?}",
+                        open_set, closed_set, loops
+                    );
                 }
                 None => {
                     println!("PF: failed to find end node for {:?}", map_end);
@@ -310,5 +315,5 @@ pub fn a_star(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Vec<(f
             println!("PF: failed to find start node for {:?}", map_start);
         }
     }
-    vec![]
+    None
 }
