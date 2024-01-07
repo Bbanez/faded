@@ -196,16 +196,10 @@ export class Game {
     //     }),
     //   );
     //   plane.rotation.x = -PI12;
-    //   plane.position.set(node.map_position[0], 9, node.map_position[1]);
+    //   plane.position.set(node.map_position[0], 10, node.map_position[1]);
     //   this.scene.add(plane);
     // }
-
-    // await PathFinding.a_star(
-    //   this,
-    //   nogo.nodes[0],
-    //   nogo.nodes[64],
-    //   nogo,
-    // );
+    // await PathFinding.a_star(this, nogo.nodes[0], nogo.nodes[99], nogo);
   }
 
   destroy() {

@@ -2,6 +2,7 @@ import { Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { RustNogo, RustPathFindingNode } from '../types';
 import { Game } from './main';
 import { PI12 } from './consts';
+import { Mouse, MouseEventType } from './mouse';
 
 interface LocalNode extends RustPathFindingNode {
   f(): number;
@@ -20,14 +21,14 @@ function to_locale_node(node: RustPathFindingNode, nogo: RustNogo): LocalNode {
       }),
     );
   if (!(node as any).plane) {
-    plane.position.set(node.map_position[0], 10, node.map_position[1]);
+    plane.position.set(node.map_position[0], 0.3, node.map_position[1]);
     plane.rotation.x = -PI12;
   }
   const self: LocalNode = {
     ...new_node,
     plane,
     f() {
-      return new_node.g + new_node.h;
+      return self.g + self.h;
     },
     clone() {
       return to_locale_node(self, nogo);
@@ -43,9 +44,15 @@ function lowest_f(
   let lowest_idx = 0;
   let lowest_f_vel = 1000000000;
   for (let i = 0; i < nodes.length; i++) {
-    if (nodes[i].f() < lowest_f_vel) {
-      lowest_f_vel = nodes[i].f();
+    const f = nodes[i].f();
+    if (f < lowest_f_vel) {
+      lowest_f_vel = f;
       lowest_idx = i;
+    } else if (f === lowest_f_vel) {
+      if (nodes[i].g < nodes[lowest_idx].g) {
+        lowest_f_vel = f;
+        lowest_idx = i;
+      }
     }
   }
   return [
@@ -137,27 +144,35 @@ function get_neighbor_nodes(
   return res;
 }
 
-function is_in_set(node: LocalNode, nodes: LocalNode[]): boolean {
+function is_in_set(
+  node: LocalNode,
+  nodes: LocalNode[],
+): [LocalNode, number] | null {
   for (let i = 0; i < nodes.length; i++) {
     if (
       nodes[i].position[0] === node.position[0] &&
       nodes[i].position[1] === node.position[1]
     ) {
-      return true;
+      return [nodes[i], i];
     }
   }
-  return false;
+  return null;
 }
 
 function set_node_color(color: number, node: LocalNode) {
   (node.plane.material as MeshBasicMaterial).color.setHex(color);
 }
 
-async function delay(t: number) {
+async function delay(_t: number) {
   await new Promise<void>((resolve) => {
+    // const unsub = Mouse.subscribe(MouseEventType.MOUSE_DOWN, () => {
+    //   unsub();
+    //   console.log('click');
+    //   resolve();
+    // });
     setTimeout(() => {
       resolve();
-    }, t);
+    }, _t);
   });
 }
 
@@ -222,8 +237,17 @@ export class PathFinding {
     game.scene.add(end_node.plane);
     const open_set: LocalNode[] = [start_node.clone()];
     const closed_set: LocalNode[] = [];
+    let loops = 0;
     while (open_set.length > 0) {
+      loops++;
       const current_node = lowest_f(open_set, nogo);
+      // console.log(
+      //   'current_node',
+      //   current_node[0].position,
+      //   current_node[0].g,
+      //   current_node[0].h,
+      //   current_node[0].f(),
+      // );
       set_node_color(0xff00ff, current_node[0]);
       open_set.splice(current_node[2], 1);
       closed_set.push(current_node[0].clone());
@@ -232,7 +256,7 @@ export class PathFinding {
         current_node[0].position[1] === end_node.position[1]
       ) {
         resolve_path(current_node[0], start_node, nogo, closed_set);
-        console.log('RESOLVED');
+        console.log('RESOLVED', loops);
         return;
       }
       const neighbor_nodes = get_neighbor_nodes(
@@ -244,31 +268,36 @@ export class PathFinding {
       );
       for (let i = 0; i < neighbor_nodes.length; i++) {
         neighbor_nodes[i].parent_idx = current_node[1];
-        if (is_in_set(neighbor_nodes[i], closed_set) === false) {
+        if (is_in_set(neighbor_nodes[i], closed_set) === null) {
           const new_move_cost =
             current_node[0].g +
             distance_between_nodes(
               current_node[0].position,
               neighbor_nodes[i].position,
             );
-          if (
-            new_move_cost < neighbor_nodes[i].g ||
-            is_in_set(neighbor_nodes[i], open_set) === false
-          ) {
+          const neighbor_in_open_set = is_in_set(neighbor_nodes[i], open_set);
+          if (neighbor_in_open_set === null) {
             neighbor_nodes[i].g = new_move_cost;
             neighbor_nodes[i].h = distance_between_nodes(
               neighbor_nodes[i].position,
               end_node.position,
             );
-            if (is_in_set(neighbor_nodes[i], open_set) === false) {
-              set_node_color(0x0000ff, neighbor_nodes[i]);
-              game.scene.add(neighbor_nodes[i].plane);
-              open_set.push(neighbor_nodes[i].clone());
+            set_node_color(0x0000ff, neighbor_nodes[i]);
+            game.scene.add(neighbor_nodes[i].plane);
+            open_set.push(neighbor_nodes[i].clone());
+          } else if (neighbor_in_open_set !== null) {
+            if (new_move_cost < open_set[neighbor_in_open_set[1]].g) {
+              open_set[neighbor_in_open_set[1]].g = new_move_cost;
+              open_set[neighbor_in_open_set[1]].h = distance_between_nodes(
+                neighbor_nodes[i].position,
+                end_node.position,
+              );
+              open_set[neighbor_in_open_set[1]].parent_idx = current_node[1];
             }
           }
         }
       }
-      await delay(100);
+      // await delay(1);
     }
     console.log('NO PATH');
   }

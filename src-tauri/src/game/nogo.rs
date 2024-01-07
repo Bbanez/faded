@@ -104,7 +104,9 @@ impl Nogo {
         let z = self.map_z_trans.calc(map_position.1) as usize;
         let chunk_idx = x + self.width as usize * z;
         if chunk_idx < self.nodes.len() {
-            return Some(&self.nodes[chunk_idx]);
+            if self.nodes[chunk_idx].valid {
+                return Some(&self.nodes[chunk_idx]);
+            }
         }
         None
     }

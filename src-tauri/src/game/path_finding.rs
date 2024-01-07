@@ -82,6 +82,8 @@ fn lowest_f(nodes: &Vec<PathFindingNode>, nogo: &Nogo) -> (PathFindingNode, usiz
         if nodes[i].f() < lowest_f_vel {
             lowest_f_vel = nodes[i].f();
             lowest_idx = i;
+        } else if nodes[i].f() == lowest_f_vel && nodes[i].g < nodes[lowest_idx].g {
+            lowest_idx = i;
         }
     }
     (
@@ -91,13 +93,13 @@ fn lowest_f(nodes: &Vec<PathFindingNode>, nogo: &Nogo) -> (PathFindingNode, usiz
     )
 }
 
-fn is_in_set(node: &PathFindingNode, nodes: &Vec<PathFindingNode>) -> bool {
+fn is_in_set(node: &PathFindingNode, nodes: &Vec<PathFindingNode>) -> usize {
     for i in 0..nodes.len() {
         if nodes[i].position.0 == node.position.0 && nodes[i].position.1 == node.position.1 {
-            return true;
+            return i;
         }
     }
-    false
+    1000000
 }
 
 fn set_node_params(
@@ -280,23 +282,31 @@ pub fn a_star(map_start: (f32, f32), map_end: (f32, f32), nogo: &Nogo) -> Option
                         );
                         for i in 0..neighbor_nodes.len() {
                             neighbor_nodes[i].parent_idx = Some(current_node.1);
-                            if is_in_set(&neighbor_nodes[i], &closed_set) == false {
+                            if is_in_set(&neighbor_nodes[i], &closed_set) == 1000000 {
                                 let new_move_cost = current_node.0.g
                                     + distance_between_points(
                                         current_node.0.position,
                                         neighbor_nodes[i].position,
                                     );
-                                if new_move_cost < neighbor_nodes[i].g
-                                    || is_in_set(&neighbor_nodes[i], &open_set) == false
-                                {
+                                let neighbor_node_in_open_set_idx =
+                                    is_in_set(&neighbor_nodes[i], &open_set);
+                                if neighbor_node_in_open_set_idx == 1000000 {
                                     neighbor_nodes[i].g = new_move_cost;
                                     neighbor_nodes[i].h = distance_between_points(
                                         neighbor_nodes[i].position,
                                         end_node.position,
                                     );
-                                    if is_in_set(&neighbor_nodes[i], &open_set) == false {
-                                        open_set.push(neighbor_nodes[i].clone());
-                                    }
+                                    open_set.push(neighbor_nodes[i].clone());
+                                } else if new_move_cost < open_set[neighbor_node_in_open_set_idx].g
+                                {
+                                    open_set[neighbor_node_in_open_set_idx].g = new_move_cost;
+                                    open_set[neighbor_node_in_open_set_idx].h =
+                                        distance_between_points(
+                                            neighbor_nodes[i].position,
+                                            end_node.position,
+                                        );
+                                    open_set[neighbor_node_in_open_set_idx].parent_idx =
+                                        Some(current_node.1);
                                 }
                             }
                         }

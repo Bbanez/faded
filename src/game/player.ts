@@ -3,13 +3,15 @@ import { Animation, AnimationConfigItem } from './animation';
 import { Game } from './main';
 import { bcms } from './bcms';
 import { AssetLoader } from './asset-loader';
-import { RustPlayer } from '../types';
+import { RustNogo, RustPlayer } from '../types';
 import { invoke } from '@tauri-apps/api';
 import { MouseRay } from './mouse-ray';
 import { Keyboard, KeyboardEventType, KeyboardState } from './keyboard';
 import { Distance } from './distance';
 import { Ticker } from './ticker';
 import { PI12 } from './consts';
+import { PathFinding } from './path_finding';
+import { FunctionBuilder } from './math';
 
 export interface PlayerAnimation {
   idle: AnimationConfigItem;
@@ -39,6 +41,26 @@ export class Player {
     this.unsubs.push(
       this.mouseRay.subscribe((inter) => {
         if (inter[0]) {
+          const nogo = this.game.nogo as RustNogo;
+          const trans = FunctionBuilder.linear2D([
+            [0, 0],
+            [100, 150],
+          ]);
+          const current = [
+            parseInt(trans(this.rust.obj.position[0]) + ''),
+            parseInt(trans(this.rust.obj.position[1]) + ''),
+          ];
+          const target = [
+            parseInt(trans(inter[0].point.x) + ''),
+            parseInt(trans(inter[0].point.z) + ''),
+          ];
+          // PathFinding.a_star(
+          //   this.game,
+          //   nogo.nodes[current[0] + 150 * current[1]],
+          //   nogo.nodes[target[0] + 150 * target[1]],
+          //   // nogo.nodes[97 + 150 * 102],
+          //   nogo,
+          // );
           invoke('player_set_wanted_position', {
             wantedPosition: [inter[0].point.x, inter[0].point.z],
           }).catch((err) => console.error(err));
