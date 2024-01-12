@@ -2,12 +2,12 @@ import { defineComponent, ref } from 'vue';
 import { Button, Input, Link } from '../components';
 import { createRefValidator, createValidationItem } from '../util';
 import { AccountFactory, useDb } from '../db';
-import { useRoute } from '../router';
+import { useRouter } from '../router';
 
 export const NewAccountView = defineComponent({
   setup() {
     const db = useDb();
-    const route = useRoute();
+    const router = useRouter();
     const data = ref({
       username: createValidationItem({
         value: '',
@@ -33,7 +33,7 @@ export const NewAccountView = defineComponent({
         username: data.value.username.value,
       });
       await db.accounts.set(account);
-      route.push('account');
+      router.push('account');
     }
 
     return () => (

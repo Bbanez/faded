@@ -1,12 +1,12 @@
 import { computed, defineComponent } from 'vue';
-import { Pages, useRoute } from './router';
+import { Pages, useRouter } from './router';
 
 export const Router = defineComponent({
   setup() {
-    const route = useRoute();
+    const router = useRouter();
     const Page = computed(() => {
-      if (Pages[route.path]) {
-        return Pages[route.path];
+      if (Pages[router.path]) {
+        return Pages[router.path];
       }
       return Pages.home;
     });

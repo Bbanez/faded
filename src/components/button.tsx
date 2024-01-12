@@ -3,11 +3,17 @@ import { DefaultComponentProps } from './_default';
 
 export type ButtonType = 'primary';
 
+const buttonStyle = {
+  primary: {
+    class: 'bg-slate-400 px-4 py-2 hover:bg-slate-600 transition-all'
+  }
+}
+
 export const Button = defineComponent({
   props: {
     ...DefaultComponentProps,
     kind: {
-      type: String as PropType<ButtonType>,
+      type: String as PropType<keyof typeof buttonStyle>,
       default: 'primary',
     },
   },
@@ -20,7 +26,7 @@ export const Button = defineComponent({
     return () => (
       <button
         id={props.id}
-        class={`${props.kind === 'primary' ? '' : ''} ${props.class || ''}`}
+        class={`${buttonStyle[props.kind] ? buttonStyle[props.kind].class : buttonStyle.primary.class} ${props.class || ''}`}
         style={props.style}
         onClick={(event) => {
           ctx.emit('click', event);

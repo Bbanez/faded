@@ -68,7 +68,6 @@ export class Mouse {
     }
   }
   private static onMouseDown(event: MouseEvent) {
-    event.preventDefault();
     if (event.button === 0) {
       if (!Mouse.state.left) {
         Mouse.state.left = true;
@@ -87,7 +86,6 @@ export class Mouse {
     }
   }
   private static onMouseUp(event: MouseEvent) {
-    event.preventDefault();
     if (event.button === 0) {
       if (Mouse.state.left) {
         Mouse.state.left = false;
@@ -106,7 +104,6 @@ export class Mouse {
     }
   }
   private static onMouseMove(event: MouseEvent) {
-    event.preventDefault();
     Mouse.state.delta.x = event.clientX - Mouse.state.x;
     Mouse.state.delta.y = event.clientY - Mouse.state.y;
     Mouse.state.x = event.clientX;

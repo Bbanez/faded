@@ -1,6 +1,6 @@
 import { PropType, defineComponent } from 'vue';
 import { DefaultComponentProps } from './_default';
-import { PageNames, useRoute } from '../router';
+import { PageNames, useRouter } from '../router';
 
 export const Link = defineComponent({
   props: {
@@ -11,7 +11,7 @@ export const Link = defineComponent({
     },
   },
   setup(props, ctx) {
-    const route = useRoute();
+    const router = useRouter();
 
     return () => (
       <a
@@ -21,7 +21,7 @@ export const Link = defineComponent({
         href={props.href}
         onClick={(event) => {
           event.preventDefault();
-          route.push(props.href);
+          router.push(props.href);
         }}
       >
         {ctx.slots.default ? ctx.slots.default() : ''}

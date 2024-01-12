@@ -1,12 +1,13 @@
 @font-face {
   font-family: 'IBM Plex Mono';
-  src: url('/ui/webfonts/IBMPlexMono-Bold.ttf') format('truetype'),
-    url('/ui/webfonts/IBMPlexMono-ExtraLight.ttf') format('truetype'),
-    url('/ui/webfonts/IBMPlexMono-Italic.ttf') format('truetype'),
-    url('/ui/webfonts/IBMPlexMono-Light.ttf') format('truetype'),
-    url('/ui/webfonts/IBMPlexMono-Medium.ttf') format('truetype'),
-    url('/ui/webfonts/IBMPlexMono-SemiBold.ttf') format('truetype'),
-    url('/ui/webfonts/IBMPlexMono-Bold.ttf') format('truetype');
+  src:
+    url('/webfonts/IBMPlexMono-Bold.ttf') format('truetype'),
+    url('/webfonts/IBMPlexMono-ExtraLight.ttf') format('truetype'),
+    url('/webfonts/IBMPlexMono-Italic.ttf') format('truetype'),
+    url('/webfonts/IBMPlexMono-Light.ttf') format('truetype'),
+    url('/webfonts/IBMPlexMono-Medium.ttf') format('truetype'),
+    url('/webfonts/IBMPlexMono-SemiBold.ttf') format('truetype'),
+    url('/webfonts/IBMPlexMono-Bold.ttf') format('truetype');
 }
 
 :root {

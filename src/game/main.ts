@@ -206,8 +206,7 @@ export class Game {
     this.scene.add(water);
     this.renderer.onResize();
 
-    this.player = await createPlayer(this, 'demo');
-    console.log(this.player.rust);
+    this.player = await createPlayer(this, 'demo', 'demo');
     this.scene.add(this.player.model);
     this.player.animation.play('run');
     this.camera.follow(this.player);

@@ -1,6 +1,7 @@
 import { Ref, ref } from 'vue';
 import { AccountView, GameView, Home } from './views';
 import { NewAccountView } from './views/new-account';
+import { browserStorage } from './browser-storage';
 
 export const Pages = {
   home: Home,
@@ -15,46 +16,65 @@ export interface RouteData {
   [name: string]: string;
 }
 
-export interface Route {
-  path: PageNames;
-  data: RouteData;
-  history: Array<{
-    path: PageNames;
-    data: RouteData;
-  }>;
-  push(path: PageNames, data?: RouteData): void;
-  replace(path: PageNames, data?: RouteData): void;
-}
+export class Router {
+  constructor(
+    public path: PageNames,
+    public data: RouteData,
+    public history: Array<{
+      path: PageNames;
+      data: RouteData;
+    }>,
+  ) {}
 
-let route: Ref<Route>;
-
-export function useRoute(): Route {
-  if (!route) {
-    route = ref<Route>({
-      path: 'game',
-      data: {},
-      history: [
-        {
-          path: 'game',
-          data: {},
-        },
-      ],
-
-      push(path, data) {
-        route.value.history.push({ path: route.value.path, data: data || {} });
-        route.value.path = path;
-        route.value.data = data || {};
-      },
-
-      replace(path, data) {
-        route.value.history[route.value.history.length - 1] = {
-          path,
-          data: data || {},
-        };
-        route.value.path = path;
-        route.value.data = data || {};
-      },
+  push(path: PageNames, data?: RouteData): void {
+    this.history.push({ path: this.path, data: data || {} });
+    this.path = path;
+    this.data = data || {};
+    browserStorage.set('router', {
+      h: this.history,
+      p: this.path,
+      d: this.data,
     });
   }
-  return route.value;
+
+  replace(path: PageNames, data?: RouteData): void {
+    this.history[this.history.length - 1] = {
+      path,
+      data: data || {},
+    };
+    this.path = path;
+    this.data = data || {};
+    browserStorage.set('router', {
+      h: this.history,
+      p: this.path,
+      d: this.data,
+    });
+  }
+
+  back() {
+    if (this.history.length > 0) {
+      const history = this.history.slice(this.history.length - 1, 1)[0];
+      this.path = history.path;
+      this.data = history.data;
+      browserStorage.set('router', {
+        h: this.history,
+        p: this.path,
+        d: this.data,
+      });
+    }
+  }
+}
+
+let router: Ref<Router> = null as never;
+
+export function useRouter(): Router {
+  if (!router) {
+    const storageData: any = browserStorage.get('router');
+    if (storageData) {
+      router = ref(new Router(storageData.p, storageData.d, storageData.h));
+    } else {
+      router = ref(new Router('home', {}, []));
+    }
+  }
+  return router.value;
 }

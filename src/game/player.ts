@@ -135,14 +135,16 @@ export class Player {
 
 export async function createPlayer(
   game: Game,
-  playerSlug: string,
+  characterSlug: string,
+  mapSlug: string,
 ): Promise<Player> {
-  const char = bcms.characters.find((e) => e.slug === playerSlug);
+  const char = bcms.characters.find((e) => e.slug === characterSlug);
   if (!char) {
-    throw Error(`Character "${playerSlug}" does not exist`);
+    throw Error(`Character "${characterSlug}" does not exist`);
   }
   const rust = await invoke<RustPlayer>('player_load', {
-    characterSlug: 'demo',
+    characterSlug,
+    mapSlug,
   });
   AssetLoader.register(
     {

@@ -11,6 +11,7 @@
     "pull:bcms": "node scripts/pull-bcms.cjs"
   },
   "dependencies": {
+    "@banez/browser-storage": "^1.0.0",
     "@tauri-apps/api": "^1.5.2",
     "axios": "^1.6.3",
     "vue": "^3.3.4"
