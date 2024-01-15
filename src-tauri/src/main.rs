@@ -15,6 +15,7 @@ use storage::Storage;
 use crate::bcms::entry::fdd_map::FDD_MAP_META_ITEMS;
 
 pub mod bcms;
+pub mod db;
 pub mod game;
 pub mod models;
 pub mod state;
@@ -33,8 +34,8 @@ fn main() {
         serde_json::from_str(FDD_CHARACTER_META_ITEMS).unwrap();
     let enemies_data: Vec<FddEnemyEntryMetaItem> =
         serde_json::from_str(FDD_ENEMY_META_ITEMS).unwrap();
-    let storage = Storage {};
-    let storage_data = storage.read();
+    let storage_data = Storage::read();
+    println!("{:?}", storage_data);
     let accounts: Vec<Account>;
     let active_account: Option<Account>;
     match storage_data.accounts {
@@ -64,20 +65,21 @@ fn main() {
                 (3200.0, 3200.0),
                 BaseStats::new(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0),
             ),
-            storage: Storage {},
             accounts,
             active_account,
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
-            storage::storage_get,
-            storage::storage_set,
             game::player::player_load,
             game::player::player_motion,
             game::player::player_get,
             game::player::player_set_wanted_position,
             game::on_tick::on_tick,
             game::nogo::nogo_set,
+            models::account::account_create,
+            models::account::account_load,
+            models::account::account_get_active,
+            models::account::account_all
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

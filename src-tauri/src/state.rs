@@ -5,7 +5,6 @@ use crate::{
     },
     game::{nogo::Nogo, player::Player, projectile::Projectile},
     models::account::Account,
-    storage::Storage,
 };
 
 #[derive(Debug)]
@@ -18,7 +17,6 @@ pub struct State {
     pub nogo: Nogo,
     pub active_account: Option<Account>,
     pub accounts: Vec<Account>,
-    pub storage: Storage,
 }
 
 impl State {

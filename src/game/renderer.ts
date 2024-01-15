@@ -43,7 +43,8 @@ export class Renderer {
     } else {
       this.width = window.innerWidth;
       this.height = window.innerHeight;
-      this.r.setSize(window.innerWidth, window.innerHeight);
+      // this.r.setSize(window.innerWidth, window.innerHeight);
+      this.r.setSize(200, 200);
       window.addEventListener('resize', () => this.onResize());
       this.unsubs.push(() => {
         window.removeEventListener('resize', () => this.onResize());

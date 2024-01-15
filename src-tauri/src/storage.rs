@@ -7,8 +7,6 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tauri::api::path::home_dir;
 
-use crate::GameState;
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StorageData {
     pub active_account: Option<String>,
@@ -19,7 +17,7 @@ pub struct StorageData {
 pub struct Storage {}
 
 impl Storage {
-    fn get_file(&self) -> File {
+    fn get_file() -> File {
         let home = home_dir().unwrap();
         let home_base = home.display();
         let home_path = format!("{}/faded", home_base);
@@ -40,8 +38,8 @@ impl Storage {
         file
     }
 
-    pub fn read(&self) -> StorageData {
-        let mut file = self.get_file();
+    pub fn read() -> StorageData {
+        let mut file = Storage::get_file();
         let mut content = String::new();
         match file.read_to_string(&mut content) {
             Ok(_) => {
@@ -56,8 +54,8 @@ impl Storage {
         }
     }
 
-    fn write(&self, storage: StorageData) {
-        let mut file = self.get_file();
+    fn write(storage: StorageData) {
+        let mut file = Storage::get_file();
         let s = toml::to_string(&storage).unwrap();
         match file.write_all(s.as_bytes()) {
             Ok(r) => r,
@@ -65,31 +63,29 @@ impl Storage {
         }
     }
 
-    pub fn get(&self, key: &str) -> Option<String> {
-        let storage = self.read();
+    pub fn get(key: &str) -> Option<String> {
+        let storage = Storage::read();
         if key == "accounts" {
             return storage.accounts;
         }
         None
     }
 
-    pub fn set(&self, key: &str, value: &str) {
-        let mut storage = self.read();
+    pub fn set(key: &str, value: &str) {
+        let mut storage = Storage::read();
         if key == "accounts" {
             storage.accounts = Some(String::from(value));
-            self.write(storage);
+            Storage::write(storage);
         }
     }
 }
 
 #[tauri::command]
-pub fn storage_get(state: tauri::State<GameState>, key: &str) -> Option<String> {
-    let state_guard = state.0.lock().unwrap();
-    state_guard.storage.get(key)
+pub fn storage_get(key: &str) -> Option<String> {
+    Storage::get(key)
 }
 
 #[tauri::command]
-pub fn storage_set(state: tauri::State<GameState>, key: &str, value: &str) {
-    let state_guard = state.0.lock().unwrap();
-    state_guard.storage.set(key, value);
+pub fn storage_set(key: &str, value: &str) {
+    Storage::set(key, value);
 }

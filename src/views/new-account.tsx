@@ -1,13 +1,13 @@
 import { defineComponent, ref } from 'vue';
 import { Button, Input, Link } from '../components';
 import { createRefValidator, createValidationItem } from '../util';
-import { AccountFactory, useDb } from '../db';
 import { useRouter } from '../router';
+import { AccountHandler, useAccounts } from '../rust/account';
 
 export const NewAccountView = defineComponent({
   setup() {
-    const db = useDb();
     const router = useRouter();
+    const accounts = useAccounts();
     const data = ref({
       username: createValidationItem({
         value: '',
@@ -15,7 +15,7 @@ export const NewAccountView = defineComponent({
           if (!value) {
             return 'Please enter username';
           }
-          const account = db.accounts.methods.findByUsername(value);
+          const account = accounts.find(e => e.username === value);
           if (account) {
             return 'You already have account with this username';
           }
@@ -28,11 +28,7 @@ export const NewAccountView = defineComponent({
       if (!validate()) {
         return;
       }
-      const account = AccountFactory.create({
-        level: 1,
-        username: data.value.username.value,
-      });
-      await db.accounts.set(account);
+      await AccountHandler.create(data.value.username.value);
       router.push('account');
     }
 
