@@ -15,7 +15,7 @@ import { Renderer, RendererConfig } from './renderer';
 import { Mouse } from './mouse';
 import { Keyboard } from './keyboard';
 import { Ticker } from './ticker';
-import { FddMapEntryMeta } from '../types/bcms';
+import { FddMapEntryMeta, Nogo, RustNogo } from '../types';
 import { bcms, loadBcmsData } from './bcms';
 import { invoke } from '@tauri-apps/api';
 import { AssetLoader } from './asset-loader';
@@ -24,7 +24,6 @@ import { PI12 } from './consts';
 import { Camera } from './camera';
 import { Player, createPlayer } from './player';
 import { getImageData } from './util';
-import type { Nogo, RustNogo } from '../types';
 import { FunctionBuilder } from './math';
 
 export interface GameConfig {

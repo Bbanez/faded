@@ -2,7 +2,6 @@ import { Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { RustNogo, RustPathFindingNode } from '../types';
 import { Game } from './main';
 import { PI12 } from './consts';
-import { Mouse, MouseEventType } from './mouse';
 
 interface LocalNode extends RustPathFindingNode {
   f(): number;
@@ -163,18 +162,6 @@ function set_node_color(color: number, node: LocalNode) {
   (node.plane.material as MeshBasicMaterial).color.setHex(color);
 }
 
-async function delay(_t: number) {
-  await new Promise<void>((resolve) => {
-    // const unsub = Mouse.subscribe(MouseEventType.MOUSE_DOWN, () => {
-    //   unsub();
-    //   console.log('click');
-    //   resolve();
-    // });
-    setTimeout(() => {
-      resolve();
-    }, _t);
-  });
-}
 
 function get_node_at_position(
   position: [number, number],
@@ -285,7 +272,7 @@ export class PathFinding {
             set_node_color(0x0000ff, neighbor_nodes[i]);
             game.scene.add(neighbor_nodes[i].plane);
             open_set.push(neighbor_nodes[i].clone());
-          } else if (neighbor_in_open_set !== null) {
+          } else  {
             if (new_move_cost < open_set[neighbor_in_open_set[1]].g) {
               open_set[neighbor_in_open_set[1]].g = new_move_cost;
               open_set[neighbor_in_open_set[1]].h = distance_between_nodes(

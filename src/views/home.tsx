@@ -12,7 +12,7 @@ export const Home = defineComponent({
     return () => (
       <SetupLayout>
         <div class="flex flex-col gap-2">
-          {activeAccount && (
+          {activeAccount.data.value && (
             <Button
               onClick={() => {
                 router.push('account');

@@ -4,13 +4,22 @@
 use std::sync::Mutex;
 
 use bcms::entry::{
-    fdd_character::{FddCharacterEntryMetaItem, FDD_CHARACTER_META_ITEMS},
-    fdd_enemy::{FddEnemyEntryMetaItem, FDD_ENEMY_META_ITEMS},
+    fdd_character::{FDD_CHARACTER_META_ITEMS, FddCharacterEntryMetaItem},
+    fdd_enemy::{FDD_ENEMY_META_ITEMS, FddEnemyEntryMetaItem},
     fdd_map::FddMapEntryMetaItem,
 };
-use game::object::BaseStats;
-use models::account::Account;
-use storage::Storage;
+use game::{
+    nogo::nogo_set,
+    object::BaseStats,
+    on_tick::on_tick,
+    player::{player_get, player_load, player_motion, player_set_wanted_position},
+};
+use models::account::{Account, account_all, account_create, account_get_active, account_load};
+use storage::{
+    Storage,
+    storage_get,
+    storage_set,
+};
 
 use crate::bcms::entry::fdd_map::FDD_MAP_META_ITEMS;
 
@@ -70,16 +79,23 @@ fn main() {
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
-            game::player::player_load,
-            game::player::player_motion,
-            game::player::player_get,
-            game::player::player_set_wanted_position,
-            game::on_tick::on_tick,
-            game::nogo::nogo_set,
-            models::account::account_create,
-            models::account::account_load,
-            models::account::account_get_active,
-            models::account::account_all
+
+            player_load,
+            player_motion,
+            player_get,
+            player_set_wanted_position,
+
+            on_tick,
+
+            nogo_set,
+
+            account_create,
+            account_load,
+            account_get_active,
+            account_all,
+
+            storage_get,
+            storage_set
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

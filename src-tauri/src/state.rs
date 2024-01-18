@@ -20,31 +20,22 @@ pub struct State {
 }
 
 impl State {
-    pub fn find_map(&mut self, map_slug: &str) -> Option<FddMapEntryMetaItem> {
-        for i in 0..self.maps.len() {
-            if self.maps[i].slug == map_slug {
-                return Some(self.maps[i].clone());
-            }
-        }
-        None
+    pub fn find_map(&self, map_slug: &str) -> Option<FddMapEntryMetaItem> {
+        self.maps.iter()
+            .find(|&map| map.slug == map_slug)
+            .cloned()
     }
 
-    pub fn find_enemy_data(&mut self, enemy_data_slug: &str) -> Option<FddEnemyEntryMetaItem> {
-        for i in 0..self.enemies_data.len() {
-            if self.enemies_data[i].slug == enemy_data_slug {
-                return Some(self.enemies_data[i].clone());
-            }
-        }
-        None
+    pub fn find_enemy_data(&self, enemy_data_slug: &str) -> Option<FddEnemyEntryMetaItem> {
+        self.enemies_data.iter()
+            .find(|&enemy| enemy.slug == enemy_data_slug)
+            .cloned()
     }
 
-    pub fn find_character(&mut self, character_slug: &str) -> Option<FddCharacterEntryMetaItem> {
-        for i in 0..self.characters.len() {
-            if self.characters[i].slug == character_slug {
-                return Some(self.characters[i].clone());
-            }
-        }
-        None
+    pub fn find_character(&self, character_slug: &str) -> Option<FddCharacterEntryMetaItem> {
+        self.characters.iter()
+            .find(|character| character.slug == character_slug)
+            .cloned()
     }
 
     pub fn find_map_and_character(
@@ -62,12 +53,11 @@ impl State {
     //     self.enemies.iter().find(|item| item.id == enemy_id)
     // }
 
-    pub fn find_projectile(&mut self, projectile_id: String) -> Option<(Projectile, usize)> {
-        for i in 0..self.projectiles.len() {
-            if self.projectiles[i].id == projectile_id {
-                Some((self.projectiles[i].clone(), i));
-            }
-        }
-        None
+    pub fn find_projectile(&self, projectile_id: &str) -> Option<(Projectile, usize)> {
+        self.projectiles
+            .iter()
+            .enumerate()
+            .find(|(_, projectile)| projectile.id == projectile_id)
+            .map(|(i, projectile)| (projectile.clone(), i))
     }
 }
