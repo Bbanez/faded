@@ -73,7 +73,6 @@ pub fn account_load(state: tauri::State<GameState>, username: &str) -> Option<Ac
 #[tauri::command]
 pub fn account_get_active(state: tauri::State<GameState>) -> Option<Account> {
     let state_guard = state.0.lock().unwrap();
-    println!("{:?}", state_guard.active_account);
     state_guard.active_account.clone()
 }
 

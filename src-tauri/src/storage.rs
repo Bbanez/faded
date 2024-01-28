@@ -11,13 +11,15 @@ use tauri::api::path::home_dir;
 pub struct StorageData {
     pub active_account: Option<String>,
     pub accounts: Option<String>,
+    pub settings: Option<String>,
 }
 
 impl StorageData {
-    pub fn new(active_account: Option<String>, accounts: Option<String>) -> StorageData {
+    pub fn new(active_account: Option<String>, accounts: Option<String>, settings: Option<String>) -> StorageData {
         StorageData {
             accounts,
             active_account,
+            settings,
         }
     }
 }
@@ -62,7 +64,7 @@ impl Storage {
             Ok(_) => Storage::parse_data(&content),
             Err(e) => {
                 println!("Failed to read file: {:?}", e);
-                StorageData::new(None, None)
+                StorageData::new(None, None, None)
             }
         };
     }

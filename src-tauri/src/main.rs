@@ -14,7 +14,9 @@ use game::{
     on_tick::on_tick,
     player::{player_get, player_load, player_motion, player_set_wanted_position},
 };
-use models::account::{Account, account_all, account_create, account_get_active, account_load};
+use models::{
+    account::{Account, account_all, account_create, account_get_active, account_load},
+    settings::{settings_get, settings_set}};
 use storage::{
     Storage,
     storage_get,
@@ -44,15 +46,24 @@ fn main() {
     let enemies_data: Vec<FddEnemyEntryMetaItem> =
         serde_json::from_str(FDD_ENEMY_META_ITEMS).unwrap();
     let storage_data = Storage::read();
-    println!("{:?}", storage_data);
-    let accounts: Vec<Account>;
     let active_account: Option<Account>;
+    let accounts;
     match storage_data.accounts {
         Some(accounts_str) => {
             accounts = serde_json::from_str(&accounts_str).unwrap();
         }
         None => {
             accounts = vec![];
+        }
+    }
+    let settings;
+    match storage_data.settings
+    {
+        Some(settings_str) => {
+            settings = serde_json::from_str(&settings_str).unwrap();
+        }
+        None => {
+            settings = vec![];
         }
     }
     match storage_data.active_account {
@@ -76,6 +87,7 @@ fn main() {
             ),
             accounts,
             active_account,
+            settings,
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
@@ -95,7 +107,10 @@ fn main() {
             account_all,
 
             storage_get,
-            storage_set
+            storage_set,
+
+            settings_get,
+            settings_set
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

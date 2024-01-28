@@ -41,23 +41,6 @@ export const AccountView = defineComponent({
           </div>
         )}
       </SetupLayout>
-      // <div class="flex flex-col">
-      //   <div>
-      //     <Link href="home">Back</Link>
-      //   </div>
-      //   <div>
-      //     <Link href="game">Start Game</Link>
-      //     <button
-      //       onClick={async () => {
-      //         const timeOffset = Date.now();
-      //         await invoke('test');
-      //         console.log(Date.now() - timeOffset);
-      //       }}
-      //     >
-      //       Test
-      //     </button>
-      //   </div>
-      // </div>
     );
   },
 });
