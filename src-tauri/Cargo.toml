@@ -1,10 +1,10 @@
 [package]
-name = "fdd"
-version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+name = "faded"
+version = "0.0.1"
+description = "Faded Game"
+authors = ["Branislav Vajagić"]
+license = "MIT"
+repository = "https://github.com/Bbanez/faded"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

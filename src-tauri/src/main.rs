@@ -63,7 +63,7 @@ fn main() {
             settings = serde_json::from_str(&settings_str).unwrap();
         }
         None => {
-            settings = vec![];
+            settings = None;
         }
     }
     match storage_data.active_account {

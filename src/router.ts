@@ -2,12 +2,14 @@ import { Ref, ref } from 'vue';
 import { AccountView, GameView, Home } from './views';
 import { NewAccountView } from './views/new-account';
 import { browserStorage } from './browser-storage';
+import { Settings } from './views/settings.tsx';
 
 export const Pages = {
   home: Home,
   game: GameView,
   account: AccountView,
   'new-account': NewAccountView,
+  settings: Settings
 };
 
 export type PageNames = keyof typeof Pages;

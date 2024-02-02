@@ -1,10 +1,12 @@
-import { PropType, defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
 import { DefaultComponentProps } from './_default';
 import { PageNames, useRouter } from '../router';
+import { buttonStyle } from './button.tsx';
 
 export const Link = defineComponent({
   props: {
     ...DefaultComponentProps,
+    asButton: String as PropType<keyof typeof buttonStyle>,
     href: {
       type: String as PropType<PageNames>,
       required: true,
@@ -16,7 +18,7 @@ export const Link = defineComponent({
     return () => (
       <a
         id={props.id}
-        class={props.class}
+        class={`${props.asButton ? buttonStyle[props.asButton].class : ''} ${props.class || ''}`}
         style={props.style}
         href={props.href}
         onClick={(event) => {

@@ -1,33 +1,26 @@
 import { defineComponent } from 'vue';
-import { Button } from '../components';
+import { Link } from '../components';
 import { SetupLayout } from '../layout';
-import { useRouter } from '../router';
 import { useActiveAccount } from '../rust/account';
 
 export const Home = defineComponent({
   setup() {
     const activeAccount = useActiveAccount();
-    const router = useRouter();
 
     return () => (
       <SetupLayout>
         <div class="flex flex-col gap-2">
           {activeAccount.data.value && (
-            <Button
-              onClick={() => {
-                router.push('account');
-              }}
-            >
+            <Link asButton="primary" href={'account'}>
               Continue
-            </Button>
+            </Link>
           )}
-          <Button
-            onClick={() => {
-              router.push('new-account');
-            }}
-          >
+          <Link asButton="primary" href={'new-account'}>
             New Game
-          </Button>
+          </Link>
+          <Link asButton="primary" href={'settings'}>
+            Settings
+          </Link>
         </div>
       </SetupLayout>
     );

@@ -83,6 +83,7 @@ impl Storage {
         match key {
             "accounts" => storage.accounts,
             "active_account" => storage.active_account,
+            "settings" => storage.settings,
             _ => None,
         }
     }
@@ -95,6 +96,9 @@ impl Storage {
             Storage::write(storage);
         } else if key == "active_account" {
             storage.active_account = Some(value);
+            Storage::write(storage);
+        } else if key == "settings" {
+            storage.settings = Some(value);
             Storage::write(storage);
         }
     }

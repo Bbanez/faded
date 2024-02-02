@@ -18,7 +18,7 @@ pub struct State {
     pub nogo: Nogo,
     pub active_account: Option<Account>,
     pub accounts: Vec<Account>,
-    pub settings: Vec<Settings>,
+    pub settings: Option<Settings>,
 }
 
 impl State {
