@@ -1,16 +1,6 @@
 import { invoke } from '@tauri-apps/api';
 import { RustAccount } from '../types';
 import { onMounted, ref } from 'vue';
-import { useQuery, UseQueryArgsOnLoad } from '../query.ts';
-
-export function useActiveAccount(onLoaded?: UseQueryArgsOnLoad<RustAccount>) {
-  return useQuery({
-    fetch: async () => {
-      return await AccountHandler.get_active();
-    },
-    onLoaded,
-  });
-}
 
 export function useAccounts(): RustAccount[] {
   const accounts = ref<RustAccount[]>([]);

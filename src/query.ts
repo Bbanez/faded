@@ -1,45 +1,82 @@
-import { ref, Ref } from 'vue';
+import { onBeforeUnmount, ref, type Ref } from 'vue';
 
-export interface UseQueryArgsOnLoad<Data> {
-  (data: Data | null): void
+export type UseQuery<Data> = [
+  // Data
+  Ref<Data | null>,
+  // Is Loaded
+  Ref<boolean>,
+  // Is ReFetching
+  Ref<boolean>,
+  // ReFetch data
+  () => Promise<void>,
+];
+
+export interface UseQueryOnLoaded<Data> {
+  (data: Ref<Data | null>): void;
 }
 
-export interface UseQueryArgs<Data> {
-  fetch: () => Promise<Data | null>,
-  onLoaded?: UseQueryArgsOnLoad<Data>,
-}
+const queries: {
+  [name: string]: UseQuery<any>;
+} = {};
 
-export function useQuery<Data = unknown>(
-  args: UseQueryArgs<Data>
-) {
-  const output: {
-    data: Ref<Data | null>;
-    isLoaded: Ref<boolean>;
-    isReFetching: Ref<boolean>;
-    reFetch(): Promise<Data | null>;
-  } = {
-    data: ref(null),
-    isLoaded: ref(false),
-    isReFetching: ref(false),
-    async reFetch() {
-      output.isReFetching.value = true;
-      output.data.value = await args.fetch();
-      output.isReFetching.value = false;
-      if (args.onLoaded && !output.isLoaded.value) {
-        args.onLoaded(output.data.value);
-      }
-      output.isLoaded.value = true;
-      return output.data.value;
-    },
+const onLoadedFns: {
+  [name: string]: {
+    [id: string]: UseQueryOnLoaded<any>;
   };
-  args.fetch()
-    .then((result) => {
-      output.data.value = result;
-      output.isLoaded.value = true;
-      if (args.onLoaded) {
-        args.onLoaded(result);
+} = {};
+
+export function useQuery<Data>(
+  name: string,
+  doFetch: () => Promise<Data | null>,
+  onLoaded?: UseQueryOnLoaded<Data>,
+  onUnmount?: (data: Ref<Data | null>) => void,
+): UseQuery<Data> {
+  if (onLoaded) {
+    if (!onLoadedFns[name]) {
+      onLoadedFns[name] = {};
+    }
+    onLoadedFns[name][onLoaded.toString()] = onLoaded;
+  }
+  if (queries[name]) {
+    return queries[name];
+  }
+  const query: UseQuery<Data> = [
+    ref(null),
+    ref(false),
+    ref(false),
+    async () => {
+      query[2].value = true;
+      query[0].value = await doFetch();
+      query[2].value = false;
+      query[1].value = true;
+      for (const onLoadedFnId in onLoadedFns[name]) {
+        if (onLoadedFns[name][onLoadedFnId]) {
+          onLoadedFns[name][onLoadedFnId](query[0]);
+        }
       }
-    })
-    .catch((err) => console.error(err));
-  return output;
+    },
+  ];
+  query[3]().then(() => {
+    for (const onLoadedFnId in onLoadedFns[name]) {
+      if (onLoadedFns[name][onLoadedFnId]) {
+        onLoadedFns[name][onLoadedFnId](query[0]);
+      }
+    }
+  });
+  queries[name] = query;
+
+  onBeforeUnmount(async () => {
+    if (onUnmount) {
+      onUnmount(query[0]);
+      if (
+        onLoaded &&
+        onLoadedFns[name] &&
+        onLoadedFns[name][onLoaded.toString()]
+      ) {
+        delete onLoadedFns[name][onLoaded.toString()];
+      }
+    }
+  });
+
+  return query;
 }

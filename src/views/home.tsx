@@ -1,16 +1,16 @@
 import { defineComponent } from 'vue';
 import { Link } from '../components';
 import { SetupLayout } from '../layout';
-import { useActiveAccount } from '../rust/account';
+import { useActiveAccount } from '../hooks/account.ts';
 
 export const Home = defineComponent({
   setup() {
-    const activeAccount = useActiveAccount();
+    const [activeAccount] = useActiveAccount();
 
     return () => (
       <SetupLayout>
         <div class="flex flex-col gap-2">
-          {activeAccount.data.value && (
+          {activeAccount.value && (
             <Link asButton="primary" href={'account'}>
               Continue
             </Link>

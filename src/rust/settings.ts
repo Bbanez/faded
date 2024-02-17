@@ -1,14 +1,5 @@
 import { invoke } from '@tauri-apps/api';
 import { RustSettings } from '../types/rust/settings.ts';
-import { useQuery } from '../query.ts';
-
-export function useSettings() {
-  return useQuery({
-    async fetch() {
-      return await SettingsHandler.get();
-    },
-  });
-}
 
 export class SettingsHandler {
   static async get() {

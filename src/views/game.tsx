@@ -73,7 +73,7 @@ export const GameView = defineComponent({
         >
           Test
         </button>
-        <div class="absolute top-0 left-0 w-full h-full -z-10" ref={el} />
+        <div class="absolute top-0 left-0 w-screen h-screen -z-10" ref={el} />
       </div>
     );
   },

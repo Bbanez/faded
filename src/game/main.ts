@@ -11,7 +11,7 @@ import {
   Scene,
   Texture,
 } from 'three';
-import { Renderer, RendererConfig } from './renderer';
+import { Renderer } from './renderer';
 import { Mouse } from './mouse';
 import { Keyboard } from './keyboard';
 import { Ticker } from './ticker';
@@ -25,11 +25,11 @@ import { Camera } from './camera';
 import { Player, createPlayer } from './player';
 import { getImageData } from './util';
 import { FunctionBuilder } from './math';
+import { SettingsHandler } from '../rust/settings.ts';
 
 export interface GameConfig {
   el: HTMLElement;
   frameTicker?: boolean;
-  renderer?: RendererConfig;
   mapSlug: string;
 }
 
@@ -65,7 +65,6 @@ export class Game {
       config.el,
       this.scene,
       this.camera.cam,
-      config.renderer,
     );
     Mouse.init();
     Keyboard.init();
@@ -96,6 +95,7 @@ export class Game {
 
   async run() {
     await loadBcmsData();
+    await SettingsHandler.get();
     const mapData = bcms.maps.find((e) => e.slug === this.mapSlug);
     if (!mapData) {
       throw Error(`Failed to load map "${this.mapSlug}"`);

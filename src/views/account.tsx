@@ -2,20 +2,16 @@ import { defineComponent } from 'vue';
 import { Button } from '../components';
 import { SetupLayout } from '../layout';
 import { useRouter } from '../router';
-import { useActiveAccount } from '../rust/account.ts';
+import { useActiveAccount } from '../hooks/account.ts';
 
 export const AccountView = defineComponent({
   setup() {
     const router = useRouter();
-    const activeAccount = useActiveAccount((data) => {
-      if (!data) {
-        router.push('home');
-      }
-    });
+    const [_, activeAccountLoaded] = useActiveAccount();
 
     return () => (
       <SetupLayout>
-        {activeAccount.isLoaded.value && (
+        {activeAccountLoaded.value && (
           <div class="flex flex-col gap-2">
             <Button
               onClick={() => {

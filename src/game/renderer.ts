@@ -2,23 +2,13 @@ import {
   PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
-  ShadowMapType,
   WebGLRenderer,
 } from 'three';
 import { Ticker } from './ticker';
-
-export interface RendererConfig {
-  shadowMapType?: ShadowMapType;
-  size?: {
-    width: number;
-    height: number;
-  };
-}
+import { useSettings } from '../hooks/settings.ts';
 
 export class Renderer {
   r = new WebGLRenderer();
-  width = 0;
-  height = 0;
 
   private unsubs: Array<() => void> = [];
   private resizeDebounce: any = undefined;
@@ -27,29 +17,26 @@ export class Renderer {
     el: HTMLElement,
     public scene: Scene,
     private camera: PerspectiveCamera,
-    config?: RendererConfig,
   ) {
-    if (!config) {
-      config = {};
-    }
+    const [settings] = useSettings();
     this.r = new WebGLRenderer();
     this.r.shadowMap.enabled = true;
-    this.r.shadowMap.type = config.shadowMapType || PCFSoftShadowMap;
+    this.r.shadowMap.type = PCFSoftShadowMap;
     this.r.setPixelRatio(window.devicePixelRatio);
-    if (config.size) {
-      this.r.setSize(config.size.width, config.size.height);
-      this.width = config.size.width;
-      this.height = config.size.height;
+    if (settings.value) {
+      this.r.setSize(
+        settings.value.resolution[0],
+        settings.value.resolution[1],
+      );
     } else {
-      this.width = window.innerWidth;
-      this.height = window.innerHeight;
-      // this.r.setSize(window.innerWidth, window.innerHeight);
-      this.r.setSize(200, 200);
+      this.r.setSize(window.innerWidth, window.innerHeight);
+      // this.r.setSize(200, 200);
       window.addEventListener('resize', () => this.onResize());
       this.unsubs.push(() => {
         window.removeEventListener('resize', () => this.onResize());
       });
     }
+    this.r.domElement.setAttribute('style', 'width: 100%; height: 100%;');
     el.appendChild(this.r.domElement);
     this.unsubs.push(
       Ticker.subscribe(async () => {
@@ -61,14 +48,17 @@ export class Renderer {
   onResize() {
     clearTimeout(this.resizeDebounce);
     this.resizeDebounce = setTimeout(() => {
-      this.width = window.innerWidth;
-      this.height = window.innerHeight;
-      if (this.camera) {
-        this.camera.aspect = this.width / this.height;
-        this.camera.updateProjectionMatrix();
+      const [settings] = useSettings();
+      if (settings.value) {
+        if (this.camera) {
+          this.camera.aspect =
+            settings.value.resolution[0] / settings.value.resolution[1];
+          this.camera.updateProjectionMatrix();
+        }
+        this.r.setSize(...settings.value.resolution);
+        this.render();
+        this.r.domElement.setAttribute('style', 'width: 100%; height: 100%;');
       }
-      this.r.setSize(window.innerWidth, window.innerHeight);
-      this.render();
     }, 200);
   }
 
