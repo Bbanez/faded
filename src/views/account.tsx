@@ -1,8 +1,8 @@
 import { defineComponent } from 'vue';
-import { Button } from '../components';
 import { SetupLayout } from '../layout';
 import { useRouter } from '../router';
 import { useActiveAccount } from '../hooks/account.ts';
+import { Button } from '../components/button.tsx';
 
 export const AccountView = defineComponent({
   setup() {

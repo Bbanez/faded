@@ -48,10 +48,8 @@ export class Game {
   player: Player | null = null;
   nogo: Nogo | null = null;
   frameTicker: boolean;
-  frameTimeFn = FunctionBuilder.linear2D([
-    [500, 2],
-    [1000, 1],
-  ]);
+  fps: number = 0;
+  fpsEl = document.createElement('div');
 
   private unsubs: Array<() => void> = [];
 
@@ -61,17 +59,22 @@ export class Game {
     this.scene = new Scene();
     this.scene.background = new Color(0, 0, 0);
     this.camera = new Camera(this, [50, 50]);
-    this.renderer = new Renderer(
-      config.el,
-      this.scene,
-      this.camera.cam,
-    );
+    this.renderer = new Renderer(config.el, this.scene, this.camera.cam);
     Mouse.init();
     Keyboard.init();
+    this.fpsEl.setAttribute(
+      'style',
+      'text-size: 12px; position: fixed; right: 0; top: 0; padding: 5px 12px; z-index: 1000; background-color: rgba(0, 0, 0, 0.3); color: white;',
+    );
+    setInterval(() => {
+      this.fpsEl.innerText = this.fps + '';
+      this.fps = 0;
+    }, 1000);
 
     Ticker.reset();
     this.unsubs.push(
       Ticker.subscribe(async () => {
+        this.fps++;
         await invoke('on_tick');
       }),
     );

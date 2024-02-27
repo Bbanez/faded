@@ -53,15 +53,17 @@ pub fn account_create(state: tauri::State<GameState>, username: &str) -> Account
     storage_data.active_account = Some(serde_json::to_string(&account).unwrap());
     storage_data.accounts = Some(serde_json::to_string(&state_guard.accounts).unwrap());
     drop(state_guard);  // explicit drop to release the lock asap
-    Storage::write(storage_data);
+    Storage::write(&storage_data);
     account
 }
 
 #[tauri::command]
 pub fn account_load(state: tauri::State<GameState>, username: &str) -> Option<Account> {
-    let state_guard = state.0.lock().unwrap();
-    return match Account::find(&state_guard.accounts, username) {
+    let mut state_guard = state.0.lock().unwrap();
+    // let accounts = state_guard.accounts.clone();
+    return match Account::find(&state_guard.accounts.clone(), username) {
         Some(account) => {
+            state_guard.active_account = Some(account.clone());
             Some(account.clone())
         }
         None => {

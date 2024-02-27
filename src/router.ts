@@ -1,8 +1,10 @@
 import { Ref, ref } from 'vue';
-import { AccountView, GameView, Home } from './views';
 import { NewAccountView } from './views/new-account';
 import { browserStorage } from './browser-storage';
 import { Settings } from './views/settings.tsx';
+import { Home } from './views/home.tsx';
+import { GameView } from './views/game.tsx';
+import { AccountView } from './views/account.tsx';
 
 export const Pages = {
   home: Home,

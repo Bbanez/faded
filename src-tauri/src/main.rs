@@ -17,16 +17,11 @@ use game::{
 use models::{
     account::{Account, account_all, account_create, account_get_active, account_load},
     settings::{settings_get, settings_set}};
-use storage::{
-    Storage,
-    storage_get,
-    storage_set,
-};
+use storage::Storage;
 
 use crate::bcms::entry::fdd_map::FDD_MAP_META_ITEMS;
 
 pub mod bcms;
-pub mod db;
 pub mod game;
 pub mod models;
 pub mod state;
@@ -105,9 +100,6 @@ fn main() {
             account_load,
             account_get_active,
             account_all,
-
-            storage_get,
-            storage_set,
 
             settings_get,
             settings_set

@@ -1,13 +1,17 @@
 import { defineComponent, ref } from 'vue';
-import { Button, Input, Link } from '../components';
 import { createRefValidator, createValidationItem } from '../util';
 import { useRouter } from '../router';
 import { AccountHandler, useAccounts } from '../rust/account';
+import { Input } from '../components/inputs/input.tsx';
+import { Button } from '../components/button.tsx';
+import { Link } from '../components/link.tsx';
+import { useActiveAccount } from '../hooks/account.ts';
 
 export const NewAccountView = defineComponent({
   setup() {
     const router = useRouter();
     const accounts = useAccounts();
+    const [_, __, ___, activeAccountRefetch] = useActiveAccount();
     const data = ref({
       username: createValidationItem({
         value: '',
@@ -29,6 +33,7 @@ export const NewAccountView = defineComponent({
         return;
       }
       await AccountHandler.create(data.value.username.value);
+      await activeAccountRefetch();
       router.push('account');
     }
 

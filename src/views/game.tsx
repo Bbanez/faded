@@ -1,7 +1,7 @@
 import { defineComponent, onMounted, onUnmounted, ref } from 'vue';
-import { Link } from '../components';
 import { Game } from '../game';
 import { invoke } from '@tauri-apps/api';
+import { Link } from '../components/link.tsx';
 
 export const GameView = defineComponent({
   setup() {
@@ -16,6 +16,7 @@ export const GameView = defineComponent({
           frameTicker: true,
         });
         await game.run();
+        el.value.appendChild(game.fpsEl);
         // const scene = new Scene();
         // const camera = new PerspectiveCamera(
         //   75,
@@ -58,7 +59,7 @@ export const GameView = defineComponent({
     });
 
     return () => (
-      <div>
+      <div draggable={false} unselectable={'on'}>
         <h1>Game</h1>
         <Link href="home">Go to Home</Link>
         <button
@@ -67,7 +68,7 @@ export const GameView = defineComponent({
               await invoke('player_load', {
                 screenWidth: window.innerWidth,
                 screenHeight: window.innerHeight,
-              })
+              }),
             );
           }}
         >

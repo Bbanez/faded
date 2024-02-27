@@ -12,7 +12,6 @@ export class SettingsHandler {
     const res = await invoke<RustSettings>('settings_set', {
       resolution,
     });
-    console.log(res);
     return res;
   }
 }
