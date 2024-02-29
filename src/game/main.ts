@@ -43,6 +43,8 @@ export class Game {
   assets: {
     ground: Group;
     skybox: CubeTexture;
+    grad: Texture;
+    cursorMove: Texture;
   } = {} as never;
   camera: Camera;
   player: Player | null = null;
@@ -127,6 +129,16 @@ export class Game {
         path: this.mapData.nogo.src,
         type: 'texture',
       },
+      {
+        name: 'grad',
+        path: '/grad.png',
+        type: 'texture',
+      },
+      {
+        name: 'cursorMove',
+        path: '/cursor-move.png',
+        type: 'texture',
+      },
     );
     const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
       if (item.name === 'ground') {
@@ -160,10 +172,16 @@ export class Game {
             [rustNogo.height, rustNogo.map_height],
           ]),
         };
+      } else if (item.name === 'grad') {
+        this.assets.grad = data as Texture;
+      } else if (item.name === 'cursorMove') {
+        this.assets.cursorMove = data as Texture;
       }
     });
     await AssetLoader.run();
     loaderUnsub();
+    this.renderer.postProcessingShader.uniforms.tGrad.value = this.assets.grad;
+    await this.renderer.loadPostProcessing();
     this.scene.add(this.assets.ground);
     this.scene.background = this.assets.skybox;
 

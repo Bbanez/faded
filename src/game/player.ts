@@ -1,4 +1,7 @@
-import { Group } from 'three';
+import { v4 as uuidv4 } from 'uuid';
+import cursorMoveVert from './shaders/cursor-move.vert';
+import cursorMoveFrag from './shaders/cursor-move.frag';
+import { Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
 import { Animation, AnimationConfigItem } from './animation';
 import { Game } from './main';
 import { bcms } from './bcms';
@@ -21,6 +24,12 @@ export class Player {
   animation: Animation<keyof PlayerAnimation>;
   mouseRay: MouseRay;
 
+  private cursorObjects: Array<{
+    id: string;
+    mesh: Mesh;
+    shader: ShaderMaterial;
+    expAt: number;
+  }> = [];
   private unsubs: Array<() => void> = [];
 
   constructor(
@@ -59,6 +68,33 @@ export class Player {
           //   // nogo.nodes[97 + 150 * 102],
           //   nogo,
           // );
+          const shaderMaterial = new ShaderMaterial({
+            uniforms: {
+              uTexture: {
+                value: this.game.assets.cursorMove,
+              },
+              uMillis: {
+                value: 0.0,
+              },
+            },
+            vertexShader: cursorMoveVert,
+            fragmentShader: cursorMoveFrag,
+            transparent: true,
+          });
+          const plane = new Mesh(new PlaneGeometry(0.2, 0.2), shaderMaterial);
+          plane.position.set(
+            inter[0].point.x,
+            inter[0].point.y + 0.2,
+            inter[0].point.z,
+          );
+          plane.rotation.y = -this.game.camera.alpha.curr - PI12;
+          this.cursorObjects.push({
+            id: uuidv4(),
+            mesh: plane,
+            shader: shaderMaterial,
+            expAt: Date.now() + 1000,
+          });
+          this.game.scene.add(plane);
           invoke('player_set_wanted_position', {
             wantedPosition: [inter[0].point.x, inter[0].point.z],
           }).catch((err) => console.error(err));
@@ -73,8 +109,22 @@ export class Player {
       Keyboard.subscribe(KeyboardEventType.KEY_UP, async (state) => {
         await this.setMove(state);
       }),
-      Ticker.subscribe(async (_ct, dt) => {
+      Ticker.subscribe(async (cTime, dt) => {
         await this.update(dt / 800);
+        const removeCursorObjects: string[] = [];
+        for (let i = 0; i < this.cursorObjects.length; i++) {
+          if (this.cursorObjects[i].expAt < Date.now()) {
+            removeCursorObjects.push(this.cursorObjects[i].id);
+            this.game.scene.remove(this.cursorObjects[i].mesh);
+          }
+        }
+        this.cursorObjects = this.cursorObjects.filter(
+          (e) => !removeCursorObjects.includes(e.id),
+        );
+        for (let i = 0; i < this.cursorObjects.length; i++) {
+          this.cursorObjects[i].shader.uniforms.uMillis.value += dt;
+          this.cursorObjects[i].mesh.position.y += Math.sin(cTime / 100) / 100
+        }
       }),
     );
   }

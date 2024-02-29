@@ -4,18 +4,30 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three';
+import postProcessingVert from './shaders/post-processing.vert';
+import postProcessingFrag from './shaders/post-processing.frag';
 import { Ticker } from './ticker';
 import { useSettings } from '../hooks/settings.ts';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
-import postProcessingVert from './shaders/post-processing.vert';
-import postProcessingFrag from './shaders/post-processing.frag';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
+import { Mouse, MouseEventType } from './mouse.ts';
 
 export class Renderer {
   r = new WebGLRenderer();
   composer: EffectComposer;
+  postProcessingShader = new ShaderPass({
+    uniforms: {
+      tDiffuse: null,
+      tGrad: { value: null as any },
+      uMillis: { value: 0.0 },
+      uMouse: { value: [0.0, 0.0] },
+      uScreen: { value: [window.innerWidth, window.innerHeight] },
+    },
+    fragmentShader: postProcessingFrag,
+    vertexShader: postProcessingVert,
+  });
 
   private unsubs: Array<() => void> = [];
   private resizeDebounce: any = undefined;
@@ -31,19 +43,6 @@ export class Renderer {
     this.r.shadowMap.type = PCFSoftShadowMap;
     this.r.setPixelRatio(window.devicePixelRatio);
     this.composer = new EffectComposer(this.r);
-    const renderPass = new RenderPass(this.scene, this.camera);
-    this.composer.addPass(renderPass);
-    this.composer.addPass(
-      new ShaderPass({
-        uniforms: {
-          tDiffuse: null,
-        },
-        fragmentShader: postProcessingFrag,
-        vertexShader: postProcessingVert,
-      }),
-    );
-    // const outputPass = new OutputPass();
-    this.composer.addPass(new OutputPass());
     if (settings.value) {
       this.r.setSize(
         settings.value.resolution[0],
@@ -60,10 +59,20 @@ export class Renderer {
     this.r.domElement.setAttribute('style', 'width: 100%; height: 100%;');
     el.appendChild(this.r.domElement);
     this.unsubs.push(
-      Ticker.subscribe(async () => {
+      Ticker.subscribe(async (_cTime, deltaTime) => {
+        this.postProcessingShader.uniforms.uMillis.value += deltaTime;
         this.render();
       }),
+      Mouse.subscribe(MouseEventType.MOUSE_MOVE, (data) => {
+        this.postProcessingShader.uniforms.uMouse.value = [data.x, data.y];
+      }),
     );
+  }
+
+  async loadPostProcessing() {
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.composer.addPass(this.postProcessingShader);
+    this.composer.addPass(new OutputPass());
   }
 
   onResize() {

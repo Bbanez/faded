@@ -60,7 +60,7 @@ async function main() {
     ) {
       await fs.save(
         ['src', 'types', 'bcms', ...tsType.outputFile.split('/')],
-        tsType.content
+        tsType.content,
       );
       index.push(`export * from './${tsType.outputFile}';`);
     }
@@ -99,12 +99,12 @@ async function main() {
                 line === 'pub mod content;'
               );
             })
-            .join('\n')
+            .join('\n'),
         );
       } else {
         await fs.save(
           ['src-tauri', 'src', 'bcms', ...rustType.outputFile.split('/')],
-          rustType.content
+          rustType.content,
         );
       }
     }
@@ -121,8 +121,8 @@ async function main() {
       ['public', 'bcms', 'content', template.name + '.json'],
       JSON.stringify(entries, null, 2).replace(
         /src": "\/faded/g,
-        'src": "/bcms'
-      )
+        'src": "/bcms',
+      ),
     );
     await nodefs.appendFile(
       path.join(
@@ -131,7 +131,7 @@ async function main() {
         'src',
         'bcms',
         'entry',
-        template.name + '.rs'
+        template.name + '.rs',
       ),
       [
         '',
@@ -141,9 +141,11 @@ async function main() {
             return e.meta.en;
           }),
           null,
-          4
-        ).replace(/src": "\/faded/g, 'src": "/bcms')}\n"#;`,
-      ].join('\n')
+          4,
+        )
+          .replace(/src": "\/faded/g, 'src": "/bcms')
+          .replace(/"#/g, '"\\#')}\n"#;`,
+      ].join('\n'),
     );
   }
   const media = await client.media.getAll();
@@ -154,7 +156,7 @@ async function main() {
       console.log(path);
       await fs.save(
         ['public', 'bcms', ...path.split('/').slice(2)],
-        await item.bin()
+        await item.bin(),
       );
     }
   }
