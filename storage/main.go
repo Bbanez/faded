@@ -15,15 +15,51 @@ type Data struct {
 	Settings      string `json:"settings"`
 }
 
-func GetFile() *os.File {
+func StorageUnpackKeyValue[Value any](data *Data, key string) (*Value, error) {
+	str := ""
+	if key == "ActiveAccount" {
+		str = data.ActiveAccount
+	} else if key == "Accounts" {
+		str = data.ActiveAccount
+	} else if key == "Settings" {
+		str = data.ActiveAccount
+	}
+	var result Value
+	err := json.Unmarshal([]byte(str), &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func StoragePackKeyValue[Value any](data *Data, key string, value Value) error {
+	jsonBytes, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	if key == "ActiveAccount" {
+		data.ActiveAccount = string(jsonBytes)
+	} else if key == "Accounts" {
+		data.Accounts = string(jsonBytes)
+	} else if key == "ActiveAccount" {
+		data.Settings = string(jsonBytes)
+	}
+	return nil
+}
+
+func getFilePath() (string, string) {
 	homeDirName, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
 	homeDirPath := fmt.Sprintf("%s/faded", homeDirName)
 	filePath := fmt.Sprintf("%s/faded/storage.json", homeDirName)
+	return filePath, homeDirPath
+}
+
+func GetFile() *os.File {
+	filePath, homeDirPath := getFilePath()
 	if _, err := os.Stat(homeDirPath); errors.Is(err, os.ErrNotExist) {
-		fmt.Println("HERE")
 		err := os.Mkdir(homeDirPath, os.ModePerm)
 		if err != nil {
 			panic(err)
@@ -46,26 +82,44 @@ func GetFile() *os.File {
 	return file
 }
 
-func ReadFile(file *os.File) Data {
+func ReadFile() Data {
+	file := GetFile()
 	stringBuilder := strings.Builder{}
 	_, err := io.Copy(&stringBuilder, file)
 	if err != nil {
 		panic(err)
 	}
 	data := Data{}
-	err = json.Unmarshal([]byte(stringBuilder.String()), &data)
+	s := stringBuilder.String()
+	if s == "" {
+		s = "{}"
+	}
+	err = json.Unmarshal([]byte(s), &data)
 	if err != nil {
 		panic(err)
+	}
+	err = file.Close()
+	if err != nil {
+		panic(nil)
 	}
 	return data
 }
 
-func WriteFile(file *os.File, data Data) {
+func WriteFile(data Data) {
+	filePath, _ := getFilePath()
+	file, err := os.OpenFile(filePath, os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 	jsonString, err := json.Marshal(data)
 	if err != nil {
 		panic(err)
 	}
 	_, err = file.Write(jsonString)
+	if err != nil {
+		panic(err)
+	}
+	err = file.Close()
 	if err != nil {
 		panic(err)
 	}

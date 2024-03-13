@@ -1,13 +1,11 @@
 import { defineComponent } from 'vue';
-import { HelloWorld } from './components/hello-world';
+import { Router } from './_router';
 
 export const App = defineComponent({
     setup() {
         return () => (
-            <div>
-                <img id="logo" alt="Wails logo" src="/images/logo-universal.png" />
-                <HelloWorld />
-              <button>Test</button>
+            <div class="root">
+                <Router />
             </div>
         );
     },
