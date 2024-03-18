@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::GameState;
 
 use super::{math::MathFnLinear2D, path_finding::PathFindingNode};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct Nogo {
     pub nodes: Vec<PathFindingNode>,
     pub width: u32,

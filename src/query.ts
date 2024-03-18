@@ -1,15 +1,15 @@
 import { onBeforeUnmount, ref, type Ref } from 'vue';
 
-export type UseQuery<Data> = [
+export type UseQuery<Data> = {
   // Data
-  Ref<Data | null>,
+  data: Ref<Data | null>;
   // Is Loaded
-  Ref<boolean>,
+  isLoaded: Ref<boolean>;
   // Is ReFetching
-  Ref<boolean>,
+  isReFetching: Ref<boolean>;
   // ReFetch data
-  () => Promise<void>,
-];
+  reFetch(): Promise<void>;
+};
 
 export interface UseQueryOnLoaded<Data> {
   (data: Ref<Data | null>): void;
@@ -40,26 +40,26 @@ export function useQuery<Data>(
   if (queries[name]) {
     return queries[name];
   }
-  const query: UseQuery<Data> = [
-    ref(null),
-    ref(false),
-    ref(false),
-    async () => {
-      query[2].value = true;
-      query[0].value = await doFetch();
-      query[2].value = false;
-      query[1].value = true;
+  const query: UseQuery<Data> = {
+    data: ref(null),
+    isLoaded: ref(false),
+    isReFetching: ref(false),
+    async reFetch() {
+      query.isReFetching.value = true;
+      query.data.value = await doFetch();
+      query.isReFetching.value = false;
+      query.isLoaded.value = true;
       for (const onLoadedFnId in onLoadedFns[name]) {
         if (onLoadedFns[name][onLoadedFnId]) {
-          onLoadedFns[name][onLoadedFnId](query[0]);
+          onLoadedFns[name][onLoadedFnId](query.data);
         }
       }
     },
-  ];
-  query[3]().then(() => {
+  };
+  query.reFetch().then(() => {
     for (const onLoadedFnId in onLoadedFns[name]) {
       if (onLoadedFns[name][onLoadedFnId]) {
-        onLoadedFns[name][onLoadedFnId](query[0]);
+        onLoadedFns[name][onLoadedFnId](query.data);
       }
     }
   });
@@ -67,12 +67,8 @@ export function useQuery<Data>(
 
   onBeforeUnmount(async () => {
     if (onUnmount) {
-      onUnmount(query[0]);
-      if (
-        onLoaded &&
-        onLoadedFns[name] &&
-        onLoadedFns[name][onLoaded.toString()]
-      ) {
+      onUnmount(query.data);
+      if (onLoaded && onLoadedFns[name] && onLoadedFns[name][onLoaded.toString()]) {
         delete onLoadedFns[name][onLoaded.toString()];
       }
     }

@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use super::collision::{collision_with_bb, collision_with_point};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct BoundingBox {
     position: (f32, f32),
     size: (f32, f32),

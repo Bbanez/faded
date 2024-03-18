@@ -7,11 +7,11 @@ import { Button } from '../components/button.tsx';
 export const AccountView = defineComponent({
   setup() {
     const router = useRouter();
-    const [_, activeAccountLoaded] = useActiveAccount();
+    const activeAccountQuery = useActiveAccount();
 
     return () => (
       <SetupLayout>
-        {activeAccountLoaded.value && (
+        {activeAccountQuery.data.value && (
           <div class="flex flex-col gap-2">
             <Button
               onClick={() => {

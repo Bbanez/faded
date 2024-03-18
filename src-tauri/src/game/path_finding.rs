@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use super::nogo::Nogo;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct PathFindingNode {
     pub g: usize, // Distance from the start
     pub h: usize, // Distance from the end

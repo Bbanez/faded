@@ -1,17 +1,16 @@
 import { invoke } from '@tauri-apps/api';
-import { RustSettings } from '../types/rust/settings.ts';
+import { Settings } from '../types/rs';
 
 export class SettingsHandler {
   static async get() {
-    return await invoke<RustSettings>('settings_get', {
+    return await invoke<Settings>('settings_get', {
       resolution: [window.innerWidth, window.innerHeight],
     });
   }
 
   static async set(resolution: [number, number]) {
-    const res = await invoke<RustSettings>('settings_set', {
+    return await invoke<Settings>('settings_set', {
       resolution,
     });
-    return res;
   }
 }

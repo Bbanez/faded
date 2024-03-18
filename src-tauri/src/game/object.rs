@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::bcms::group::fdd_base_stats::FddBaseStatsGroup;
 
 use super::bounding_box::BoundingBox;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct GameObject {
     position: (f32, f32),
     size: (f32, f32),
@@ -39,7 +41,8 @@ impl GameObject {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct BaseStats {
     pub str: f32,
     pub agi: f32,
@@ -96,7 +99,8 @@ impl BaseStats {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct CharacterStats {
     pub str: f32,
     pub agi: f32,

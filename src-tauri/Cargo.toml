@@ -25,6 +25,7 @@ uuid = { version = "1.6.1", features = [
 rand = "0.8.4"
 pathfinding = "4.8.0"
 base64 = "0.21.7"
+ts-rs = "8.0.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

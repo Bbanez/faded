@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::GameState;
 use crate::models::model::Model;
 use crate::storage::Storage;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct Settings {
     pub model: Model,
     pub resolution: (i32, i32),

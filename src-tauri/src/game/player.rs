@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{bcms::entry::fdd_character::FddCharacterEntryMetaItem, GameState};
 
@@ -8,13 +9,15 @@ use super::{
     path_finding,
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub enum PlayerAttackType {
     RANGE,
     MELEE,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct Player {
     pub base_stats: BaseStats,
     pub stats: CharacterStats,

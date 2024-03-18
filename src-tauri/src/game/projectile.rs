@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::GameState;
 
 use super::{math::Math, object::GameObject};
 
-#[derive(Serialize, Debug, Deserialize, Clone)]
+#[derive(Serialize, Debug, Deserialize, Clone, TS)]
+#[ts(export)]
 pub struct Projectile {
     pub id: String,
     pub friendly: bool,

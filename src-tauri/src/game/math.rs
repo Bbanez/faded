@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use super::consts::{PI, PI12, PI32};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct MathFnLinear2D {
     points: Vec<(f32, f32)>,
     k: Vec<f32>,

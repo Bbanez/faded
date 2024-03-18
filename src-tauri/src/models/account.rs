@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{storage::Storage, GameState};
 
 use super::model::Model;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
 pub struct Account {
     pub model: Model,
     pub username: String,

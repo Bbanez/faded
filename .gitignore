@@ -27,3 +27,4 @@ dist-ssr
 /src-tauri/src/bcms
 /public/bcms
 /src/types/bcms
+/src/types/rs

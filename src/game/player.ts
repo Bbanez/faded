@@ -6,13 +6,13 @@ import { Animation, AnimationConfigItem } from './animation';
 import { Game } from './main';
 import { bcms } from './bcms';
 import { AssetLoader } from './asset-loader';
-import { RustPlayer } from '../types';
 import { invoke } from '@tauri-apps/api';
 import { MouseRay } from './mouse-ray';
 import { Keyboard, KeyboardEventType, KeyboardState } from './keyboard';
 import { Distance } from './distance';
 import { Ticker } from './ticker';
 import { PI12 } from './consts';
+import type {Player as RustPlayer} from '../types/rs'
 
 export interface PlayerAnimation {
   idle: AnimationConfigItem;
