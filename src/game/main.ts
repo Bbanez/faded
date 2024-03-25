@@ -16,16 +16,15 @@ import { Mouse } from './mouse';
 import { Keyboard } from './keyboard';
 import { Ticker } from './ticker';
 import { bcms, loadBcmsData } from './bcms';
-import { invoke } from '@tauri-apps/api';
 import { AssetLoader } from './asset-loader';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { PI12 } from './consts';
 import { Camera } from './camera';
 import { Player, createPlayer } from './player';
-import { SettingsHandler } from '../rust/settings.ts';
 import { FddMapEntryMeta } from '../types/bcms';
-import { Nogo } from '../types/rs';
 import { getImageData } from './util/image.ts';
+import { rust_api_calls } from '../rust/api-call.ts';
+import { MapInfo } from '../types/rs';
 
 export interface GameConfig {
     el: HTMLElement;
@@ -48,7 +47,7 @@ export class Game {
     } = {} as never;
     camera: Camera;
     player: Player | null = null;
-    nogo: Nogo | null = null;
+    mapInfo: MapInfo | null = null;
     frameTicker: boolean;
     fps: number = 0;
     fpsEl = document.createElement('div');
@@ -77,7 +76,7 @@ export class Game {
         this.unsubs.push(
             Ticker.subscribe(async () => {
                 this.fps++;
-                await invoke('on_tick');
+                await rust_api_calls.on_tick();
             }),
         );
 
@@ -100,7 +99,6 @@ export class Game {
 
     async run() {
         await loadBcmsData();
-        await SettingsHandler.get();
         const mapData = bcms.maps.find((e) => e.slug === this.mapSlug);
         if (!mapData) {
             throw Error(`Failed to load map "${this.mapSlug}"`);
@@ -161,7 +159,7 @@ export class Game {
                     const pixel = imageData.data[i];
                     pixels.push(pixel);
                 }
-                this.nogo = await invoke<Nogo>('nogo_set', {
+                this.mapInfo = await rust_api_calls.map_info_set({
                     pixels,
                     mapSlug: this.mapSlug,
                 });

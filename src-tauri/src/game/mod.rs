@@ -1,10 +1,12 @@
 pub mod bounding_box;
 pub mod collision;
 pub mod consts;
+pub mod map_info;
+pub mod map_node;
 pub mod math;
-pub mod nogo;
-pub mod object;
 pub mod on_tick;
 pub mod path_finding;
 pub mod player;
+pub mod point;
 pub mod projectile;
+pub mod size;

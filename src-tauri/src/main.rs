@@ -2,6 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Mutex;
+use std::thread;
+
+use actix_web::{get, HttpResponse, Responder};
 
 use bcms::entry::{
     fdd_character::{FDD_CHARACTER_META_ITEMS, FddCharacterEntryMetaItem},
@@ -9,8 +12,7 @@ use bcms::entry::{
     fdd_map::FddMapEntryMetaItem,
 };
 use game::{
-    nogo::nogo_set,
-    object::BaseStats,
+    map_info::map_info_set,
     on_tick::on_tick,
     player::{player_get, player_load, player_motion, player_set_wanted_position},
 };
@@ -20,18 +22,25 @@ use models::{
 use storage::Storage;
 
 use crate::bcms::entry::fdd_map::FDD_MAP_META_ITEMS;
+use crate::game::size::{Size, USize};
 
 pub mod bcms;
 pub mod game;
 pub mod models;
 pub mod state;
 pub mod storage;
+mod server;
 
 pub struct GameState(pub Mutex<state::State>);
 
 #[tauri::command]
 fn report_error(err: &str) {
     println!("FRErr: {}", err);
+}
+
+#[get("/")]
+async fn hello() -> impl Responder {
+    HttpResponse::Ok().body("Hello world!")
 }
 
 fn main() {
@@ -68,18 +77,22 @@ fn main() {
         None => active_account = None,
     }
     tauri::Builder::default()
+        .setup(|app| {
+            let handler = app.handle();
+            let boxed_handler = Box::new(handler);
+            thread::spawn(move || {
+                server::init(*boxed_handler).unwrap();
+            });
+            Ok(())
+        })
         .manage(GameState(Mutex::new(state::State {
-            nogo: game::nogo::Nogo::new(vec![], 0, 0, 0, 0),
+            // nogo: game::nogo::Nogo::new(vec![], 0, 0, 0, 0),
+            map_info: game::map_info::MapInfo::new(vec![], USize::new(0, 0), Size::new(0.0, 0.0)),
             maps,
             characters,
             enemies_data,
             projectiles: vec![],
-            player: game::player::Player::new(
-                (100.0, 100.0),
-                (4.0, 4.0),
-                (3200.0, 3200.0),
-                BaseStats::new(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0),
-            ),
+            player: None,
             accounts,
             active_account,
             settings,
@@ -94,7 +107,7 @@ fn main() {
 
             on_tick,
 
-            nogo_set,
+            map_info_set,
 
             account_create,
             account_load,

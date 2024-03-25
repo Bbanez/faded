@@ -1,16 +1,16 @@
 import { defineComponent, ref } from 'vue';
 import { createRefValidator, createValidationItem } from '../util/validation';
 import { useRouter } from '../router';
-import { AccountHandler, useAccounts } from '../rust/account';
 import { Input } from '../components/inputs/input';
 import { Button } from '../components/button.tsx';
 import { Link } from '../components/link.tsx';
-import { useActiveAccount } from '../hooks/account.ts';
+import { useAccounts, useActiveAccount } from '../hooks/account.ts';
+import { rust_api_calls } from '../rust/api-call.ts';
 
 export const NewAccountView = defineComponent({
     setup() {
         const router = useRouter();
-        const accounts = useAccounts();
+        const accountsQuery = useAccounts();
         const activeAccountQuery = useActiveAccount();
         const data = ref({
             username: createValidationItem({
@@ -19,7 +19,9 @@ export const NewAccountView = defineComponent({
                     if (!value) {
                         return 'Please enter username';
                     }
-                    const account = accounts.find((e) => e.username === value);
+                    const account = accountsQuery.data.value?.find(
+                        (e) => e.username === value,
+                    );
                     if (account) {
                         return 'You already have account with this username';
                     }
@@ -32,7 +34,9 @@ export const NewAccountView = defineComponent({
             if (!validate()) {
                 return;
             }
-            await AccountHandler.create(data.value.username.value);
+            await rust_api_calls.account_create({
+                username: data.value.username.value,
+            });
             await activeAccountQuery.reFetch();
             router.push('account');
         }

@@ -55,7 +55,10 @@ export class Camera {
         if (position) {
             this.position.curr = [
                 position[0],
-                Distance.heightTo(position, this.game.assets.ground),
+                Distance.heightTo(
+                    { x: position[0], y: position[1] },
+                    this.game.assets.ground,
+                ),
                 position[1],
             ];
             this.position.wanted = [...this.position.curr];
@@ -104,17 +107,19 @@ export class Camera {
     private calcPosition() {
         if (this.followObj) {
             if (
-                this.position.wanted[0] !==
-                    this.followObj.rust.obj.position[0] ||
-                this.position.wanted[2] !== this.followObj.rust.obj.position[1]
+                this.followObj.rust &&
+                (this.position.wanted[0] !==
+                    this.followObj.rust?.bounding_box.position.x ||
+                    this.position.wanted[2] !==
+                        this.followObj.rust.bounding_box.position.y)
             ) {
                 this.position.wanted = [
-                    this.followObj.rust.obj.position[0],
+                    this.followObj.rust.bounding_box.position.x,
                     Distance.heightTo(
-                        this.followObj.rust.obj.position,
+                        this.followObj.rust.bounding_box.position,
                         this.game.assets.ground,
                     ),
-                    this.followObj.rust.obj.position[1],
+                    this.followObj.rust.bounding_box.position.y,
                 ];
             }
         }
@@ -145,7 +150,10 @@ export class Camera {
     setWantedPosition(position: [number, number]) {
         this.position.wanted = [
             position[0],
-            Distance.heightTo(position, this.game.assets.ground),
+            Distance.heightTo(
+                { x: position[0], y: position[1] },
+                this.game.assets.ground,
+            ),
             position[1],
         ];
     }
@@ -154,7 +162,10 @@ export class Camera {
         this.followObj = null;
         this.position.curr = [
             position[0],
-            Distance.heightTo(position, this.game.assets.ground),
+            Distance.heightTo(
+                { x: position[0], y: position[1] },
+                this.game.assets.ground,
+            ),
             position[1],
         ];
         this.position.wanted = [...this.position.curr];

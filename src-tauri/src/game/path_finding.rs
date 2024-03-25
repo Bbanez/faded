@@ -1,83 +1,8 @@
-use serde::{Deserialize, Serialize};
-use ts_rs::TS;
+use crate::game::map_info::MapInfo;
+use crate::game::map_node::{MapNode, MapNodeNeighborIdx};
+use crate::game::point::{Point, UPoint};
 
-use super::nogo::Nogo;
-
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
-#[ts(export)]
-pub struct PathFindingNode {
-    pub g: usize, // Distance from the start
-    pub h: usize, // Distance from the end
-    pub position: (usize, usize),
-    pub map_position: (f32, f32),
-    pub parent_idx: Option<usize>,
-    pub neighbor_idx: (
-        // tl
-        usize,
-        // tm
-        usize,
-        // tr
-        usize,
-        // mr
-        usize,
-        // br
-        usize,
-        // bm
-        usize,
-        // bl
-        usize,
-        // ml
-        usize,
-    ),
-    pub valid: bool,
-}
-
-impl PathFindingNode {
-    pub fn new(
-        start: (usize, usize),
-        position: (usize, usize),
-        map_position: (f32, f32),
-        end: (usize, usize),
-        parent_idx: Option<usize>,
-        neighbor_idx: (
-            // tl
-            usize,
-            // tm
-            usize,
-            // tr
-            usize,
-            // mr
-            usize,
-            // br
-            usize,
-            // bm
-            usize,
-            // bl
-            usize,
-            // ml
-            usize,
-        ),
-        valid: bool,
-    ) -> PathFindingNode {
-        let g = distance_between_points(start, position);
-        let h = distance_between_points(position, end);
-        PathFindingNode {
-            g,
-            h,
-            position,
-            map_position,
-            parent_idx,
-            neighbor_idx,
-            valid,
-        }
-    }
-
-    pub fn f(&self) -> usize {
-        self.g + self.h
-    }
-}
-
-fn lowest_f(nodes: &Vec<PathFindingNode>, nogo: &Nogo) -> (PathFindingNode, usize, usize) {
+fn lowest_f(nodes: &Vec<MapNode>, map_info: &MapInfo) -> (MapNode, usize, usize) {
     let mut lowest_idx = 0;
     let mut lowest_f_vel: usize = 1000000000000;
     for i in 0..nodes.len() {
@@ -90,14 +15,14 @@ fn lowest_f(nodes: &Vec<PathFindingNode>, nogo: &Nogo) -> (PathFindingNode, usiz
     }
     (
         nodes[lowest_idx].clone(),
-        nodes[lowest_idx].position.0 + (nogo.width as usize) * nodes[lowest_idx].position.1,
+        nodes[lowest_idx].v_position.x + (map_info.v_size.width) * nodes[lowest_idx].v_position.y,
         lowest_idx,
     )
 }
 
-fn is_in_set(node: &PathFindingNode, nodes: &Vec<PathFindingNode>) -> usize {
+fn is_in_set(node: &MapNode, nodes: &Vec<MapNode>) -> usize {
     for i in 0..nodes.len() {
-        if nodes[i].position.0 == node.position.0 && nodes[i].position.1 == node.position.1 {
+        if nodes[i].v_position.x == node.v_position.x && nodes[i].v_position.y == node.v_position.y {
             return i;
         }
     }
@@ -105,106 +30,80 @@ fn is_in_set(node: &PathFindingNode, nodes: &Vec<PathFindingNode>) -> usize {
 }
 
 fn set_node_params(
-    start: &PathFindingNode,
-    end: &PathFindingNode,
-    node: &PathFindingNode,
-) -> PathFindingNode {
+    start: &MapNode,
+    end: &MapNode,
+    node: &MapNode,
+) -> MapNode {
     let mut n = node.clone();
-    n.g = distance_between_points(start.position, node.position);
-    n.h = distance_between_points(node.position, end.position);
+    n.g = MapInfo::distance_between_points(&start.v_position, &node.v_position);
+    n.h = MapInfo::distance_between_points(&node.v_position, &end.v_position);
     n
 }
 
 fn get_neighbor_nodes(
-    start: &PathFindingNode,
-    end: &PathFindingNode,
-    neighbor_idx: (
-        // tl
-        usize,
-        // tm
-        usize,
-        // tr
-        usize,
-        // mr
-        usize,
-        // br
-        usize,
-        // bm
-        usize,
-        // bl
-        usize,
-        // ml
-        usize,
-    ),
-    nodes: &Vec<PathFindingNode>,
-) -> Vec<PathFindingNode> {
-    let mut res: Vec<PathFindingNode> = vec![];
-    if neighbor_idx.0 < 100000 {
-        let node = &nodes[neighbor_idx.0];
-        if node.valid {
+    start: &MapNode,
+    end: &MapNode,
+    neighbor_idx: MapNodeNeighborIdx,
+    nodes: &Vec<MapNode>,
+) -> Vec<MapNode> {
+    let mut res: Vec<MapNode> = vec![];
+    if neighbor_idx.top_left < 100000000 {
+        let node = &nodes[neighbor_idx.top_left];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.1 < 100000 {
-        let node = &nodes[neighbor_idx.1];
-        if node.valid {
+    if neighbor_idx.top_mid < 100000000 {
+        let node = &nodes[neighbor_idx.top_mid];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.2 < 100000 {
-        let node = &nodes[neighbor_idx.2];
-        if node.valid {
+    if neighbor_idx.top_right < 100000000 {
+        let node = &nodes[neighbor_idx.top_right];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.3 < 100000 {
-        let node = &nodes[neighbor_idx.3];
-        if node.valid {
+    if neighbor_idx.mid_right < 100000000 {
+        let node = &nodes[neighbor_idx.mid_right];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.4 < 100000 {
-        let node = &nodes[neighbor_idx.4];
-        if node.valid {
+    if neighbor_idx.bottom_right < 100000000 {
+        let node = &nodes[neighbor_idx.bottom_right];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.5 < 100000 {
-        let node = &nodes[neighbor_idx.5];
-        if node.valid {
+    if neighbor_idx.bottom_mid < 100000000 {
+        let node = &nodes[neighbor_idx.bottom_mid];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.6 < 100000 {
-        let node = &nodes[neighbor_idx.6];
-        if node.valid {
+    if neighbor_idx.bottom_left < 100000000 {
+        let node = &nodes[neighbor_idx.bottom_left];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
-    if neighbor_idx.7 < 100000 {
-        let node = &nodes[neighbor_idx.7];
-        if node.valid {
+    if neighbor_idx.mid_left < 100000000 {
+        let node = &nodes[neighbor_idx.mid_left];
+        if node.walkable {
             res.push(set_node_params(start, end, &node));
         }
     }
     res
 }
 
-fn distance_between_points(start: (usize, usize), end: (usize, usize)) -> usize {
-    let x = end.0.abs_diff(start.0);
-    let z = end.1.abs_diff(start.1);
-    if x > z {
-        return 14 * z + 10 * (x - z);
-    }
-    return 14 * x + 10 * (z - x);
-}
-
 pub fn get_node_at_position(
-    position: (usize, usize),
-    nodes: &Vec<PathFindingNode>,
-) -> Option<PathFindingNode> {
+    position: &UPoint,
+    nodes: &Vec<MapNode>,
+) -> Option<MapNode> {
     for i in 0..nodes.len() {
-        if position.0 == nodes[i].position.0 && position.1 == nodes[i].position.1 {
+        if position.x == nodes[i].v_position.x && position.y == nodes[i].v_position.y {
             return Some(nodes[i].clone());
         }
     }
@@ -212,27 +111,27 @@ pub fn get_node_at_position(
 }
 
 fn resolve_path(
-    start_node: &PathFindingNode,
-    end_node: &PathFindingNode,
-    nogo: &Nogo,
-    closed_set: &Vec<PathFindingNode>,
-) -> Vec<(f32, f32)> {
-    let mut output: Vec<(f32, f32)> = vec![start_node.map_position];
-    let mut current_node: PathFindingNode = start_node.clone();
+    start_node: &MapNode,
+    end_node: &MapNode,
+    map_info: &MapInfo,
+    closed_set: &Vec<MapNode>,
+) -> Vec<Point> {
+    let mut output: Vec<Point> = vec![start_node.r_position.clone()];
+    let mut current_node: MapNode = start_node.clone();
     let mut do_loop = true;
     while do_loop == true {
-        if current_node.position.0 == end_node.position.0
-            && current_node.position.1 == end_node.position.1
+        if current_node.v_position.x == end_node.v_position.x
+            && current_node.v_position.y == end_node.v_position.y
         {
             do_loop = false;
         } else {
             match current_node.parent_idx {
                 Some(parent_idx) => {
                     let node_opt =
-                        get_node_at_position(nogo.nodes[parent_idx].position, &closed_set);
+                        get_node_at_position(&map_info.nodes[parent_idx].v_position, &closed_set);
                     match node_opt {
                         Some(node) => {
-                            output.push(node.map_position);
+                            output.push(node.r_position.clone());
                             current_node = node;
                         }
                         None => {
@@ -252,37 +151,37 @@ fn resolve_path(
 }
 
 pub fn a_star(
-    map_start: (f32, f32),
-    map_end: (f32, f32),
-    nogo: &Nogo,
+    map_start: &Point,
+    map_end: &Point,
+    map_info: &MapInfo,
 ) -> (
-    Option<Vec<(f32, f32)>>, // Path to follow
+    Option<Vec<Point>>, // Path to follow
     bool,                    // Is end position valid
 ) {
-    let start_node_opt = nogo.get_valid_node(map_start);
+    let start_node_opt = map_info.get_valid_node(map_start);
     match start_node_opt.0 {
         Some(start_node) => {
-            let end_node_opt = nogo.get_valid_node(map_end);
+            let end_node_opt = map_info.get_valid_node(map_end);
             match end_node_opt.0 {
                 Some(end_node) => {
-                    if start_node.position.0 == end_node.position.0
-                        && start_node.position.1 == end_node.position.1
+                    if start_node.v_position.x == end_node.v_position.x
+                        && start_node.v_position.y == end_node.v_position.y
                     {
                         return (Some(vec![]), true);
                     }
-                    let mut open_set: Vec<PathFindingNode> = vec![start_node.clone()];
-                    let mut closed_set: Vec<PathFindingNode> = vec![];
+                    let mut open_set: Vec<MapNode> = vec![start_node.clone()];
+                    let mut closed_set: Vec<MapNode> = vec![];
                     let mut loops = 0;
                     while open_set.len() > 0 {
                         loops += 1;
-                        let current_node = lowest_f(&open_set, nogo);
+                        let current_node = lowest_f(&open_set, map_info);
                         open_set.remove(current_node.2);
                         closed_set.push(current_node.0.clone());
-                        if current_node.0.position.0 == end_node.position.0
-                            && current_node.0.position.1 == end_node.position.1
+                        if current_node.0.v_position.x == end_node.v_position.x
+                            && current_node.0.v_position.y == end_node.v_position.y
                         {
                             return (
-                                Some(resolve_path(&current_node.0, start_node, nogo, &closed_set)),
+                                Some(resolve_path(&current_node.0, start_node, map_info, &closed_set)),
                                 end_node_opt.1,
                             );
                         }
@@ -290,32 +189,32 @@ pub fn a_star(
                             &start_node,
                             &end_node,
                             current_node.0.neighbor_idx,
-                            &nogo.nodes,
+                            &map_info.nodes,
                         );
                         for i in 0..neighbor_nodes.len() {
                             neighbor_nodes[i].parent_idx = Some(current_node.1);
                             if is_in_set(&neighbor_nodes[i], &closed_set) == 1000000 {
                                 let new_move_cost = current_node.0.g
-                                    + distance_between_points(
-                                        current_node.0.position,
-                                        neighbor_nodes[i].position,
-                                    );
+                                    + MapInfo::distance_between_points(
+                                    &current_node.0.v_position,
+                                    &neighbor_nodes[i].v_position,
+                                );
                                 let neighbor_node_in_open_set_idx =
                                     is_in_set(&neighbor_nodes[i], &open_set);
                                 if neighbor_node_in_open_set_idx == 1000000 {
                                     neighbor_nodes[i].g = new_move_cost;
-                                    neighbor_nodes[i].h = distance_between_points(
-                                        neighbor_nodes[i].position,
-                                        end_node.position,
+                                    neighbor_nodes[i].h = MapInfo::distance_between_points(
+                                        &neighbor_nodes[i].v_position,
+                                        &end_node.v_position,
                                     );
                                     open_set.push(neighbor_nodes[i].clone());
                                 } else if new_move_cost < open_set[neighbor_node_in_open_set_idx].g
                                 {
                                     open_set[neighbor_node_in_open_set_idx].g = new_move_cost;
                                     open_set[neighbor_node_in_open_set_idx].h =
-                                        distance_between_points(
-                                            neighbor_nodes[i].position,
-                                            end_node.position,
+                                        MapInfo::distance_between_points(
+                                            &neighbor_nodes[i].v_position,
+                                            &end_node.v_position,
                                         );
                                     open_set[neighbor_node_in_open_set_idx].parent_idx =
                                         Some(current_node.1);

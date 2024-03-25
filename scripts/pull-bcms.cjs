@@ -24,7 +24,8 @@ async function main() {
     base: path.join(process.cwd()),
   });
   const client = createBcmsClient({
-    cmsOrigin: 'https://cms.vajaga.com',
+    // cmsOrigin: 'https://cms.vajaga.com',
+    cmsOrigin: 'http://localhost:8080',
     key: {
       id: '6581b5b277fc80f2f2159c1f',
       secret:

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use crate::game::size::USize;
 
 use crate::GameState;
 use crate::models::model::Model;
@@ -9,11 +10,11 @@ use crate::storage::Storage;
 #[ts(export)]
 pub struct Settings {
     pub model: Model,
-    pub resolution: (i32, i32),
+    pub resolution: USize,
 }
 
 impl Settings {
-    pub fn new(resolution: (i32, i32)) -> Settings {
+    pub fn new(resolution: USize) -> Settings {
         Settings {
             model: Model::new(None),
             resolution,
@@ -22,7 +23,7 @@ impl Settings {
 }
 
 #[tauri::command]
-pub fn settings_get(state: tauri::State<GameState>, resolution: (i32, i32)) -> Settings {
+pub fn settings_get(state: tauri::State<GameState>, resolution: USize) -> Settings {
     let mut state_guard = state.0.lock().unwrap();
     return match &state_guard.settings {
         Some(settings) => {
@@ -41,7 +42,7 @@ pub fn settings_get(state: tauri::State<GameState>, resolution: (i32, i32)) -> S
 }
 
 #[tauri::command]
-pub fn settings_set(state: tauri::State<GameState>, resolution: (i32, i32)) -> Settings {
+pub fn settings_set(state: tauri::State<GameState>, resolution: USize) -> Settings {
     let mut state_guard = state.0.lock().unwrap();
     if let Some(ref mut settings) = state_guard.settings {
         settings.resolution = resolution;

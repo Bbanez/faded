@@ -53,13 +53,18 @@ export const Minimap = defineComponent({
             unsub.push(
                 Ticker.subscribe(async (cTime) => {
                     if (refreshAt < cTime) {
-                        if (props.game.player && data.value.player) {
+                        if (
+                            (props.game.player && data.value.player,
+                            props.game.player?.rust)
+                        ) {
                             const playerPosition: [number, number] = [
                                 gameToMapSpace[0](
-                                    props.game.player.rust.obj.position[1],
+                                    props.game.player.rust.bounding_box.position
+                                        .y,
                                 ),
                                 gameToMapSpace[1](
-                                    props.game.player.rust.obj.position[0],
+                                    props.game.player.rust.bounding_box.position
+                                        .x,
                                 ),
                             ];
                             if (

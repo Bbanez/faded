@@ -45,8 +45,8 @@ export class Renderer {
         this.composer = new EffectComposer(this.r);
         if (settings.data.value) {
             this.r.setSize(
-                settings.data.value.resolution[0],
-                settings.data.value.resolution[1],
+                settings.data.value.resolution.width,
+                settings.data.value.resolution.height,
             );
         } else {
             this.r.setSize(window.innerWidth, window.innerHeight);
@@ -85,11 +85,14 @@ export class Renderer {
             if (settings.data.value) {
                 if (this.camera) {
                     this.camera.aspect =
-                        settings.data.value.resolution[0] /
-                        settings.data.value.resolution[1];
+                        settings.data.value.resolution.width /
+                        settings.data.value.resolution.height;
                     this.camera.updateProjectionMatrix();
                 }
-                this.composer.setSize(...settings.data.value.resolution);
+                this.composer.setSize(
+                    settings.data.value.resolution.width,
+                    settings.data.value?.resolution.height,
+                );
                 this.r.domElement.setAttribute(
                     'style',
                     'width: 100%; height: 100%;',

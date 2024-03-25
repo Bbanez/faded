@@ -1,23 +1,26 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::game::point::Point;
+use crate::game::size::Size;
+
 use super::consts::{PI, PI12, PI32};
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct MathFnLinear2D {
-    points: Vec<(f32, f32)>,
+    points: Vec<Point>,
     k: Vec<f32>,
     n: Vec<f32>,
 }
 
 impl MathFnLinear2D {
-    pub fn new(points: Vec<(f32, f32)>) -> MathFnLinear2D {
+    pub fn new(points: Vec<Point>) -> MathFnLinear2D {
         let mut k: Vec<f32> = vec![];
         let mut n: Vec<f32> = vec![];
         for i in 1..points.len() {
-            k.push((points[i].1 - points[i - 1].1) / (points[i].0 - points[i - 1].0));
-            n.push(points[i - 1].1 - k[i - 1] * points[i - 1].0);
+            k.push((points[i].y - points[i - 1].y) / (points[i].x - points[i - 1].x));
+            n.push(points[i - 1].y - k[i - 1] * points[i - 1].x);
         }
         MathFnLinear2D { k, n, points }
     }
@@ -25,11 +28,11 @@ impl MathFnLinear2D {
     pub fn calc(&self, x: f32) -> f32 {
         let mut best_section_idx = 0;
         let len = self.points.len() - 1;
-        if x >= self.points[len].0 {
+        if x >= self.points[len].x {
             best_section_idx = len - 1;
         } else {
             for i in 0..len {
-                if x >= self.points[i].0 && x <= self.points[i + 1].0 {
+                if x >= self.points[i].x && x <= self.points[i + 1].y {
                     best_section_idx = i;
                     break;
                 }
@@ -41,11 +44,11 @@ impl MathFnLinear2D {
     pub fn inverse(&self, y: f32) -> f32 {
         let mut best_section_idx = 0;
         let len = self.points.len() - 1;
-        if y >= self.points[len].1 {
+        if y >= self.points[len].y {
             best_section_idx = len - 1;
         } else {
             for i in 0..len {
-                if y >= self.points[i].1 && y < self.points[i + 1].1 {
+                if y >= self.points[i].y && y < self.points[i + 1].y {
                     best_section_idx = i;
                     break;
                 }
@@ -55,25 +58,26 @@ impl MathFnLinear2D {
     }
 }
 
+
 pub struct Math {}
 
 impl Math {
-    pub fn distance_between_points(start: (f32, f32), end: (f32, f32)) -> f32 {
-        let x = (end.0 - start.0).abs();
-        let y = (end.1 - start.1).abs();
+    pub fn distance_between_points(start: &Point, end: &Point) -> f32 {
+        let x = (end.x - start.x).abs();
+        let y = (end.y - start.y).abs();
         (x * x + y * y).sqrt()
     }
 
-    pub fn are_points_near(point1: (f32, f32), point2: (f32, f32), delta: (f32, f32)) -> bool {
-        point1.0 > point2.0 - delta.0
-            && point1.0 < point2.0 + delta.0
-            && point1.1 > point2.1 - delta.1
-            && point1.1 < point2.1 + delta.1
+    pub fn are_points_near(point1: &Point, point2: &Point, delta: &Size) -> bool {
+        point1.x > point2.x - delta.width
+            && point1.x < point2.x + delta.width
+            && point1.y > point2.y - delta.height
+            && point1.y < point2.y + delta.height
     }
 
-    pub fn get_angle(position: (f32, f32), target: (f32, f32)) -> f32 {
-        let dx = target.0 - position.0;
-        let dz = target.1 - position.1;
+    pub fn get_angle(position: &Point, target: &Point) -> f32 {
+        let dx = target.x - position.x;
+        let dz = target.y - position.y;
         let mut angle: f32 = 0.0;
         if dx == 0.0 {
             angle = PI12;
@@ -105,7 +109,7 @@ impl Math {
         PI * deg / 180.0
     }
 
-    pub fn fn_linear_2d(points: Vec<(f32, f32)>) -> MathFnLinear2D {
+    pub fn fn_linear_2d(points: Vec<Point>) -> MathFnLinear2D {
         MathFnLinear2D::new(points)
     }
 }

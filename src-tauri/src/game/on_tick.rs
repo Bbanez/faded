@@ -3,7 +3,10 @@ use crate::GameState;
 #[tauri::command]
 pub fn on_tick(state: tauri::State<GameState>) {
     let mut state_guard = state.0.lock().unwrap();
-    state_guard.player.on_tick();
+    if let Some(mut player) = state_guard.player.clone() {
+        player.on_tick();
+        state_guard.player = Some(player);
+    }
     // Loop over enemies
     // {
     //     let mut i = 0;

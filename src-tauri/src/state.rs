@@ -3,19 +3,21 @@ use crate::{
         fdd_character::FddCharacterEntryMetaItem, fdd_enemy::FddEnemyEntryMetaItem,
         fdd_map::FddMapEntryMetaItem,
     },
-    game::{nogo::Nogo, player::Player, projectile::Projectile},
+    game::{player::Player, projectile::Projectile},
     models::account::Account,
 };
+use crate::game::map_info::MapInfo;
 use crate::models::settings::Settings;
 
 #[derive(Debug)]
 pub struct State {
-    pub player: Player,
+    pub player: Option<Player>,
     pub characters: Vec<FddCharacterEntryMetaItem>,
     pub maps: Vec<FddMapEntryMetaItem>,
     pub enemies_data: Vec<FddEnemyEntryMetaItem>,
     pub projectiles: Vec<Projectile>,
-    pub nogo: Nogo,
+    // pub nogo: Nogo,
+    pub map_info: MapInfo,
     pub active_account: Option<Account>,
     pub accounts: Vec<Account>,
     pub settings: Option<Settings>,

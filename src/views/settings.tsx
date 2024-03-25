@@ -1,19 +1,21 @@
 import { defineComponent, ref } from 'vue';
 import { SetupLayout } from '../layout';
-import { SettingsHandler } from '../rust/settings.ts';
 import { useSettings } from '../hooks/settings.ts';
 import { Button } from '../components/button.tsx';
 import { Link } from '../components/link.tsx';
 import { Select, SelectOption } from '../components/inputs/select.tsx';
 import { FunctionBuilder } from '../game/math/function-builder.ts';
+import { rust_api_calls } from '../rust/api-call.ts';
 
 export const Settings = defineComponent({
     setup() {
         const settingsQuery = useSettings();
         const inputs = ref({
-            width: settingsQuery.data.value?.resolution[0] || window.innerWidth,
+            width:
+                settingsQuery.data.value?.resolution.width || window.innerWidth,
             height:
-                settingsQuery.data.value?.resolution[1] || window.innerHeight,
+                settingsQuery.data.value?.resolution.height ||
+                window.innerHeight,
         });
         const resOptions = getResolutions();
 
@@ -70,10 +72,10 @@ export const Settings = defineComponent({
                                 onInput={(option) => {
                                     const split = option.value.split('x');
                                     if (settingsQuery.data.value) {
-                                        settingsQuery.data.value.resolution = [
-                                            parseInt(split[0]),
-                                            parseInt(split[1]),
-                                        ];
+                                        settingsQuery.data.value.resolution = {
+                                            width: parseInt(split[0]),
+                                            height: parseInt(split[1]),
+                                        };
                                         console.log(
                                             settingsQuery.data.value
                                                 ?.resolution,
@@ -84,10 +86,11 @@ export const Settings = defineComponent({
                             <Button
                                 onClick={async () => {
                                     if (settingsQuery.data.value) {
-                                        await SettingsHandler.set(
-                                            settingsQuery.data.value
-                                                ?.resolution,
-                                        );
+                                        await rust_api_calls.settings_set({
+                                            resolution:
+                                                settingsQuery.data.value
+                                                    ?.resolution,
+                                        });
                                     }
                                 }}
                             >

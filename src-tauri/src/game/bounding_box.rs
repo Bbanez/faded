@@ -1,71 +1,91 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::game::point::Point;
+use crate::game::size::Size;
+
 use super::collision::{collision_with_bb, collision_with_point};
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
-pub struct BoundingBox {
-    position: (f32, f32),
-    size: (f32, f32),
+pub struct BoundingBoxEdges {
     pub top: f32,
     pub right: f32,
     pub bottom: f32,
     pub left: f32,
 }
 
+impl BoundingBoxEdges {
+    pub fn new(top: f32, right: f32, bottom: f32, left: f32) -> BoundingBoxEdges {
+        BoundingBoxEdges {
+            top,
+            right,
+            bottom,
+            left,
+        }
+    }
+
+    pub fn flatten(&mut self) -> (f32, f32, f32, f32) {
+        (self.top, self.right, self.bottom, self.left)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
+pub struct BoundingBox {
+    position: Point,
+    size: Size,
+    edges: BoundingBoxEdges,
+}
+
 impl BoundingBox {
-    pub fn new(size: (f32, f32), position: (f32, f32)) -> BoundingBox {
+    pub fn new(size: Size, position: Point) -> BoundingBox {
         let mut bb = BoundingBox {
             size,
             position,
-            top: 0.0,
-            right: 0.0,
-            bottom: 0.0,
-            left: 0.0,
+            edges: BoundingBoxEdges::new(0.0, 0.0, 0.0, 0.0),
         };
         bb.update();
         bb
     }
 
     fn update(&mut self) {
-        self.top = self.position.1 - self.size.1 / 2.0;
-        self.right = self.position.0 + self.size.0 / 2.0;
-        self.bottom = self.position.1 + self.size.1 / 2.0;
-        self.left = self.position.0 - self.size.0 / 2.0;
+        self.edges.top = self.position.y - self.size.height / 2.0;
+        self.edges.right = self.position.x + self.size.width / 2.0;
+        self.edges.bottom = self.position.y + self.size.height / 2.0;
+        self.edges.left = self.position.x - self.size.width / 2.0;
     }
 
-    pub fn set_size(&mut self, width: f32, height: f32) {
-        self.size.0 = width;
-        self.size.1 = height;
+    pub fn set_size(&mut self, size: Size) {
+        self.size = size;
         self.update();
     }
 
-    pub fn get_size(&mut self) -> (f32, f32) {
-        self.size
+    pub fn get_size(&mut self) -> Size {
+        self.size.clone()
     }
 
-    pub fn set_position(&mut self, position: (f32, f32)) {
+    pub fn set_position(&mut self, position: Point) {
         self.position = position;
         self.update();
     }
 
-    pub fn get_position(&mut self) -> (f32, f32) {
-        self.position
+    pub fn get_position(&mut self) -> Point {
+        self.position.clone()
     }
 
-    pub fn is_inside(&mut self, point: (f32, f32)) -> bool {
-        collision_with_point((self.top, self.right, self.bottom, self.left), point)
+    pub fn point_inside(&mut self, point: (f32, f32)) -> bool {
+        collision_with_point((self.edges.top, self.edges.right, self.edges.bottom, self.edges.left), point)
     }
 
     pub fn does_intersects(&mut self, bb: (f32, f32, f32, f32)) -> bool {
-        collision_with_bb((self.top, self.right, self.bottom, self.left), bb)
+        collision_with_bb((self.edges.top, self.edges.right, self.edges.bottom, self.edges.left), bb)
     }
 
     pub fn does_intersects_bb(&mut self, bb: BoundingBox) -> bool {
-        self.is_inside((bb.left, bb.top))
-            || self.is_inside((bb.right, bb.top))
-            || self.is_inside((bb.right, bb.bottom))
-            || self.is_inside((bb.left, bb.bottom))
+        self.point_inside((bb.edges.left, bb.edges.top))
+            || self.point_inside((bb.edges.right, bb.edges.top))
+            || self.point_inside((bb.edges.right, bb.edges.bottom))
+            || self.point_inside((bb.edges.left, bb.edges.bottom))
     }
 }

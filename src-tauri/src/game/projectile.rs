@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
+use crate::game::bounding_box::BoundingBox;
+use crate::game::point::Point;
+use crate::game::size::Size;
 
 use crate::GameState;
 
-use super::{math::Math, object::GameObject};
+use super::{math::Math};
 
 #[derive(Serialize, Debug, Deserialize, Clone, TS)]
 #[ts(export)]
@@ -14,15 +17,15 @@ pub struct Projectile {
     pub range: f32,
     pub angle: f32,
     pub speed: f32,
-    pub target: (f32, f32),
-    pub obj: GameObject,
+    pub target: Point,
+    pub bounding_box: BoundingBox
 }
 
 impl Projectile {
     pub fn new(
-        position: (f32, f32),
-        target: (f32, f32),
-        size: (f32, f32),
+        position: Point,
+        target: Point,
+        size: Size,
         friendly: bool,
         range: f32,
         speed: f32,
@@ -30,20 +33,20 @@ impl Projectile {
         Projectile {
             id: Uuid::new_v4().to_string(),
             friendly,
-            obj: GameObject::new(position, size),
+            bounding_box: BoundingBox::new(size, position.clone()),
             range,
             speed,
-            angle: Math::get_angle(position, target),
+            angle: Math::get_angle(&position, &target),
             target,
         }
     }
 
     pub fn update(&mut self) {
-        let position = self.obj.get_position();
-        self.angle = Math::get_angle(position, self.target);
-        self.obj.set_position((
-            position.0 + self.speed * self.angle.cos(),
-            position.1 + self.speed * self.angle.sin(),
+        let position = self.bounding_box.get_position();
+        self.angle = Math::get_angle(&position, &self.target);
+        self.bounding_box.set_position(Point::new(
+            position.x + self.speed * self.angle.cos(),
+            position.y + self.speed * self.angle.sin(),
         ));
     }
 }

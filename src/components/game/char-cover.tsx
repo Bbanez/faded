@@ -9,6 +9,7 @@ import type {
     FddCharacterEntryMeta,
     FddLayoutEntryMeta,
 } from '../../types/bcms';
+import { usePlayer } from '../../hooks/player.ts';
 
 export const CharCover = defineComponent({
     props: {
@@ -28,6 +29,41 @@ export const CharCover = defineComponent({
         ]);
         const unsubs: Array<() => void> = [];
         let tickAt = 0;
+        const player = usePlayer();
+
+        async function calcExp(cTime: number) {
+            if (tickAt < cTime) {
+                tickAt = cTime + 100;
+                await player.reFetch();
+                if (player.data.value) {
+                    const stats = player.data.value.stats;
+                    if (svgRef.value) {
+                        const expEl = findChild(
+                            svgRef.value.children,
+                            (child) => {
+                                if (child.getAttribute('fill') === '#24CEC4') {
+                                    return child;
+                                }
+                            },
+                        );
+                        if (expEl) {
+                            const d = expEl.getAttribute('d');
+                            if (d) {
+                                const parts = d.split(' ');
+                                if (parts[2]) {
+                                    const width = expTransFn(
+                                        (stats.level_partial - stats.level) *
+                                            100,
+                                    );
+                                    parts[2] = `100H${width}L${width + 5}`;
+                                    expEl.setAttribute('d', parts.join(' '));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         onMounted(() => {
             layout.value = bcms.layout[0];
@@ -38,35 +74,7 @@ export const CharCover = defineComponent({
             }
             unsubs.push(
                 Ticker.subscribe(async (cTime) => {
-                    if (tickAt < cTime) {
-                        tickAt = cTime + 100;
-                        if (svgRef.value) {
-                            const expEl = findChild(
-                                svgRef.value.children,
-                                (child) => {
-                                    if (
-                                        child.getAttribute('fill') === '#24CEC4'
-                                    ) {
-                                        return child;
-                                    }
-                                },
-                            );
-                            if (expEl) {
-                                const d = expEl.getAttribute('d');
-                                if (d) {
-                                    const parts = d.split(' ');
-                                    if (parts[2]) {
-                                        const width = expTransFn(10);
-                                        parts[2] = `100H${width}L${width + 5}`;
-                                        expEl.setAttribute(
-                                            'd',
-                                            parts.join(' '),
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    await calcExp(cTime);
                 }),
             );
         });

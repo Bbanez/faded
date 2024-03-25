@@ -9,6 +9,7 @@ const fs = createFS({
 async function main() {
     await ChildProcess.spawn('cargo', ['test'], {
         cwd: path.join(process.cwd(), 'src-tauri'),
+        stdio: 'inherit'
     });
     if (await fs.exist(['src', 'types', 'rs'])) {
         await fs.deleteDir(['src', 'types', 'rs']);
