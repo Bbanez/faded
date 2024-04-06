@@ -15,9 +15,20 @@ use game::{
     map_info::map_info_set,
     on_tick::on_tick,
     player::{player_get, player_load, player_motion, player_set_wanted_position},
+    projectile::{
+        projectile_find_all_in_area,
+        projectile_get,
+        projectile_get_all,
+    },
 };
 use models::{
-    account::{Account, account_all, account_create, account_get_active, account_load},
+    account::{
+        account_all,
+        account_get_by_username,
+        account_create,
+        account_get_active,
+        account_load
+    },
     settings::{settings_get, settings_set}};
 use storage::Storage;
 
@@ -30,6 +41,7 @@ pub mod models;
 pub mod state;
 pub mod storage;
 mod server;
+mod util;
 
 pub struct GameState(pub Mutex<state::State>);
 
@@ -50,7 +62,6 @@ fn main() {
     let enemies_data: Vec<FddEnemyEntryMetaItem> =
         serde_json::from_str(FDD_ENEMY_META_ITEMS).unwrap();
     let storage_data = Storage::read();
-    let active_account: Option<Account>;
     let accounts;
     match storage_data.accounts {
         Some(accounts_str) => {
@@ -70,12 +81,6 @@ fn main() {
             settings = None;
         }
     }
-    match storage_data.active_account {
-        Some(account_str) => {
-            active_account = Some(serde_json::from_str(&account_str).unwrap());
-        }
-        None => active_account = None,
-    }
     tauri::Builder::default()
         .setup(|app| {
             let handler = app.handle();
@@ -94,7 +99,6 @@ fn main() {
             projectiles: vec![],
             player: None,
             accounts,
-            active_account,
             settings,
         })))
         .invoke_handler(tauri::generate_handler![
@@ -113,9 +117,14 @@ fn main() {
             account_load,
             account_get_active,
             account_all,
+            account_get_by_username,
 
             settings_get,
-            settings_set
+            settings_set,
+
+            projectile_get,
+            projectile_get_all,
+            projectile_find_all_in_area,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

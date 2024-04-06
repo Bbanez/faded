@@ -1,5 +1,4 @@
 import { defineComponent, ref } from 'vue';
-import { SetupLayout } from '../layout';
 import { useSettings } from '../hooks/settings.ts';
 import { Button } from '../components/button.tsx';
 import { Link } from '../components/link.tsx';
@@ -7,7 +6,7 @@ import { Select, SelectOption } from '../components/inputs/select.tsx';
 import { FunctionBuilder } from '../game/math/function-builder.ts';
 import { rust_api_calls } from '../rust/api-call.ts';
 
-export const Settings = defineComponent({
+export const SettingsView = defineComponent({
     setup() {
         const settingsQuery = useSettings();
         const inputs = ref({
@@ -38,73 +37,68 @@ export const Settings = defineComponent({
         }
 
         return () => (
-            <SetupLayout>
-                <div class={'flex flex-col gap-4'}>
-                    {settingsQuery.data.value ? (
-                        <>
-                            {/*<Input*/}
-                            {/*  type={'text'}*/}
-                            {/*  format={inputAsNumber('int')}*/}
-                            {/*  value={settings.value?.resolution[0] + ''}*/}
-                            {/*  onInput={(value) => {*/}
-                            {/*    if (settings.value) {*/}
-                            {/*      settings.value.resolution[0] = parseInt(value);*/}
-                            {/*    }*/}
-                            {/*  }}*/}
-                            {/*/>*/}
-                            {/*<Input*/}
-                            {/*  type={'text'}*/}
-                            {/*  format={inputAsNumber('int')}*/}
-                            {/*  value={settings.value?.resolution[1] + ''}*/}
-                            {/*  onInput={(value) => {*/}
-                            {/*    if (settings.value) {*/}
-                            {/*      settings.value.resolution[1] = parseInt(value);*/}
-                            {/*    }*/}
-                            {/*  }}*/}
-                            {/*/>*/}
-                            <Select
-                                value={
-                                    inputs.value.width +
-                                    'x' +
-                                    inputs.value.height
+            <div class={'flex flex-col gap-4'}>
+                {settingsQuery.data.value ? (
+                    <>
+                        {/*<Input*/}
+                        {/*  type={'text'}*/}
+                        {/*  format={inputAsNumber('int')}*/}
+                        {/*  value={settings.value?.resolution[0] + ''}*/}
+                        {/*  onInput={(value) => {*/}
+                        {/*    if (settings.value) {*/}
+                        {/*      settings.value.resolution[0] = parseInt(value);*/}
+                        {/*    }*/}
+                        {/*  }}*/}
+                        {/*/>*/}
+                        {/*<Input*/}
+                        {/*  type={'text'}*/}
+                        {/*  format={inputAsNumber('int')}*/}
+                        {/*  value={settings.value?.resolution[1] + ''}*/}
+                        {/*  onInput={(value) => {*/}
+                        {/*    if (settings.value) {*/}
+                        {/*      settings.value.resolution[1] = parseInt(value);*/}
+                        {/*    }*/}
+                        {/*  }}*/}
+                        {/*/>*/}
+                        <Select
+                            value={
+                                inputs.value.width + 'x' + inputs.value.height
+                            }
+                            options={resOptions}
+                            onInput={(option) => {
+                                const split = option.value.split('x');
+                                if (settingsQuery.data.value) {
+                                    settingsQuery.data.value.resolution = {
+                                        width: parseInt(split[0]),
+                                        height: parseInt(split[1]),
+                                    };
+                                    console.log(
+                                        settingsQuery.data.value?.resolution,
+                                    );
                                 }
-                                options={resOptions}
-                                onInput={(option) => {
-                                    const split = option.value.split('x');
-                                    if (settingsQuery.data.value) {
-                                        settingsQuery.data.value.resolution = {
-                                            width: parseInt(split[0]),
-                                            height: parseInt(split[1]),
-                                        };
-                                        console.log(
+                            }}
+                        />
+                        <Button
+                            onClick={async () => {
+                                if (settingsQuery.data.value) {
+                                    await rust_api_calls.settings_set({
+                                        resolution:
                                             settingsQuery.data.value
                                                 ?.resolution,
-                                        );
-                                    }
-                                }}
-                            />
-                            <Button
-                                onClick={async () => {
-                                    if (settingsQuery.data.value) {
-                                        await rust_api_calls.settings_set({
-                                            resolution:
-                                                settingsQuery.data.value
-                                                    ?.resolution,
-                                        });
-                                    }
-                                }}
-                            >
-                                Update
-                            </Button>
-                        </>
-                    ) : (
-                        'Loading ...'
-                    )}
-                    <Link href={'home'} asButton={'primary'}>
-                        Back
-                    </Link>
-                </div>
-            </SetupLayout>
+                                    });
+                                }
+                            }}
+                        >
+                            Update
+                        </Button>
+                    </>
+                ) : (
+                    'Loading ...'
+                )}
+                <Link href={'home'} asButton={'primary'}>
+                    Back
+                </Link>
+            </div>
         );
     },
 });

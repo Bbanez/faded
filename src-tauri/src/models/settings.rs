@@ -2,21 +2,26 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use crate::game::size::USize;
 
-use crate::GameState;
-use crate::models::model::Model;
+use crate::{GameState, util};
 use crate::storage::Storage;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct Settings {
-    pub model: Model,
+    pub id: String,
+    pub created_at: u128,
+    pub updated_at: u128,
     pub resolution: USize,
 }
 
 impl Settings {
     pub fn new(resolution: USize) -> Settings {
+        let time = util::time::get_current_millis();
+        let id = util::id::generate();
         Settings {
-            model: Model::new(None),
+            id,
+            created_at: time,
+            updated_at: time,
             resolution,
         }
     }

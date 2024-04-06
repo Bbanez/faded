@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import './styles/_main.scss';
 import { App } from './app';
 import { invoke } from '@tauri-apps/api';
+import { router } from './router.ts';
 
 async function log(args: any[]) {
     console.log(args);
@@ -34,4 +35,4 @@ console.error = (...data) => {
     return _error.apply(console, data);
 };
 
-createApp(App).mount('#app');
+createApp(App).use(router).mount('#app');

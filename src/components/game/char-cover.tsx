@@ -1,10 +1,9 @@
-import { defineComponent, onMounted, PropType, ref } from 'vue';
+import { computed, defineComponent, onMounted, PropType, ref } from 'vue';
 import type { Game } from '../../game';
 import { bcms } from '../../game/bcms.ts';
 import { findChild } from '../../util/dom';
 import { FunctionBuilder } from '../../game/math/function-builder.ts';
 import { Ticker } from '../../game/ticker.ts';
-import { useActiveAccount } from '../../hooks/account.ts';
 import type {
     FddCharacterEntryMeta,
     FddLayoutEntryMeta,
@@ -12,6 +11,8 @@ import type {
 import { usePlayer } from '../../hooks/player.ts';
 import { Link } from '../link.tsx';
 import { Icon } from '../icon.tsx';
+import { useSdk } from '../../sdk/main.ts';
+import { throwable } from '../../util/throwable.ts';
 
 export const CharCover = defineComponent({
     props: {
@@ -21,10 +22,13 @@ export const CharCover = defineComponent({
         },
     },
     setup() {
+        const sdk = useSdk();
         const layout = ref<FddLayoutEntryMeta>();
         const charInfo = ref<FddCharacterEntryMeta>();
         const svgRef = ref<HTMLDivElement | null>(null);
-        const activeAccountQuery = useActiveAccount();
+        const activeAccount = computed(() =>
+            sdk.account.store.methods.findActive(),
+        );
         const expTransFn = FunctionBuilder.linear2D([
             [0, 124],
             [100, 300.5],
@@ -67,7 +71,7 @@ export const CharCover = defineComponent({
             }
         }
 
-        onMounted(() => {
+        onMounted(async () => {
             layout.value = bcms.layout[0];
             charInfo.value = bcms.characters[0];
             if (svgRef.value) {
@@ -79,6 +83,9 @@ export const CharCover = defineComponent({
                     await calcExp(cTime);
                 }),
             );
+            await throwable(async () => {
+                await sdk.account.get_all();
+            });
         });
 
         return () => (
@@ -88,7 +95,7 @@ export const CharCover = defineComponent({
                     <img
                         class={`relative rounded-full w-[89px] h-[89px] left-[37px] top-[30px]`}
                         src={charInfo.value?.avatar.src}
-                        alt={activeAccountQuery.data.value?.username}
+                        alt={activeAccount.value?.username}
                     />
                     <div
                         class={`absolute text-xs text-center`}
@@ -97,13 +104,20 @@ export const CharCover = defineComponent({
                         {player.data.value?.stats.level}
                     </div>
                     <div
-                        class={`absolute text-xs text-center`}
-                        style={`top: 74px; left: 138px`}
+                        class={`absolute text-xs text-left overflow-hidden truncate`}
+                        style={`width: 180px; top: 74px; left: 138px;`}
                     >
-                        {activeAccountQuery.data.value?.username}
+                        {activeAccount.value?.username}
                     </div>
-                    <Link class={`absolute`} style={`top: 112px; left: 152px;`} href={'account'}>
-                        <Icon class={`stroke-emerald-400 w-3 h-3`} src={`/feather/home`} />
+                    <Link
+                        class={`absolute`}
+                        style={`top: 112px; left: 152px;`}
+                        href={'account'}
+                    >
+                        <Icon
+                            class={`stroke-emerald-400 w-3 h-3`}
+                            src={`/feather/home`}
+                        />
                     </Link>
                 </div>
             </div>

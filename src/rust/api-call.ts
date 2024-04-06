@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api';
 import type {
-    Account,
     MapInfo,
     Player,
     Point,
@@ -30,12 +29,6 @@ export const rust_api_calls = {
         },
         Player
     >('player_set_wanted_position'),
-
-    // Account API
-    account_create: api_call<{ username: string }, Account>('account_create'),
-    account_load: api_call<{ username: string }, Account>('account_load'),
-    account_get_active: api_call<void, Account | null>('account_get_active'),
-    account_all: api_call<void, Account[]>('account_all'),
 
     // Settings API
     settings_get: api_call<{ resolution: USize }, Settings>('settings_get'),

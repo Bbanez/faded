@@ -1,14 +1,14 @@
 import { defineComponent, PropType } from 'vue';
 import { DefaultComponentProps } from './_default';
-import { PageNames, useRouter } from '../router';
 import { buttonStyle } from './button.tsx';
+import { useRouter } from 'vue-router';
 
 export const Link = defineComponent({
     props: {
         ...DefaultComponentProps,
         asButton: String as PropType<keyof typeof buttonStyle>,
         href: {
-            type: String as PropType<PageNames>,
+            type: String,
             required: true,
         },
     },
@@ -23,9 +23,9 @@ export const Link = defineComponent({
                 } ${props.class || ''}`}
                 style={props.style}
                 href={props.href}
-                onClick={(event) => {
+                onClick={async (event) => {
                     event.preventDefault();
-                    router.push(props.href);
+                    await router.push(props.href);
                 }}
             >
                 {ctx.slots.default ? ctx.slots.default() : ''}

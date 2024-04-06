@@ -61,7 +61,7 @@ impl BoundingBox {
         self.update();
     }
 
-    pub fn get_size(&mut self) -> Size {
+    pub fn get_size(&self) -> Size {
         self.size.clone()
     }
 
@@ -70,19 +70,19 @@ impl BoundingBox {
         self.update();
     }
 
-    pub fn get_position(&mut self) -> Point {
+    pub fn get_position(&self) -> Point {
         self.position.clone()
     }
 
-    pub fn point_inside(&mut self, point: (f32, f32)) -> bool {
+    pub fn point_inside(&self, point: (f32, f32)) -> bool {
         collision_with_point((self.edges.top, self.edges.right, self.edges.bottom, self.edges.left), point)
     }
 
-    pub fn does_intersects(&mut self, bb: (f32, f32, f32, f32)) -> bool {
+    pub fn does_intersects(&self, bb: (f32, f32, f32, f32)) -> bool {
         collision_with_bb((self.edges.top, self.edges.right, self.edges.bottom, self.edges.left), bb)
     }
 
-    pub fn does_intersects_bb(&mut self, bb: BoundingBox) -> bool {
+    pub fn does_intersects_bb(&self, bb: BoundingBox) -> bool {
         self.point_inside((bb.edges.left, bb.edges.top))
             || self.point_inside((bb.edges.right, bb.edges.top))
             || self.point_inside((bb.edges.right, bb.edges.bottom))

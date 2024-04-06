@@ -71,7 +71,7 @@ impl PlayerStats {
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct Player {
-    pub character: FddCharacterEntryMetaItem,
+    pub character_slug: String,
     pub stats: PlayerStats,
     pub angle: f32,
     motion: Point,
@@ -94,7 +94,7 @@ impl Player {
             bounding_box: BoundingBox::new(size, position),
             wanted_positions: vec![],
             wanted_position: None,
-            character,
+            character_slug: character.slug,
             exp_to_level: MathFnLinear2D::new(vec![
                 Point::new(0.0, 1.0),
                 Point::new(20.0, 2.0),

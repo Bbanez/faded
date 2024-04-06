@@ -1,17 +1,16 @@
 import { defineComponent, ref } from 'vue';
 import { createRefValidator, createValidationItem } from '../util/validation';
-import { useRouter } from '../router';
 import { Input } from '../components/inputs/input';
 import { Button } from '../components/button.tsx';
-import { Link } from '../components/link.tsx';
-import { useAccounts, useActiveAccount } from '../hooks/account.ts';
-import { rust_api_calls } from '../rust/api-call.ts';
+import { useRouter } from 'vue-router';
+import { useSdk } from '../sdk/main.ts';
+import { throwable } from '../util/throwable.ts';
+import { NotificationService } from '../services/notification.ts';
 
 export const NewAccountView = defineComponent({
     setup() {
+        const sdk = useSdk();
         const router = useRouter();
-        const accountsQuery = useAccounts();
-        const activeAccountQuery = useActiveAccount();
         const data = ref({
             username: createValidationItem({
                 value: '',
@@ -19,11 +18,9 @@ export const NewAccountView = defineComponent({
                     if (!value) {
                         return 'Please enter username';
                     }
-                    const account = accountsQuery.data.value?.find(
-                        (e) => e.username === value,
-                    );
+                    const account = sdk.account.store.findById(value);
                     if (account) {
-                        return 'You already have account with this username';
+                        return 'Account with this name already exist';
                     }
                 },
             }),
@@ -34,37 +31,39 @@ export const NewAccountView = defineComponent({
             if (!validate()) {
                 return;
             }
-            await rust_api_calls.account_create({
-                username: data.value.username.value,
-            });
-            await activeAccountQuery.reFetch();
-            router.push('account');
+            await throwable(
+                async () => {
+                    await sdk.account.create(data.value.username.value);
+                },
+                async () => {
+                    NotificationService.push(
+                        'success',
+                        'Account created successfully',
+                    );
+                    await router.push('/account');
+                },
+            );
         }
 
         return () => (
-            <div class="relative">
-                <div class="absolute top-0 left-0 w-full h-screen flex flex-col items-center">
-                    <div class="m-auto">
-                        <Input
-                            label="Username"
-                            error={data.value.username.error}
-                            value={data.value.username.value}
-                            onInput={(value) => {
-                                data.value.username.value = value;
-                            }}
-                        />
-                        <Button
-                            onClick={() => {
-                                submit();
-                            }}
-                        >
-                            Create
-                        </Button>
-                    </div>
-                </div>
-                <div class="relative">
-                    <Link href="home">Back</Link>
-                </div>
+            <div
+                class={`min-w-full min-h-full flex flex-col gap-4 items-center justify-center`}
+            >
+                <Input
+                    label="Username"
+                    error={data.value.username.error}
+                    value={data.value.username.value}
+                    onInput={(value) => {
+                        data.value.username.value = value;
+                    }}
+                />
+                <Button
+                    onClick={async () => {
+                        await submit();
+                    }}
+                >
+                    Create
+                </Button>
             </div>
         );
     },

@@ -16,9 +16,7 @@ pub struct State {
     pub maps: Vec<FddMapEntryMetaItem>,
     pub enemies_data: Vec<FddEnemyEntryMetaItem>,
     pub projectiles: Vec<Projectile>,
-    // pub nogo: Nogo,
     pub map_info: MapInfo,
-    pub active_account: Option<Account>,
     pub accounts: Vec<Account>,
     pub settings: Option<Settings>,
 }

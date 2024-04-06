@@ -1,34 +1,29 @@
+mod controllers;
+mod security;
+
 use std::sync::Mutex;
 
-use actix_web::{App, get, HttpResponse, HttpServer, middleware, Responder, web};
-use tauri::{AppHandle, Manager};
+use actix_web::{App, HttpServer, web};
+use tauri::{AppHandle};
 
-use crate::GameState;
+pub struct ServerData {
 
-struct TauriAppState {
-    app: Mutex<AppHandle>,
 }
 
-#[get("/hello")]
-async fn h(data: web::Data<TauriAppState>) -> impl Responder {
-    let data_locked = data.app.lock().unwrap();
-    let game_state = data_locked.state::<GameState>();
-    let state_guard = game_state.0.lock().unwrap();
-    let position = state_guard.player.clone().unwrap().bounding_box.get_position();
-    HttpResponse::Ok().body(format!("Hello world! {:?}", position))
+pub struct ActixTauriAppState {
+    app: Mutex<AppHandle>,
 }
 
 #[actix_web::main]
 pub async fn init(app: AppHandle) -> std::io::Result<()> {
-    let tauri_app = web::Data::new(TauriAppState {
+    let tauri_app = web::Data::new(ActixTauriAppState {
         app: Mutex::new(app),
     });
 
     HttpServer::new(move || {
         App::new()
             .app_data(tauri_app.clone())
-            .wrap(middleware::Logger::default())
-            .service(h)
+            .service(controllers::player::player_controller())
     })
         .bind(("127.0.0.1", 8080))?
         .run()

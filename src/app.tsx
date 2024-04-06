@@ -1,11 +1,24 @@
-import { defineComponent } from 'vue';
-import { Router } from './_router';
+import { computed, defineComponent } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
+import { RouteMeta } from './router.ts';
+import { layouts } from './layout';
+import { Toast } from './components/toast.tsx';
 
 export const App = defineComponent({
     setup() {
+        const route = useRoute();
+        const meta = computed(() => (route.meta as RouteMeta) || {});
+        const Layout = computed(() =>
+            meta.value.layout ? layouts[meta.value.layout] : 'div',
+        );
+
         return () => (
             <div class="root">
-                <Router />
+                <Layout.value {...meta.value}>
+                    <RouterView />
+                </Layout.value>
+
+                <Toast />
             </div>
         );
     },

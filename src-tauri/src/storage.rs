@@ -5,16 +5,14 @@ use tauri::api::path::home_dir;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StorageData {
-    pub active_account: Option<String>,
     pub accounts: Option<String>,
     pub settings: Option<String>,
 }
 
 impl StorageData {
-    pub fn new(active_account: Option<String>, accounts: Option<String>, settings: Option<String>) -> StorageData {
+    pub fn new(accounts: Option<String>, settings: Option<String>) -> StorageData {
         StorageData {
             accounts,
-            active_account,
             settings,
         }
     }
@@ -83,7 +81,7 @@ impl Storage {
             Ok(_) => Storage::parse_data(&content),
             Err(e) => {
                 println!("Failed to read file: {:?}", e);
-                StorageData::new(None, None, None)
+                StorageData::new(None, None)
             }
         };
     }
@@ -101,7 +99,6 @@ impl Storage {
         let storage = Storage::read();
         return match key {
             "accounts" => storage.accounts,
-            "active_account" => storage.active_account,
             "settings" => storage.settings,
             _ => None,
         };
@@ -112,9 +109,6 @@ impl Storage {
         let value = String::from(value);
         if key == "accounts" {
             storage.accounts = Some(value);
-            Storage::write(&storage);
-        } else if key == "active_account" {
-            storage.active_account = Some(value);
             Storage::write(&storage);
         } else if key == "settings" {
             storage.settings = Some(value);
