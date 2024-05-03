@@ -7,12 +7,16 @@ import { NewAccountView } from './views/new-account.tsx';
 import { SettingsView } from './views/settings.tsx';
 import { Layouts } from './layout';
 import { P404View } from './views/404.tsx';
+import { AccountLoadView } from './views/account-load.tsx';
+import { GameStartView } from './views/game-start.tsx';
 
 export const views = {
     HomeView,
     GameView,
+    GameStartView,
     AccountView,
     NewAccountView,
+    AccountLoadView,
     SettingsView,
     P404View,
 };
@@ -66,15 +70,15 @@ const routes: Array<RouteRecordRawExtended> = [
         },
         component: NewAccountView,
     },
-    // {
-    //     path: '/account/load',
-    //     name: 'AccountView',
-    //     meta: {
-    //         title: 'Load account',
-    //         layout: 'DefaultLayout',
-    //     },
-    //     component: AccountView,
-    // },
+    {
+        path: '/account/load',
+        name: 'AccountLoadView',
+        meta: {
+            title: 'Load account',
+            layout: 'DefaultLayout',
+        },
+        component: AccountLoadView,
+    },
     {
         path: '/account/:username',
         name: 'AccountView',
@@ -85,7 +89,16 @@ const routes: Array<RouteRecordRawExtended> = [
         component: AccountView,
     },
     {
-        path: '/account/:username/map/:map_slug/game',
+        path: '/account/:username/map',
+        name: 'GameStartView',
+        meta: {
+            title: 'Start a game',
+            layout: 'DefaultLayout',
+        },
+        component: GameStartView,
+    },
+    {
+        path: '/account/:username/map/:mapId/character/:characterId/game/:managerId',
         name: 'GameView',
         meta: {
             title: 'Game',

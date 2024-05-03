@@ -77,6 +77,7 @@ export class AccountHandler {
 
     async load(username: string) {
         const account = await this.rust_load({ username });
+        this.store.items().forEach((e) => (e.active = false));
         this.store.set(account);
         return account;
     }

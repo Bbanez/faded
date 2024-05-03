@@ -107,19 +107,19 @@ export class Camera {
     private calcPosition() {
         if (this.followObj) {
             if (
-                this.followObj.rust &&
+                this.followObj.manager.player &&
                 (this.position.wanted[0] !==
-                    this.followObj.rust?.bounding_box.position.x ||
+                    this.followObj.manager.player.bounding_box.position.x ||
                     this.position.wanted[2] !==
-                        this.followObj.rust.bounding_box.position.y)
+                        this.followObj.manager.player.bounding_box.position.y)
             ) {
                 this.position.wanted = [
-                    this.followObj.rust.bounding_box.position.x,
+                    this.followObj.manager.player.bounding_box.position.x,
                     Distance.heightTo(
-                        this.followObj.rust.bounding_box.position,
+                        this.followObj.manager.player.bounding_box.position,
                         this.game.assets.ground,
                     ),
-                    this.followObj.rust.bounding_box.position.y,
+                    this.followObj.manager.player.bounding_box.position.y,
                 ];
             }
         }

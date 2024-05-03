@@ -23,6 +23,7 @@ export const DefaultLayout = defineComponent({
         );
 
         const navItems = computed<DefaultLayoutNavItem[]>(() => {
+            const accounts = sdk.account.store.items();
             const view = route.name as Views;
             const items: DefaultLayoutNavItem[] = [];
             switch (view) {
@@ -32,6 +33,12 @@ export const DefaultLayout = defineComponent({
                             items.push({
                                 text: 'Continue',
                                 href: `/account/${activeAccount.value.username}`,
+                            });
+                        }
+                        if (accounts.length > 1) {
+                            items.push({
+                                text: 'Load profile',
+                                href: `/account/load`,
                             });
                         }
                         items.push(
@@ -48,6 +55,15 @@ export const DefaultLayout = defineComponent({
                     break;
 
                 case 'NewAccountView':
+                    {
+                        items.push({
+                            text: 'Back',
+                            href: '/',
+                        });
+                    }
+                    break;
+
+                case 'AccountLoadView':
                     {
                         items.push({
                             text: 'Back',
@@ -75,6 +91,15 @@ export const DefaultLayout = defineComponent({
                         );
                     }
                     break;
+
+                case 'GameStartView':
+                    {
+                        items.push({
+                            text: 'Back',
+                            href: `/account/${route.params.username}`,
+                        });
+                    }
+                    break;
             }
             return items;
         });
@@ -86,7 +111,7 @@ export const DefaultLayout = defineComponent({
         });
 
         return () => (
-            <div class="min-w-screen min-h-screen flex">
+            <div class="min-w-screen h-screen flex">
                 <div class="fixed w-full h-full">
                     <img
                         class="w-full h-full object-cover"
@@ -127,7 +152,7 @@ export const DefaultLayout = defineComponent({
                             );
                         })}
                     </div>
-                    <div class={`min-h-full w-full`}>
+                    <div class={`h-full w-full overflow-auto`}>
                         {ctx.slots.default ? ctx.slots.default() : ''}
                     </div>
                 </div>

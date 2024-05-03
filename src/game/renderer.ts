@@ -7,12 +7,12 @@ import {
 import postProcessingVert from './shaders/post-processing.vert';
 import postProcessingFrag from './shaders/post-processing.frag';
 import { Ticker } from './ticker';
-import { useSettings } from '../hooks/settings.ts';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
 import { Mouse, MouseEventType } from './mouse.ts';
+import { useSdk } from '../sdk/main.ts';
 
 export class Renderer {
     r = new WebGLRenderer();
@@ -37,23 +37,27 @@ export class Renderer {
         public scene: Scene,
         private camera: PerspectiveCamera,
     ) {
-        const settings = useSettings();
+        const sdk = useSdk();
+        const settings = sdk.settings.store.value;
         this.r = new WebGLRenderer();
         this.r.shadowMap.enabled = true;
         this.r.shadowMap.type = PCFSoftShadowMap;
         this.r.setPixelRatio(window.devicePixelRatio);
         this.composer = new EffectComposer(this.r);
-        if (settings.data.value) {
+        if (settings) {
             this.r.setSize(
-                settings.data.value.resolution.width,
-                settings.data.value.resolution.height,
+                settings.resolution.width,
+                settings.resolution.height,
             );
         } else {
             this.r.setSize(window.innerWidth, window.innerHeight);
             // this.r.setSize(200, 200);
-            window.addEventListener('resize', () => this.onResize());
+            const resize = () => {
+                this.onResize();
+            };
+            window.addEventListener('resize', resize);
             this.unsubs.push(() => {
-                window.removeEventListener('resize', () => this.onResize());
+                window.removeEventListener('resize', resize);
             });
         }
         this.r.domElement.setAttribute('style', 'width: 100%; height: 100%;');
@@ -81,17 +85,17 @@ export class Renderer {
     onResize() {
         clearTimeout(this.resizeDebounce);
         this.resizeDebounce = setTimeout(() => {
-            const settings = useSettings();
-            if (settings.data.value) {
+            const sdk = useSdk();
+            const settings = sdk.settings.store.value;
+            if (settings) {
                 if (this.camera) {
                     this.camera.aspect =
-                        settings.data.value.resolution.width /
-                        settings.data.value.resolution.height;
+                        settings.resolution.width / settings.resolution.height;
                     this.camera.updateProjectionMatrix();
                 }
                 this.composer.setSize(
-                    settings.data.value.resolution.width,
-                    settings.data.value?.resolution.height,
+                    settings.resolution.width,
+                    settings.resolution.height,
                 );
                 this.r.domElement.setAttribute(
                     'style',

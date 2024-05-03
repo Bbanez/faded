@@ -13,7 +13,7 @@ async fn get_host_player(data: web::Data<ActixTauriAppState>, req: HttpRequest) 
             let game_state = data_locked.state::<GameState>();
             let state_guard = game_state.0.lock().unwrap();
             println!("{}", req.path());
-            Ok(web::Json(state_guard.player.clone()))
+            Ok(web::Json(state_guard.manager.clone()))
         }
         Err(err) => {
             Err(error::ErrorUnauthorized(err))

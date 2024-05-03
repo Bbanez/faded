@@ -1,29 +1,40 @@
 import { defineComponent, onMounted, onBeforeUnmount, ref } from 'vue';
-import { Game } from '../game';
-import { loadBcmsData } from '../game/bcms';
+import { createGame, Game } from '../game';
 import { Minimap } from '../components/game/minimap';
 import { CharCover } from '../components/game/char-cover';
-
-export interface GameViewData {}
+import { useRoute } from 'vue-router';
+import { useSdk } from '../sdk/main.ts';
+import { throwable } from '../util/throwable.ts';
 
 export const GameView = defineComponent({
     setup() {
+        const sdk = useSdk();
+        const route = useRoute();
         const el = ref<HTMLDivElement>(null as never);
         let game: Game | null = null;
         const mounted = ref(false);
 
         onMounted(async () => {
-            await loadBcmsData();
-            if (el.value) {
-                game = new Game({
-                    el: el.value,
-                    mapSlug: 'demo',
-                    frameTicker: true,
-                });
-                await game.run();
-                el.value.appendChild(game.fpsEl);
-            }
-            mounted.value = true;
+            await throwable(async () => {
+                if (el.value) {
+                    const manager = await sdk.manager.get(
+                        route.params.managerId as string,
+                    );
+                    console.log({m: manager})
+                    game = await createGame({
+                        el: el.value,
+                        frameTicker: true,
+                        mapId: route.params.mapId as string,
+                        characterId: route.params.characterId as string,
+                        manager,
+                    });
+                    console.log({game})
+                    await game.run();
+                    el.value.appendChild(game.fpsEl);
+                }
+                mounted.value = true;
+
+            })
         });
 
         onBeforeUnmount(() => {
@@ -34,20 +45,6 @@ export const GameView = defineComponent({
 
         return () => (
             <div draggable={false} unselectable={'on'}>
-                {/*<h1>Game</h1>*/}
-                {/*<Link href="home">Go to Home</Link>*/}
-                {/*<button*/}
-                {/*  onClick={async () => {*/}
-                {/*    console.log(*/}
-                {/*      await invoke('player_load', {*/}
-                {/*        screenWidth: window.innerWidth,*/}
-                {/*        screenHeight: window.innerHeight,*/}
-                {/*      }),*/}
-                {/*    );*/}
-                {/*  }}*/}
-                {/*>*/}
-                {/*  Test*/}
-                {/*</button>*/}
                 {mounted.value && (
                     <>
                         <Minimap game={game as Game} />

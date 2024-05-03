@@ -4,20 +4,26 @@ import cursorMoveFrag from './shaders/cursor-move.frag';
 import { Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
 import { Animation, AnimationConfigItem } from './animation';
 import { Game } from './main';
-import { bcms } from './bcms';
 import { AssetLoader } from './asset-loader';
 import { MouseRay } from './mouse-ray';
 import { Keyboard, KeyboardEventType, KeyboardState } from './keyboard';
 import { Distance } from './distance';
 import { Ticker } from './ticker';
 import { PI12 } from './consts';
-import type { Player as RustPlayer, Point } from '../types/rs';
-import { rust_api_calls } from '../rust/api-call.ts';
+import type { Character, Manager, Point } from '../types/rs';
+import { Sdk, useSdk } from '../sdk/main.ts';
 
 export interface PlayerAnimation {
     idle: AnimationConfigItem;
     death: AnimationConfigItem;
     run: AnimationConfigItem;
+}
+
+export interface PlayerAssets {
+    t: Group;
+    idle: Group;
+    run: Group;
+    death: Group;
 }
 
 export class Player {
@@ -33,19 +39,26 @@ export class Player {
     private unsubs: Array<() => void> = [];
 
     constructor(
+        private sdk: Sdk,
         private game: Game,
-        public rust: RustPlayer | null,
-        public model: Group,
-        anim: PlayerAnimation,
+        public manager: Manager,
+        public character: Character,
+        public assets: PlayerAssets,
     ) {
         this.mouseRay = new MouseRay(
             this.game.camera.cam,
             this.game.assets.ground,
         );
-        this.animation = new Animation(this.model, {
-            idle: anim.idle,
-            death: anim.death,
-            run: anim.run,
+        this.animation = new Animation(this.assets.t, {
+            idle: {
+                model: this.assets.idle,
+            },
+            death: {
+                model: this.assets.death,
+            },
+            run: {
+                model: this.assets.run,
+            },
         });
         this.animation.play('idle');
         this.unsubs.push(
@@ -101,15 +114,13 @@ export class Player {
                         expAt: Date.now() + 1000,
                     });
                     this.game.scene.add(plane);
-                    rust_api_calls
-                        .player_set_wanted_position({
-                            wantedPosition: {
-                                x: inter[0].point.x,
-                                y: inter[0].point.z,
-                            },
+                    this.sdk.player
+                        .set_wanted_position({
+                            x: inter[0].point.x,
+                            y: inter[0].point.z,
                         })
                         .then((player) => {
-                            this.rust = player;
+                            this.manager.player = player;
                         })
                         .catch((err) => console.error(err));
                 }
@@ -160,36 +171,34 @@ export class Player {
         } else {
             move.x = 0;
         }
-        await rust_api_calls.player_motion({ motion: move });
+        await this.sdk.player.set_motion(move);
     }
 
     async update(t: number) {
-        this.rust = await rust_api_calls.player_get();
-        if (this.rust) {
-            if (
-                this.rust.motion.x !== 0 ||
-                this.rust.motion.y !== 0 ||
-                this.rust.wanted_position
-            ) {
-                if (this.animation.getActiveAnimation() !== 'run') {
-                    this.animation.play('run');
-                }
-            } else {
-                if (this.animation.getActiveAnimation() !== 'idle') {
-                    this.animation.play('idle');
-                }
+        this.manager.player = await this.sdk.player.get();
+        if (
+            this.manager.player.motion.x !== 0 ||
+            this.manager.player.motion.y !== 0 ||
+            this.manager.player.wanted_position
+        ) {
+            if (this.animation.getActiveAnimation() !== 'run') {
+                this.animation.play('run');
             }
-            this.model.rotation.set(0, -this.rust.angle + PI12, 0);
-            this.model.position.set(
-                this.rust.bounding_box.position.x,
-                Distance.heightTo(
-                    this.rust.bounding_box.position,
-                    this.game.assets.ground,
-                ),
-                this.rust.bounding_box.position.y,
-            );
-            this.animation.mixer.update(t);
+        } else {
+            if (this.animation.getActiveAnimation() !== 'idle') {
+                this.animation.play('idle');
+            }
         }
+        this.assets.t.rotation.set(0, -this.manager.player.angle + PI12, 0);
+        this.assets.t.position.set(
+            this.manager.player.bounding_box.position.x,
+            Distance.heightTo(
+                this.manager.player.bounding_box.position,
+                this.game.assets.ground,
+            ),
+            this.manager.player.bounding_box.position.y,
+        );
+        this.animation.mixer.update(t);
     }
 
     destroy() {
@@ -199,65 +208,65 @@ export class Player {
                 unsub();
             }
         }
-        this.mouseRay.destroy();
+        this.mouseRay.destroy().catch((err) => console.error(err));
     }
 }
 
 export async function createPlayer(
     game: Game,
-    characterSlug: string,
-    mapSlug: string,
+    manager: Manager,
+    character: Character,
 ): Promise<Player> {
-    const char = bcms.characters.find((e) => e.slug === characterSlug);
-    if (!char) {
-        throw Error(`Character "${characterSlug}" does not exist`);
-    }
-    const rust = await rust_api_calls.player_load({
-        characterSlug,
-        mapSlug,
-    });
+    const playerAssets: PlayerAssets = {
+        death: null as never,
+        run: null as never,
+        idle: null as never,
+        t: null as never,
+    };
     AssetLoader.register(
         {
-            name: 't_pose',
-            path: char.animation.t_pose.src,
+            name: character.id + '_t',
+            path: `/assets/characters/${character.id}/t.fbx`,
             type: 'fbx',
         },
         {
-            name: 'idle',
-            path: char.animation.idle.src,
+            name: character.id + '_idle',
+            path: `/assets/characters/${character.id}/idle.fbx`,
             type: 'fbx',
         },
         {
-            name: 'run',
-            path: char.animation.run.src,
+            name: character.id + '_run',
+            path: `/assets/characters/${character.id}/run.fbx`,
             type: 'fbx',
         },
         {
-            name: 'death',
-            path: char.animation.death.src,
+            name: character.id + '_death',
+            path: `/assets/characters/${character.id}/death.fbx`,
             type: 'fbx',
         },
     );
-    const playerAnim: { [key: string]: Group } = {};
     const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
-        playerAnim[item.name] = data as Group;
+        if (item.name.startsWith(character.id)) {
+            playerAssets[item.name.split('_')[1] as keyof PlayerAssets] = data as Group;
+        }
     });
     await AssetLoader.run();
     loaderUnsub();
-    playerAnim.t_pose.traverse((m) => {
+    playerAssets.t.traverse((m) => {
         m.castShadow = true;
     });
-    playerAnim.t_pose.scale.set(0.003, 0.003, 0.003);
-    game.scene.add(playerAnim.t_pose);
-    return new Player(game, rust, playerAnim.t_pose, {
-        death: {
-            model: playerAnim.death,
-        },
-        idle: {
-            model: playerAnim.idle,
-        },
-        run: {
-            model: playerAnim.run,
-        },
-    });
+    playerAssets.t.scale.set(0.003, 0.003, 0.003);
+    game.scene.add(playerAssets.t);
+    return new Player(useSdk(), game, manager, character, playerAssets);
+    // return new Player(useSdk(), game, player_data, playerAnim.t_pose, {
+    //     death: {
+    //         model: playerAnim.death,
+    //     },
+    //     idle: {
+    //         model: playerAnim.idle,
+    //     },
+    //     run: {
+    //         model: playerAnim.run,
+    //     },
+    // });
 }

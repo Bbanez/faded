@@ -3,6 +3,7 @@ use ts_rs::TS;
 use crate::game::size::USize;
 
 use crate::{GameState, util};
+use crate::response::TauriResponse;
 use crate::storage::Storage;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -28,11 +29,11 @@ impl Settings {
 }
 
 #[tauri::command]
-pub fn settings_get(state: tauri::State<GameState>, resolution: USize) -> Settings {
+pub fn settings_get(state: tauri::State<GameState>, resolution: USize) -> TauriResponse<Settings> {
     let mut state_guard = state.0.lock().unwrap();
     return match &state_guard.settings {
         Some(settings) => {
-            settings.clone()
+            TauriResponse::new(settings.clone())
         }
         None => {
             let new_setting = Settings::new(resolution);
@@ -41,13 +42,13 @@ pub fn settings_get(state: tauri::State<GameState>, resolution: USize) -> Settin
             storage_data.settings = Some(serde_json::to_string(&state_guard.settings).unwrap());
             drop(state_guard);
             Storage::write(&storage_data);
-            new_setting
+            TauriResponse::new(new_setting)
         }
     };
 }
 
 #[tauri::command]
-pub fn settings_set(state: tauri::State<GameState>, resolution: USize) -> Settings {
+pub fn settings_set(state: tauri::State<GameState>, resolution: USize) -> TauriResponse<Settings> {
     let mut state_guard = state.0.lock().unwrap();
     if let Some(ref mut settings) = state_guard.settings {
         settings.resolution = resolution;
@@ -55,7 +56,7 @@ pub fn settings_set(state: tauri::State<GameState>, resolution: USize) -> Settin
         let settings_str = Some(serde_json::to_string(&settings).unwrap());
         storage_date.settings = settings_str;
         Storage::write(&storage_date);
-        settings.clone()
+        TauriResponse::new(settings.clone())
     } else {
         let new_settings = Some(Settings::new(resolution));
         state_guard.settings = new_settings.clone();
@@ -63,6 +64,6 @@ pub fn settings_set(state: tauri::State<GameState>, resolution: USize) -> Settin
         storage_data.settings = Some(serde_json::to_string(&new_settings).unwrap());
         drop(state_guard);
         Storage::write(&storage_data);
-        new_settings.unwrap()
+        TauriResponse::new(new_settings.unwrap())
     }
 }

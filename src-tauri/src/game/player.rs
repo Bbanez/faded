@@ -1,12 +1,13 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::{bcms::entry::fdd_character::FddCharacterEntryMetaItem, GameState};
-use crate::bcms::group::fdd_base_stats::FddBaseStatsGroup;
 use crate::game::bounding_box::BoundingBox;
+use crate::game::data::character::{Character, CharacterBaseStats};
 use crate::game::math::MathFnLinear2D;
 use crate::game::point::Point;
 use crate::game::size::Size;
+use crate::{GameState, util};
+use crate::response::TauriResponse;
 
 use super::{math::Math, path_finding};
 
@@ -41,24 +42,24 @@ pub struct PlayerStats {
 }
 
 impl PlayerStats {
-    pub fn new_from_bcms_stats(stats: &FddBaseStatsGroup) -> PlayerStats {
+    pub fn new_from_character_stats(stats: &CharacterBaseStats) -> PlayerStats {
         PlayerStats {
-            str: stats.str as f32,
-            agi: stats.agi as f32,
-            int: stats.int as f32,
-            max_hp: stats.hp as f32,
-            hp: stats.hp as f32,
-            max_mana: stats.mana as f32,
-            mana: stats.mana as f32,
-            max_stamina: stats.stamina as f32,
-            stamina: stats.stamina as f32,
-            move_speed: stats.move_speed as f32,
+            str: stats.str,
+            agi: stats.agi,
+            int: stats.int,
+            max_hp: stats.hp,
+            hp: stats.hp,
+            max_mana: stats.mana,
+            mana: stats.mana,
+            max_stamina: stats.stamina,
+            stamina: stats.stamina,
+            move_speed: stats.move_speed,
             attack_speed: 1.0,
-            armor: stats.armor as f32,
-            range: stats.range as f32,
+            armor: stats.armor,
+            range: stats.range,
             damage: PlayerDamage {
-                min: (stats.damage - stats.damage / 2.0) as f32,
-                max: stats.damage as f32,
+                min: stats.damage - stats.damage / 2.0,
+                max: stats.damage,
             },
             exp: 0.0,
             exp_percent: 0.0,
@@ -71,7 +72,8 @@ impl PlayerStats {
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct Player {
-    pub character_slug: String,
+    pub account_id: String,
+    pub character_id: String,
     pub stats: PlayerStats,
     pub angle: f32,
     motion: Point,
@@ -83,18 +85,20 @@ pub struct Player {
 
 impl Player {
     pub fn new(
-        character: FddCharacterEntryMetaItem,
+        account_id: String,
+        character: Character,
         position: Point,
         size: Size,
     ) -> Player {
         Player {
-            stats: PlayerStats::new_from_bcms_stats(&character.base_stats),
+            account_id,
+            stats: PlayerStats::new_from_character_stats(&character.base_stats),
             angle: 0.0,
             motion: Point::new(0.0, 0.0),
             bounding_box: BoundingBox::new(size, position),
             wanted_positions: vec![],
             wanted_position: None,
-            character_slug: character.slug,
+            character_id: character.id.to_string(),
             exp_to_level: MathFnLinear2D::new(vec![
                 Point::new(0.0, 1.0),
                 Point::new(20.0, 2.0),
@@ -169,57 +173,71 @@ impl Player {
 }
 
 #[tauri::command]
-pub fn player_load(state: tauri::State<GameState>, character_slug: &str, map_slug: &str) -> Player {
+pub fn player_motion(state: tauri::State<GameState>, motion: Point) -> TauriResponse<Player> {
     let mut state_guard = state.0.lock().unwrap();
-    let map = state_guard.find_map(map_slug).unwrap();
-    let character = state_guard.find_character(character_slug).unwrap();
-    let player = Player::new(
-        character,
-        Point::new(map.start_x as f32, map.start_z as f32),
-        Size::new(map.width as f32, map.height as f32),
-    );
-    state_guard.player = Some(player.clone());
-    player
-}
-
-#[tauri::command]
-pub fn player_motion(state: tauri::State<GameState>, motion: Point) {
-    let mut state_guard = state.0.lock().unwrap();
-    if let Some(mut player) = state_guard.player.clone() {
-        player.set_motion(motion);
-        state_guard.player = Some(player);
-    }
-}
-
-#[tauri::command]
-pub fn player_get(state: tauri::State<GameState>) -> Option<Player> {
-    state.0.lock().unwrap().player.clone()
-}
-
-#[tauri::command]
-pub fn player_set_wanted_position(state: tauri::State<GameState>, wanted_position: Point) {
-    let mut state_guard = state.0.lock().unwrap();
-    if let Some(mut player) = state_guard.player.clone() {
-        let path_opt = path_finding::a_star(
-            &player.bounding_box.get_position(),
-            &wanted_position,
-            &state_guard.map_info,
-        );
-        match path_opt.0 {
-            Some(p) => {
-                let mut path = p.clone();
-                if path_opt.1 == true {
-                    path.push(wanted_position);
-                }
-                player.wanted_positions = path.clone();
-                player.wanted_position = None;
-                state_guard.player = Some(player);
-            }
-            None => {
-                println!("Path not found")
-            }
-        }
+    return if let Some(mut manager) = state_guard.manager.clone() {
+        manager.player.set_motion(motion);
+        manager.updated_at = util::time::get_current_millis();
+        TauriResponse::new(manager.player)
     } else {
-        panic!("Player not initialized")
-    }
+        TauriResponse::new_error(
+            400,
+            "Game manager does not exist",
+        )
+    };
+}
+
+#[tauri::command]
+pub fn player_get(state: tauri::State<GameState>) -> TauriResponse<Player> {
+    let state_guard = state.0.lock().unwrap();
+    return match state_guard.manager.clone() {
+        Some(manager) => {
+            TauriResponse::new(manager.player)
+        }
+        None => {
+            TauriResponse::new_error(
+                400,
+                "Game manager does not exist",
+            )
+        }
+    };
+}
+
+#[tauri::command]
+pub fn player_set_wanted_position(state: tauri::State<GameState>, wanted_position: Point) -> TauriResponse<Player> {
+    let mut state_guard = state.0.lock().unwrap();
+    return match state_guard.manager.clone() {
+        Some(mut manager) => {
+            let path_opt = path_finding::a_star(
+                &manager.player.bounding_box.get_position(),
+                &wanted_position,
+                &manager.nav_mesh,
+            );
+            return match path_opt.0 {
+                Some(p) => {
+                    let mut path = p.clone();
+                    if path_opt.1 == true {
+                        path.push(wanted_position);
+                    }
+                    manager.player.wanted_positions = path.clone();
+                    manager.player.wanted_position = None;
+                    manager.updated_at = util::time::get_current_millis();
+                    state_guard.manager = Some(manager.clone());
+                    TauriResponse::new(manager.player)
+                }
+                None => {
+                    TauriResponse::new_error(
+                        400,
+                        "Path not found",
+                    )
+                }
+            };
+        }
+        None => {
+            TauriResponse::new_error(
+                400,
+                "Game manager does not exist",
+            )
+        }
+    };
 }

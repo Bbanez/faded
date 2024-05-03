@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{GameState, storage::Storage, util};
+use crate::response::TauriResponse;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
@@ -55,7 +56,7 @@ impl Account {
 }
 
 #[tauri::command]
-pub fn account_create(state: tauri::State<GameState>, username: &str) -> Account {
+pub fn account_create(state: tauri::State<GameState>, username: &str) -> TauriResponse<Account> {
     let mut state_guard = state.0.lock().unwrap();
     for i in 0..state_guard.accounts.len() {
         state_guard.accounts[i].active = false;
@@ -68,11 +69,11 @@ pub fn account_create(state: tauri::State<GameState>, username: &str) -> Account
     storage_data.accounts = Some(serde_json::to_string(&state_guard.accounts).unwrap());
     drop(state_guard);  // explicit drop to release the lock asap
     Storage::write(&storage_data);
-    account
+    TauriResponse::new(account)
 }
 
 #[tauri::command]
-pub fn account_load(state: tauri::State<GameState>, username: &str) -> Option<Account> {
+pub fn account_load(state: tauri::State<GameState>, username: &str) -> TauriResponse<Option<Account>> {
     let mut state_guard = state.0.lock().unwrap();
     // let accounts = state_guard.accounts.clone();
     let mut account_index: usize = 1000000;
@@ -85,45 +86,45 @@ pub fn account_load(state: tauri::State<GameState>, username: &str) -> Option<Ac
         }
     }
     return if account_index == 1000000 {
-        None
+        TauriResponse::new(None)
     } else {
         let account = state_guard.accounts[account_index].clone();
         let mut storage_data = Storage::read();
         storage_data.accounts = Some(serde_json::to_string(&state_guard.accounts).unwrap());
         drop(state_guard);  // explicit drop to release the lock asap
         Storage::write(&storage_data);
-        Some(account)
-    }
+        TauriResponse::new(Some(account))
+    };
 }
 
 #[tauri::command]
-pub fn account_get_active(state: tauri::State<GameState>) -> Option<Account> {
+pub fn account_get_active(state: tauri::State<GameState>) -> TauriResponse<Option<Account>> {
     let state_guard = state.0.lock().unwrap();
     return match Account::find_active(&state_guard.accounts) {
         Some(account) => {
-            Some(account.clone())
+            TauriResponse::new(Some(account.clone()))
         }
         None => {
-            None
+            TauriResponse::new(None)
         }
     };
 }
 
 #[tauri::command]
-pub fn account_all(state: tauri::State<GameState>) -> Vec<Account> {
+pub fn account_all(state: tauri::State<GameState>) -> TauriResponse<Vec<Account>> {
     let state_guard = state.0.lock().unwrap();
-    state_guard.accounts.clone()
+    TauriResponse::new(state_guard.accounts.clone())
 }
 
 #[tauri::command]
-pub fn account_get_by_username(state: tauri::State<GameState>, username: &str) -> Option<Account> {
+pub fn account_get_by_username(state: tauri::State<GameState>, username: &str) -> TauriResponse<Option<Account>> {
     let state_guard = state.0.lock().unwrap();
     return match Account::find(&state_guard.accounts, username) {
         Some(account) => {
-            Some(account.clone())
+            TauriResponse::new(Some(account.clone()))
         }
         None => {
-            None
+            TauriResponse::new(None)
         }
     };
 }

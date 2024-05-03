@@ -5,7 +5,6 @@ export function inputAsNumber(
     type: 'int' | 'float',
 ): (value: string) => string {
     return (value) => {
-        console.log('a');
         if (value) {
             value = value.replace(/[^0-9.]/g, '');
             if (!value.endsWith('.')) {

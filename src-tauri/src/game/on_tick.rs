@@ -1,11 +1,12 @@
 use crate::GameState;
+use crate::response::TauriResponse;
 
 #[tauri::command]
-pub fn on_tick(state: tauri::State<GameState>) {
+pub fn on_tick(state: tauri::State<GameState>) -> TauriResponse<usize> {
     let mut state_guard = state.0.lock().unwrap();
-    if let Some(mut player) = state_guard.player.clone() {
-        player.on_tick();
-        state_guard.player = Some(player);
+    if let Some(mut manager) = state_guard.manager.clone() {
+        manager.player.on_tick();
+        state_guard.manager = Some(manager);
     }
     // Loop over enemies
     // {
@@ -21,11 +22,5 @@ pub fn on_tick(state: tauri::State<GameState>) {
     //     }
     // }
     // Loop over projectiles
-    {
-        let mut i = 0;
-        while i < state_guard.projectiles.len() {
-            state_guard.projectiles[i].update();
-            i += 1;
-        }
-    }
+    TauriResponse::new(1)
 }

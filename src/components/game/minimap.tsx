@@ -1,4 +1,5 @@
 import {
+    computed,
     defineComponent,
     onBeforeUnmount,
     onMounted,
@@ -6,10 +7,11 @@ import {
     ref,
 } from 'vue';
 import type { Game } from '../../game';
-import { bcms } from '../../game/bcms.ts';
 import { FunctionBuilder } from '../../game/math/function-builder.ts';
 import { Ticker } from '../../game/ticker.ts';
-import type { FddLayoutEntryMeta, FddMapEntryMeta } from '../../types/bcms';
+import { useSdk } from '../../sdk/main.ts';
+import { useRoute } from 'vue-router';
+import { Icon } from '../icon.tsx';
 
 export interface MinimapData {
     player: {
@@ -26,8 +28,11 @@ export const Minimap = defineComponent({
         },
     },
     setup(props) {
-        const layout = ref<FddLayoutEntryMeta>();
-        const mapInfo = ref<FddMapEntryMeta>();
+        const sdk = useSdk();
+        const route = useRoute();
+        const map = computed(() =>
+            sdk.data.mapStore.findById(route.params.mapId as string),
+        );
         const data = ref<MinimapData>({
             player: {
                 name: 'unknown',
@@ -37,33 +42,34 @@ export const Minimap = defineComponent({
         const unsub: Array<() => void> = [];
         let refreshAt = 0;
 
-        onMounted(() => {
-            layout.value = bcms.layout[0];
-            mapInfo.value = bcms.maps[0];
+        onMounted(async () => {
+            const mapInfo = (await sdk.data.maps()).find(
+                (e) => e.id === route.params.mapId,
+            );
+            if (!mapInfo) {
+                throw Error('Map not found');
+            }
             const gameToMapSpace = [
                 FunctionBuilder.linear2D([
                     [0, 0],
-                    [mapInfo.value?.width || 0, 256],
+                    [mapInfo.width || 0, 256],
                 ]),
                 FunctionBuilder.linear2D([
                     [0, 0],
-                    [mapInfo.value?.height || 0, 256],
+                    [mapInfo.height || 0, 256],
                 ]),
             ];
             unsub.push(
                 Ticker.subscribe(async (cTime) => {
                     if (refreshAt < cTime) {
-                        if (
-                            (props.game.player && data.value.player,
-                            props.game.player?.rust)
-                        ) {
+                        if (props.game.player && data.value.player) {
                             const playerPosition: [number, number] = [
                                 gameToMapSpace[0](
-                                    props.game.player.rust.bounding_box.position
+                                    props.game.player.manager.player.bounding_box.position
                                         .y,
                                 ),
                                 gameToMapSpace[1](
-                                    props.game.player.rust.bounding_box.position
+                                    props.game.player.manager.player.bounding_box.position
                                         .x,
                                 ),
                             ];
@@ -93,7 +99,7 @@ export const Minimap = defineComponent({
                 >
                     <img
                         class={`w-full h-full`}
-                        src={mapInfo.value?.cover.src}
+                        src={`/assets/maps/${map.value?.id}/cover.png`}
                         alt="Map cover"
                     />
                 </div>
@@ -106,10 +112,7 @@ export const Minimap = defineComponent({
                         0,
                     )}px;`}
                 />
-                <div
-                    class={`relative`}
-                    v-html={layout.value?.map_elements.minimap.svg || ''}
-                />
+                <Icon src={`/assets/map-frame.svg`} />
             </div>
         );
     },

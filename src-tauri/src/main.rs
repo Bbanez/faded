@@ -6,34 +6,32 @@ use std::thread;
 
 use actix_web::{get, HttpResponse, Responder};
 
-use bcms::entry::{
-    fdd_character::{FDD_CHARACTER_META_ITEMS, FddCharacterEntryMetaItem},
-    fdd_enemy::{FDD_ENEMY_META_ITEMS, FddEnemyEntryMetaItem},
-    fdd_map::FddMapEntryMetaItem,
-};
 use game::{
-    map_info::map_info_set,
-    on_tick::on_tick,
-    player::{player_get, player_load, player_motion, player_set_wanted_position},
-    projectile::{
-        projectile_find_all_in_area,
-        projectile_get,
-        projectile_get_all,
+    data::{
+        data_characters,
+        data_maps
     },
+    manager::{
+        manager_create,
+        manager_get,
+    },
+    on_tick::on_tick,
+    player::{
+        player_get,
+        player_motion,
+        player_set_wanted_position
+    }
 };
 use models::{
     account::{
         account_all,
-        account_get_by_username,
         account_create,
         account_get_active,
+        account_get_by_username,
         account_load
     },
     settings::{settings_get, settings_set}};
 use storage::Storage;
-
-use crate::bcms::entry::fdd_map::FDD_MAP_META_ITEMS;
-use crate::game::size::{Size, USize};
 
 pub mod bcms;
 pub mod game;
@@ -42,6 +40,7 @@ pub mod state;
 pub mod storage;
 mod server;
 mod util;
+mod response;
 
 pub struct GameState(pub Mutex<state::State>);
 
@@ -56,11 +55,6 @@ async fn hello() -> impl Responder {
 }
 
 fn main() {
-    let maps: Vec<FddMapEntryMetaItem> = serde_json::from_str(FDD_MAP_META_ITEMS).unwrap();
-    let characters: Vec<FddCharacterEntryMetaItem> =
-        serde_json::from_str(FDD_CHARACTER_META_ITEMS).unwrap();
-    let enemies_data: Vec<FddEnemyEntryMetaItem> =
-        serde_json::from_str(FDD_ENEMY_META_ITEMS).unwrap();
     let storage_data = Storage::read();
     let accounts;
     match storage_data.accounts {
@@ -91,27 +85,18 @@ fn main() {
             Ok(())
         })
         .manage(GameState(Mutex::new(state::State {
-            // nogo: game::nogo::Nogo::new(vec![], 0, 0, 0, 0),
-            map_info: game::map_info::MapInfo::new(vec![], USize::new(0, 0), Size::new(0.0, 0.0)),
-            maps,
-            characters,
-            enemies_data,
-            projectiles: vec![],
-            player: None,
+            manager: None,
             accounts,
             settings,
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
 
-            player_load,
             player_motion,
             player_get,
             player_set_wanted_position,
 
             on_tick,
-
-            map_info_set,
 
             account_create,
             account_load,
@@ -122,9 +107,11 @@ fn main() {
             settings_get,
             settings_set,
 
-            projectile_get,
-            projectile_get_all,
-            projectile_find_all_in_area,
+            data_maps,
+            data_characters,
+
+            manager_create,
+            manager_get,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
