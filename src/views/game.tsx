@@ -17,10 +17,16 @@ export const GameView = defineComponent({
         onMounted(async () => {
             await throwable(async () => {
                 if (el.value) {
+                    await sdk.settings.get({
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                    });
+                    await sdk.data.maps();
+                    await sdk.data.characters();
                     const manager = await sdk.manager.get(
                         route.params.managerId as string,
                     );
-                    console.log({m: manager})
+                    console.log({ m: manager });
                     game = await createGame({
                         el: el.value,
                         frameTicker: true,
@@ -28,13 +34,11 @@ export const GameView = defineComponent({
                         characterId: route.params.characterId as string,
                         manager,
                     });
-                    console.log({game})
-                    await game.run();
+                    await game.initialize();
                     el.value.appendChild(game.fpsEl);
                 }
                 mounted.value = true;
-
-            })
+            });
         });
 
         onBeforeUnmount(() => {
@@ -44,7 +48,10 @@ export const GameView = defineComponent({
         });
 
         return () => (
-            <div draggable={false} unselectable={'on'}>
+            <div
+                draggable={false}
+                class={`fixed top-0 left-0 w-screen h-screen`}
+            >
                 {mounted.value && (
                     <>
                         <Minimap game={game as Game} />
@@ -65,6 +72,7 @@ export const GameView = defineComponent({
                     </div>
                 </div>
                 <div
+                    id={'game_canvas'}
                     class="absolute top-0 left-0 w-screen h-screen -z-10"
                     ref={el}
                 />

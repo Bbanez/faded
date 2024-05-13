@@ -1,25 +1,24 @@
 import { createApp } from 'vue';
 import './styles/_main.scss';
 import { App } from './app';
-import { invoke } from '@tauri-apps/api';
 import { router } from './router.ts';
 
 async function log(args: any[]) {
     console.log(args);
-    await invoke('report_error', {
-        err: args
-            .map((arg) => {
-                if (typeof arg === 'object') {
-                    if (arg.message && arg.stack) {
-                        return `${arg.message}\n${arg.stack}`;
-                    }
-                    return JSON.stringify(arg, null, '  ');
-                } else {
-                    return arg;
-                }
-            })
-            .join(', '),
-    });
+    // await invoke('report_error', {
+    //     err: args
+    //         .map((arg) => {
+    //             if (typeof arg === 'object') {
+    //                 if (arg.message && arg.stack) {
+    //                     return `${arg.message}\n${arg.stack}`;
+    //                 }
+    //                 return JSON.stringify(arg, null, '  ');
+    //             } else {
+    //                 return arg;
+    //             }
+    //         })
+    //         .join(', '),
+    // });
 }
 
 const _warn = console.warn,

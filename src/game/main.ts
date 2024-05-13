@@ -1,9 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import {
-    AmbientLight,
     Color,
     CubeTexture,
-    DirectionalLight,
     Group,
     Mesh,
     MeshBasicMaterial,
@@ -15,14 +13,16 @@ import { Renderer } from './renderer';
 import { Mouse } from './mouse';
 import { Keyboard } from './keyboard';
 import { Ticker } from './ticker';
-import { AssetLoader } from './asset-loader';
-import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { PI12 } from './consts';
 import { Camera } from './camera';
 import { Player, createPlayer } from './player';
-import { Character, Manager, Map } from '../types/rs';
+import { Character, Manager } from '../types/rs';
 import { api_call } from '../rust/api-call.ts';
 import { useSdk } from '../sdk/main.ts';
+import { Lights } from './lights.ts';
+import { FPS } from './fps.ts';
+import { GrassSystem } from './grass-system.ts';
+import { createLandscape, Landscape } from './landscape.ts';
 
 export interface GameConfig {
     el: HTMLElement;
@@ -37,6 +37,7 @@ export class GameAssets {
     skybox: CubeTexture = null as never;
     grad: Texture = null as never;
     cursorMove: Texture = null as never;
+    grass: Group = null as never;
 }
 
 export class Game {
@@ -44,9 +45,11 @@ export class Game {
     scene: Scene;
     renderer: Renderer;
     camera: Camera;
-    fps: number = 0;
+    fps: FPS;
     player: Player = null as never;
     fpsEl = document.createElement('div');
+    lights: Lights = null as never;
+    grassSystem: GrassSystem = null as never;
 
     private unsubs: Array<() => void> = [];
 
@@ -54,30 +57,24 @@ export class Game {
         public el: HTMLElement,
         private frameTicker: boolean,
         public manager: Manager,
-        public map: Map,
+        public landscape: Landscape,
         public character: Character,
-        public assets: GameAssets,
     ) {
+        this.fps = new FPS();
         this.scene = new Scene();
         this.scene.background = new Color(0, 0, 0);
-        this.camera = new Camera(this, [50, 50]);
+        this.camera = new Camera(this, [
+            this.manager.player.bounding_box.position.x - 0.00001,
+            this.manager.player.bounding_box.position.y - 0.00001,
+        ]);
         this.renderer = new Renderer(this.el, this.scene, this.camera.cam);
         Mouse.init();
         Keyboard.init();
-        this.fpsEl.setAttribute(
-            'style',
-            'text-size: 12px; position: fixed; right: 0; top: 0; padding: 5px 12px; z-index: 1000; background-color: rgba(0, 0, 0, 0.3); color: white;',
-        );
-        setInterval(() => {
-            this.fpsEl.innerText = this.fps + '';
-            this.fps = 0;
-        }, 1000);
 
         Ticker.reset();
         const rustOnTick = api_call<void, void>('on_tick');
         this.unsubs.push(
             Ticker.subscribe(async () => {
-                this.fps++;
                 await rustOnTick();
             }),
         );
@@ -95,72 +92,37 @@ export class Game {
         }
     }
 
-    async run() {
-        this.renderer.postProcessingShader.uniforms.tGrad.value =
-            this.assets.grad;
+    async initialize() {
         await this.renderer.loadPostProcessing();
-        this.scene.add(this.assets.ground);
-        this.scene.background = this.assets.skybox;
-
-        const sun = new DirectionalLight(0xffffff, 1);
-        sun.position.set(0, 50, 0);
-        sun.castShadow = true;
-        const sunRes = 2000;
-        const sunGroundSize = 20;
-        sun.shadow.mapSize.width = sunRes;
-        sun.shadow.mapSize.height = sunRes;
-        sun.shadow.camera.left = sunGroundSize;
-        sun.shadow.camera.right = -sunGroundSize;
-        sun.shadow.camera.top = sunGroundSize;
-        sun.shadow.camera.bottom = -sunGroundSize;
-        sun.target.position.set(30, 0, 85);
-        this.scene.add(sun);
-        this.scene.add(sun.target);
-        this.unsubs.push(
-            Ticker.subscribe(async () => {
-                if (this.player) {
-                    sun.target.position.set(
-                        this.player.assets.t.position.x,
-                        this.player.assets.t.position.y,
-                        this.player.assets.t.position.z,
-                    );
-                }
-            }),
-        );
-        const ambientLight = new AmbientLight(0xffffff, 1.5);
-        this.scene.add(ambientLight);
+        this.scene.add(this.landscape.group);
+        this.scene.background = this.landscape.skybox;
 
         const water = new Mesh(
-            new PlaneGeometry(this.map.width, this.map.height),
+            new PlaneGeometry(
+                this.landscape.map.width,
+                this.landscape.map.height,
+            ),
             new MeshBasicMaterial({
-                color: 0x00aaff,
+                color: 0x004477,
                 transparent: true,
-                opacity: 0.5,
+                opacity: 0.4,
             }),
         );
         water.rotation.x = -PI12;
-        water.position.set(this.map.width / 2, -0.2, this.map.height / 2);
+        water.position.set(
+            this.landscape.map.width / 2,
+            3,
+            this.landscape.map.height / 2,
+        );
         this.scene.add(water);
         this.renderer.onResize();
 
         this.player = await createPlayer(this, this.manager, this.character);
+        await this.player.update(0);
         this.camera.follow(this.player);
 
-        // const nogo = this.nogo as RustNogo;
-        // console.log('nogo', nogo);
-        // for (let i = 0; i < nogo.nodes.length; i++) {
-        //   const node = nogo.nodes[i];
-        //   const plane = new Mesh(
-        //     new PlaneGeometry(nogo.map_node_width, nogo.map_node_height),
-        //     new MeshBasicMaterial({
-        //       color: node.valid ? 0x000000 : 0xffffff,
-        //     }),
-        //   );
-        //   plane.rotation.x = -PI12;
-        //   plane.position.set(node.map_position[0], 10, node.map_position[1]);
-        //   this.scene.add(plane);
-        // }
-        // await PathFinding.a_star(this, nogo.nodes[0], nogo.nodes[99], nogo);
+        this.lights = new Lights(this);
+        this.grassSystem = new GrassSystem(this);
     }
 
     destroy() {
@@ -170,6 +132,7 @@ export class Game {
                 unsub();
             }
         }
+        this.lights.destroy();
         this.scene.clear();
         this.renderer.destroy();
         this.el.innerHTML = '';
@@ -179,76 +142,30 @@ export class Game {
         Keyboard.destroy();
         Ticker.clear();
         this.frameTicker = false;
+        this.fps.destroy();
+        this.grassSystem.destroy();
+        this.landscape.destroy();
     }
 }
 
 export async function createGame(config: GameConfig): Promise<Game> {
     const sdk = useSdk();
-    const map = (await sdk.data.maps()).find((e) => e.id === config.mapId);
-    if (!map) {
-        throw Error(`Map "${config.mapId}" does not exist`);
-    }
+    await sdk.settings.get({
+        width: window.innerWidth,
+        height: window.innerHeight,
+    });
     const character = (await sdk.data.characters()).find(
         (e) => e.id === config.characterId,
     );
     if (!character) {
         throw Error(`Character "${config.characterId}" does not exist`);
     }
-    console.log({ map, character });
-    const gameAssets = new GameAssets();
-    AssetLoader.register(
-        {
-            name: 'ground',
-            path: `/assets/maps/${map.id}/model.gltf`,
-            type: 'gltf',
-        },
-        {
-            name: 'skybox',
-            path: [
-                `/assets/maps/${map.id}/skybox/xn.png`,
-                `/assets/maps/${map.id}/skybox/xp.png`,
-                `/assets/maps/${map.id}/skybox/yp.png`,
-                `/assets/maps/${map.id}/skybox/yn.png`,
-                `/assets/maps/${map.id}/skybox/zp.png`,
-                `/assets/maps/${map.id}/skybox/zn.png`,
-            ],
-            type: 'cubeTexture',
-        },
-        {
-            name: 'grad',
-            path: '/grad.png',
-            type: 'texture',
-        },
-        {
-            name: 'cursorMove',
-            path: '/cursor-move.png',
-            type: 'texture',
-        },
-    );
-    const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
-        if (item.name === 'ground') {
-            gameAssets.ground = (data as GLTF).scene;
-            gameAssets.ground.traverse((o) => {
-                o.receiveShadow = true;
-                // o.castShadow = true;
-            });
-            gameAssets.ground.scale.set(map.width / 2, 50, map.height / 2);
-        } else if (item.name === 'skybox') {
-            gameAssets.skybox = data as CubeTexture;
-        } else if (item.name === 'grad') {
-            gameAssets.grad = data as Texture;
-        } else if (item.name === 'cursorMove') {
-            gameAssets.cursorMove = data as Texture;
-        }
-    });
-    await AssetLoader.run();
-    loaderUnsub();
+    const landscape = await createLandscape(config.mapId);
     return new Game(
         config.el,
         config.frameTicker,
         config.manager,
-        map,
+        landscape,
         character,
-        gameAssets,
     );
 }

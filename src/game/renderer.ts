@@ -1,34 +1,48 @@
+import postProcessingVert from './shaders/post-processing.vert';
+import postProcessingFrag from './shaders/post-processing.frag';
+
 import {
     PCFSoftShadowMap,
     PerspectiveCamera,
-    Scene,
+    Scene, Texture,
+    Vector2,
     WebGLRenderer,
 } from 'three';
-import postProcessingVert from './shaders/post-processing.vert';
-import postProcessingFrag from './shaders/post-processing.frag';
 import { Ticker } from './ticker';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
 import { Mouse, MouseEventType } from './mouse.ts';
 import { useSdk } from '../sdk/main.ts';
+import { ShaderPassManager } from './shaders/manager.ts';
 
 export class Renderer {
     r = new WebGLRenderer();
     composer: EffectComposer;
-    postProcessingShader = new ShaderPass({
-        uniforms: {
-            tDiffuse: null,
-            tGrad: { value: null as any },
-            uMillis: { value: 0.0 },
-            uMouse: { value: [0.0, 0.0] },
-            uScreen: { value: [window.innerWidth, window.innerHeight] },
-        },
-        fragmentShader: postProcessingFrag,
-        vertexShader: postProcessingVert,
+    postProcessing = new ShaderPassManager<{
+        tDiffuse: Texture | null,
+        uScreen: Vector2;
+        uTime: number;
+        uMouse: Vector2;
+    }>(postProcessingVert, postProcessingFrag, {
+        tDiffuse: null,
+        uMouse: new Vector2(0, 0),
+        uTime: 0,
+        uScreen: new Vector2(window.innerWidth, window.innerHeight),
     });
+    // postProcessingShader = new ShaderPass({
+    //     uniforms: {
+    //         tDiffuse: null,
+    //         tGrad: { value: null as any },
+    //         uMillis: { value: 0.0 },
+    //         uMouse: { value: [0.0, 0.0] },
+    //         uScreen: { value: [window.innerWidth, window.innerHeight] },
+    //     },
+    //     fragmentShader: postProcessingFrag,
+    //     vertexShader: postProcessingVert,
+    // });
 
+    private timeOffset = Date.now();
     private unsubs: Array<() => void> = [];
     private resizeDebounce: any = undefined;
 
@@ -63,22 +77,25 @@ export class Renderer {
         this.r.domElement.setAttribute('style', 'width: 100%; height: 100%;');
         el.appendChild(this.r.domElement);
         this.unsubs.push(
-            Ticker.subscribe(async (_cTime, deltaTime) => {
-                this.postProcessingShader.uniforms.uMillis.value += deltaTime;
+            Ticker.subscribe(async () => {
+                this.postProcessing.setUniform(
+                    'uTime',
+                    Date.now() - this.timeOffset,
+                );
                 this.render();
             }),
             Mouse.subscribe(MouseEventType.MOUSE_MOVE, (data) => {
-                this.postProcessingShader.uniforms.uMouse.value = [
-                    data.x,
-                    data.y,
-                ];
+                this.postProcessing.setUniform(
+                    'uMouse',
+                    new Vector2(data.x, data.y),
+                );
             }),
         );
     }
 
     async loadPostProcessing() {
         this.composer.addPass(new RenderPass(this.scene, this.camera));
-        this.composer.addPass(this.postProcessingShader);
+        this.composer.addPass(this.postProcessing.shader);
         this.composer.addPass(new OutputPass());
     }
 
@@ -101,6 +118,10 @@ export class Renderer {
                     'style',
                     'width: 100%; height: 100%;',
                 );
+                this.postProcessing.setUniform(
+                    'uScreen',
+                    new Vector2(settings.resolution.width, settings.resolution.height),
+                );
                 this.composer.render();
             }
         }, 200);
@@ -115,12 +136,6 @@ export class Renderer {
         }
         this.r.clear();
     }
-
-    // setCamera(camera: PerspectiveCamera): void {
-    //   this.camera = camera;
-    //   this.camera.aspect = this.width / this.height;
-    //   this.camera.updateProjectionMatrix();
-    // }
 
     render() {
         if (this.camera) {

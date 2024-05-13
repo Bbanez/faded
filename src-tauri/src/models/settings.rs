@@ -51,7 +51,7 @@ pub fn settings_get(state: tauri::State<GameState>, resolution: USize) -> TauriR
 pub fn settings_set(state: tauri::State<GameState>, resolution: USize) -> TauriResponse<Settings> {
     let mut state_guard = state.0.lock().unwrap();
     if let Some(ref mut settings) = state_guard.settings {
-        settings.resolution = resolution;
+        settings.resolution = resolution.clone();
         let mut storage_date = Storage::read();
         let settings_str = Some(serde_json::to_string(&settings).unwrap());
         storage_date.settings = settings_str;

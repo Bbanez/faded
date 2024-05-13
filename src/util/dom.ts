@@ -71,6 +71,20 @@ export function findChild<El = HTMLElement>(
     return null;
 }
 
+export function findParent<El = HTMLElement>(
+    el: HTMLElement,
+    query: (node: HTMLElement) => boolean,
+): El | null {
+    if (el && el.parentElement) {
+        if (query(el.parentElement)) {
+            return el.parentElement as El;
+        } else {
+            return findParent(el.parentElement, query);
+        }
+    }
+    return null;
+}
+
 (window as any).waitForSelector = waitForSelector;
 (window as any).findChildByTag = findChildByTag;
 (window as any).findChild = findChild;

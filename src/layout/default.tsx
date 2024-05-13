@@ -59,6 +59,7 @@ export const DefaultLayout = defineComponent({
                         items.push({
                             text: 'Back',
                             href: '/',
+                            class: 'mt-auto'
                         });
                     }
                     break;
@@ -97,6 +98,16 @@ export const DefaultLayout = defineComponent({
                         items.push({
                             text: 'Back',
                             href: `/account/${route.params.username}`,
+                        });
+                    }
+                    break;
+
+                case 'SettingsView':
+                    {
+                        items.push({
+                            text: 'Back',
+                            class: 'mt-auto',
+                            href: '/',
                         });
                     }
                     break;

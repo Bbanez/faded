@@ -65,12 +65,12 @@ export const Minimap = defineComponent({
                         if (props.game.player && data.value.player) {
                             const playerPosition: [number, number] = [
                                 gameToMapSpace[0](
-                                    props.game.player.manager.player.bounding_box.position
-                                        .y,
+                                    props.game.player.manager.player
+                                        .bounding_box.position.y,
                                 ),
                                 gameToMapSpace[1](
-                                    props.game.player.manager.player.bounding_box.position
-                                        .x,
+                                    props.game.player.manager.player
+                                        .bounding_box.position.x,
                                 ),
                             ];
                             if (
@@ -95,7 +95,7 @@ export const Minimap = defineComponent({
         return () => (
             <div class={`fixed top-4 right-4`}>
                 <div
-                    class={`absolute w-[256px] h-[256px] bg-gray-500 top-[28px] right-[20px]`}
+                    class={`absolute z-10 w-[256px] h-[256px] bg-gray-500 top-[28px] right-[20px]`}
                 >
                     <img
                         class={`w-full h-full`}
@@ -105,14 +105,14 @@ export const Minimap = defineComponent({
                 </div>
 
                 <div
-                    class={`absolute bg-red-500 w-2 h-2 rounded-full`}
+                    class={`z-20 absolute bg-red-500 w-2 h-2 rounded-full`}
                     style={`top: ${(28 + data.value.player.position[0]).toFixed(
                         0,
                     )}px; left: ${(20 + data.value.player.position[1]).toFixed(
                         0,
                     )}px;`}
                 />
-                <Icon src={`/assets/map-frame.svg`} />
+                <Icon class={`relative z-20`} src={`/assets/map-frame.svg`} />
             </div>
         );
     },

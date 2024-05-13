@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import {
     Group,
-    Intersection,
+    Intersection, Mesh,
     Object3D,
     PerspectiveCamera,
     Raycaster,
@@ -50,7 +50,7 @@ export class MouseRay {
 
     constructor(
         private cam: PerspectiveCamera,
-        private objects: Object3D[] | Group,
+        private objects: Object3D[] | Group | Mesh,
     ) {
         this.unsubs.push(
             Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {

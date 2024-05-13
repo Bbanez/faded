@@ -42,7 +42,7 @@ export class Camera {
     //          min
     //           |  max
     //           |  |   curr
-    private D = [1, 150, 5];
+    private D = [1, 1500, 5];
 
     constructor(
         private game: Game,
@@ -57,7 +57,7 @@ export class Camera {
                 position[0],
                 Distance.heightTo(
                     { x: position[0], y: position[1] },
-                    this.game.assets.ground,
+                    this.game.landscape.group,
                 ),
                 position[1],
             ];
@@ -114,12 +114,12 @@ export class Camera {
                         this.followObj.manager.player.bounding_box.position.y)
             ) {
                 this.position.wanted = [
-                    this.followObj.manager.player.bounding_box.position.x,
+                    this.followObj.assets.t.position.x,
                     Distance.heightTo(
                         this.followObj.manager.player.bounding_box.position,
-                        this.game.assets.ground,
+                        this.game.landscape.group,
                     ),
-                    this.followObj.manager.player.bounding_box.position.y,
+                    this.followObj.assets.t.position.z,
                 ];
             }
         }
@@ -152,7 +152,7 @@ export class Camera {
             position[0],
             Distance.heightTo(
                 { x: position[0], y: position[1] },
-                this.game.assets.ground,
+                this.game.landscape.group,
             ),
             position[1],
         ];
@@ -164,7 +164,7 @@ export class Camera {
             position[0],
             Distance.heightTo(
                 { x: position[0], y: position[1] },
-                this.game.assets.ground,
+                this.game.landscape.group,
             ),
             position[1],
         ];

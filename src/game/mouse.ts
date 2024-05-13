@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { findParent } from '../util/dom.ts';
 
 export interface MouseState {
     left: boolean;
@@ -68,20 +69,25 @@ export class Mouse {
         }
     }
     private static onMouseDown(event: MouseEvent) {
-        if (event.button === 0) {
-            if (!Mouse.state.left) {
-                Mouse.state.left = true;
-                Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
-            }
-        } else if (event.button === 1) {
-            if (!Mouse.state.middle) {
-                Mouse.state.middle = true;
-                Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
-            }
-        } else if (event.button === 2) {
-            if (!Mouse.state.right) {
-                Mouse.state.right = true;
-                Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
+        const el = findParent(event.target as HTMLElement, (node) => {
+            return node.id === 'game_canvas';
+        });
+        if (el) {
+            if (event.button === 0) {
+                if (!Mouse.state.left) {
+                    Mouse.state.left = true;
+                    Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
+                }
+            } else if (event.button === 1) {
+                if (!Mouse.state.middle) {
+                    Mouse.state.middle = true;
+                    Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
+                }
+            } else if (event.button === 2) {
+                if (!Mouse.state.right) {
+                    Mouse.state.right = true;
+                    Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
+                }
             }
         }
     }

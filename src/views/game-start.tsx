@@ -52,40 +52,48 @@ export const GameStartView = defineComponent({
                 {loaded.value && (
                     <>
                         {}
-                        {selected_map.value
-                            ? characters.value.map((char) => {
-                                  return getListItem(
-                                      `/assets/characters/${char.id}/cover.png`,
-                                      char.title,
-                                      char.description,
-                                      async () => {
-                                          await throwable(
-                                              async () => {
-                                                  return await sdk.manager.create(
-                                                      selected_map.value
-                                                          ?.id as string,
-                                                      char.id,
-                                                  );
-                                              },
-                                              async (manager) => {
-                                                  await router.push(
-                                                      `/account/${route.params.account_id}/map/${selected_map.value?.id}/character/${char.id}/game/${manager.id}`,
-                                                  );
-                                              },
-                                          );
-                                      },
-                                  );
-                              })
-                            : maps.value.map((map) => {
-                                  return getListItem(
-                                      `/assets/maps/${map.id}/cover.png`,
-                                      map.title,
-                                      map.description,
-                                      async () => {
-                                          selected_map.value = map;
-                                      },
-                                  );
-                              })}
+                        {selected_map.value ? (
+                            <>
+                                <h1>Select character</h1>
+                                {characters.value.map((char) => {
+                                    return getListItem(
+                                        `/assets/characters/${char.id}/cover.png`,
+                                        char.title,
+                                        char.description,
+                                        async () => {
+                                            await throwable(
+                                                async () => {
+                                                    return await sdk.manager.create(
+                                                        selected_map.value
+                                                            ?.id as string,
+                                                        char.id,
+                                                    );
+                                                },
+                                                async (manager) => {
+                                                    await router.push(
+                                                        `/account/${route.params.account_id}/map/${selected_map.value?.id}/character/${char.id}/game/${manager.id}`,
+                                                    );
+                                                },
+                                            );
+                                        },
+                                    );
+                                })}
+                            </>
+                        ) : (
+                            <>
+                                <h1>Select a map</h1>
+                                {maps.value.map((map) => {
+                                    return getListItem(
+                                        `/assets/maps/${map.id}/cover.png`,
+                                        map.title,
+                                        map.description,
+                                        async () => {
+                                            selected_map.value = map;
+                                        },
+                                    );
+                                })}
+                            </>
+                        )}
                     </>
                 )}
             </div>

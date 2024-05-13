@@ -1,17 +1,14 @@
-import { v4 as uuidv4 } from 'uuid';
-import cursorMoveVert from './shaders/cursor-move.vert';
-import cursorMoveFrag from './shaders/cursor-move.frag';
-import { Group, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
+import { Group } from 'three';
 import { Animation, AnimationConfigItem } from './animation';
 import { Game } from './main';
 import { AssetLoader } from './asset-loader';
 import { MouseRay } from './mouse-ray';
 import { Keyboard, KeyboardEventType, KeyboardState } from './keyboard';
 import { Distance } from './distance';
-import { Ticker } from './ticker';
 import { PI12 } from './consts';
 import type { Character, Manager, Point } from '../types/rs';
 import { Sdk, useSdk } from '../sdk/main.ts';
+import { Ticker } from './ticker.ts';
 
 export interface PlayerAnimation {
     idle: AnimationConfigItem;
@@ -30,12 +27,6 @@ export class Player {
     animation: Animation<keyof PlayerAnimation>;
     mouseRay: MouseRay;
 
-    private cursorObjects: Array<{
-        id: string;
-        mesh: Mesh;
-        shader: ShaderMaterial;
-        expAt: number;
-    }> = [];
     private unsubs: Array<() => void> = [];
 
     constructor(
@@ -47,7 +38,7 @@ export class Player {
     ) {
         this.mouseRay = new MouseRay(
             this.game.camera.cam,
-            this.game.assets.ground,
+            this.game.landscape.group,
         );
         this.animation = new Animation(this.assets.t, {
             idle: {
@@ -84,36 +75,6 @@ export class Player {
                     //   // nogo.nodes[97 + 150 * 102],
                     //   nogo,
                     // );
-                    const shaderMaterial = new ShaderMaterial({
-                        uniforms: {
-                            uTexture: {
-                                value: this.game.assets.cursorMove,
-                            },
-                            uMillis: {
-                                value: 0.0,
-                            },
-                        },
-                        vertexShader: cursorMoveVert,
-                        fragmentShader: cursorMoveFrag,
-                        transparent: true,
-                    });
-                    const plane = new Mesh(
-                        new PlaneGeometry(0.2, 0.2),
-                        shaderMaterial,
-                    );
-                    plane.position.set(
-                        inter[0].point.x,
-                        inter[0].point.y + 0.2,
-                        inter[0].point.z,
-                    );
-                    plane.rotation.y = -this.game.camera.alpha.curr - PI12;
-                    this.cursorObjects.push({
-                        id: uuidv4(),
-                        mesh: plane,
-                        shader: shaderMaterial,
-                        expAt: Date.now() + 1000,
-                    });
-                    this.game.scene.add(plane);
                     this.sdk.player
                         .set_wanted_position({
                             x: inter[0].point.x,
@@ -134,23 +95,8 @@ export class Player {
             Keyboard.subscribe(KeyboardEventType.KEY_UP, async (state) => {
                 await this.setMove(state);
             }),
-            Ticker.subscribe(async (cTime, dt) => {
+            Ticker.subscribe(async (_cTime, dt) => {
                 await this.update(dt / 800);
-                const removeCursorObjects: string[] = [];
-                for (let i = 0; i < this.cursorObjects.length; i++) {
-                    if (this.cursorObjects[i].expAt < Date.now()) {
-                        removeCursorObjects.push(this.cursorObjects[i].id);
-                        this.game.scene.remove(this.cursorObjects[i].mesh);
-                    }
-                }
-                this.cursorObjects = this.cursorObjects.filter(
-                    (e) => !removeCursorObjects.includes(e.id),
-                );
-                for (let i = 0; i < this.cursorObjects.length; i++) {
-                    this.cursorObjects[i].shader.uniforms.uMillis.value += dt;
-                    this.cursorObjects[i].mesh.position.y +=
-                        Math.sin(cTime / 100) / 100;
-                }
             }),
         );
     }
@@ -174,7 +120,7 @@ export class Player {
         await this.sdk.player.set_motion(move);
     }
 
-    async update(t: number) {
+    async update(timeStep: number) {
         this.manager.player = await this.sdk.player.get();
         if (
             this.manager.player.motion.x !== 0 ||
@@ -194,11 +140,11 @@ export class Player {
             this.manager.player.bounding_box.position.x,
             Distance.heightTo(
                 this.manager.player.bounding_box.position,
-                this.game.assets.ground,
+                this.game.landscape.group,
             ),
             this.manager.player.bounding_box.position.y,
         );
-        this.animation.mixer.update(t);
+        this.animation.mixer.update(timeStep);
     }
 
     destroy() {
@@ -247,7 +193,8 @@ export async function createPlayer(
     );
     const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
         if (item.name.startsWith(character.id)) {
-            playerAssets[item.name.split('_')[1] as keyof PlayerAssets] = data as Group;
+            playerAssets[item.name.split('_')[1] as keyof PlayerAssets] =
+                data as Group;
         }
     });
     await AssetLoader.run();

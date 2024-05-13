@@ -1,17 +1,17 @@
 import { defineComponent, onMounted, ref } from 'vue';
 import { Button } from '../components/button.tsx';
-import { Link } from '../components/link.tsx';
 import { Select, SelectOption } from '../components/inputs/select.tsx';
 import { FunctionBuilder } from '../game/math/function-builder.ts';
 import { throwable } from '../util/throwable.ts';
 import { useSdk } from '../sdk/main.ts';
 import { Settings } from '../types/rs';
+import { NotificationService } from '../services/notification.ts';
 
 export const SettingsView = defineComponent({
     setup() {
         const sdk = useSdk();
-        const resOptions = getResolutions();
         const inputs = ref(getInputs());
+        const resOptions = getResolutions();
 
         function getInputs(settings?: Settings) {
             return {
@@ -27,9 +27,17 @@ export const SettingsView = defineComponent({
                 [0, 50],
                 [9, window.innerWidth],
             ]);
+            let lock = false;
             for (let i = 0; i < 10; i++) {
                 const width = parseInt(resFn(i).toFixed(0));
                 const height = parseInt((width / aspect).toFixed(0));
+                if (!lock && width > inputs.value.width) {
+                    lock = true;
+                    options.push({
+                        label: inputs.value.width + 'x' + inputs.value.height,
+                        value: inputs.value.width + 'x' + inputs.value.height,
+                    });
+                }
                 options.push({
                     label: width + 'x' + height,
                     value: width + 'x' + height,
@@ -65,19 +73,25 @@ export const SettingsView = defineComponent({
                 />
                 <Button
                     onClick={async () => {
-                        await throwable(async () => {
-                            await sdk.settings.set({
-                                width: inputs.value.width,
-                                height: inputs.value.height,
-                            });
-                        });
+                        await throwable(
+                            async () => {
+                                console.log(inputs.value);
+                                await sdk.settings.set({
+                                    width: inputs.value.width,
+                                    height: inputs.value.height,
+                                });
+                            },
+                            async () => {
+                                NotificationService.push(
+                                    'success',
+                                    'Settings updated successfully',
+                                );
+                            },
+                        );
                     }}
                 >
                     Update
                 </Button>
-                <Link href={'home'} asButton={'primary'}>
-                    Back
-                </Link>
             </div>
         );
     },
