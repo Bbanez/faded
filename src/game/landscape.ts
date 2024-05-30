@@ -1,7 +1,15 @@
 import demoVert from './shaders/maps/demo/ground.vert';
 import demoFrag from './shaders/maps/demo/ground.frag';
 
-import { Color, CubeTexture, FrontSide, Group, Vector2, Vector3 } from 'three';
+import {
+    Color,
+    CubeTexture,
+    FrontSide,
+    Group,
+    Mesh,
+    Vector2,
+    Vector3,
+} from 'three';
 import { ShaderManager } from './shaders/manager.ts';
 import { AssetLoader } from './asset-loader.ts';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -62,8 +70,12 @@ export class Landscape {
                 uMapSize: this.group.scale,
             },
         );
-        // const mesh = this.group.children[0] as Mesh;
-        // mesh.material = this.shader.material;
+        const mesh = this.group.children[0] as Mesh;
+        mesh.material = this.shader.material;
+        // (group as any).children[0].material.onBeforeCompile = (shader: any) => {
+        //     console.log('FSH', shader.fragmentShader);
+        //     console.log('VSH', shader.vertexShader);
+        // };
         window.addEventListener('resize', this.onResize);
         this.unsubs.push(
             Ticker.subscribe(async () => {

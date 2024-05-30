@@ -1,3 +1,4 @@
+use crate::game::math::MathFnLinear2D;
 use crate::game::nav_mesh::{NavMesh, NavMeshNeighborIdx, NavMeshNode};
 use crate::game::point::{Point, UPoint};
 
@@ -146,7 +147,14 @@ fn resolve_path(
     }
     output.reverse();
     let to = output.len() - 1;
-    output[1..to].to_vec()
+    output[1..to].to_vec();
+    let mut output_reduced: Vec<Point> = vec![output[0].clone()];
+    for i in 1..output.len() {
+        if (output[i - 1].x != output[i].x && output[i - 1].y != output[i].y) {
+            output_reduced.push(output[i].clone());
+        }
+    }
+    output_reduced
 }
 
 pub fn a_star(
@@ -163,6 +171,30 @@ pub fn a_star(
             let end_node_opt = nav_mesh.get_valid_node(map_end);
             match end_node_opt.0 {
                 Some(end_node) => {
+                    if ((start_node.v_position.x as f32 - end_node.v_position.x as f32) != 0.0) {
+                        let line_start_end = MathFnLinear2D::new(vec![
+                            Point::new(start_node.v_position.x as f32 + 0.000001, start_node.v_position.y as f32),
+                            Point::new(end_node.v_position.x as f32, end_node.v_position.y as f32),
+                        ]);
+                        let line_len_x = ((start_node.v_position.x.pow(2) + end_node.v_position.x.pow(2)) as f32).sqrt();
+                        let segment_len_x = 1.0;
+                        let mut cumulative_len_x = segment_len_x;
+                        let mut should_skip = true;
+                        while (cumulative_len_x < line_len_x) {
+                            let y = line_start_end.calc(start_node.v_position.x as f32 + cumulative_len_x);
+                            let segment_point = Point::new(cumulative_len_x + start_node.v_position.x as f32, y);
+                            let is_valid_node = nav_mesh.get_node_at_position(segment_point.to_u_point());
+                            if let Some(_valid_node) = is_valid_node {
+                                cumulative_len_x += segment_len_x;
+                            } else {
+                                should_skip = false;
+                                break;
+                            }
+                        }
+                        if (should_skip) {
+                            return (Some(vec![]), true);
+                        }
+                    }
                     if start_node.v_position.x == end_node.v_position.x
                         && start_node.v_position.y == end_node.v_position.y
                     {

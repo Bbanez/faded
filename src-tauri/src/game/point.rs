@@ -26,6 +26,10 @@ impl Point {
             y: point.1,
         }
     }
+
+    pub fn to_u_point(self) -> UPoint {
+        UPoint::new(self.x as usize, self.y as usize)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -52,6 +56,10 @@ impl UPoint {
             x: point.0,
             y: point.1,
         }
+    }
+
+    pub fn to_point(self) -> Point {
+        Point::new(self.x as f32, self.y as f32)
     }
 }
 

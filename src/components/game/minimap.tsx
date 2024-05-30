@@ -99,7 +99,7 @@ export const Minimap = defineComponent({
                 >
                     <img
                         class={`w-full h-full`}
-                        src={`/assets/maps/${map.value?.id}/cover.png`}
+                        src={`/assets/maps/${map.value?.id}/cover.jpg`}
                         alt="Map cover"
                     />
                 </div>

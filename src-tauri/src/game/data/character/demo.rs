@@ -21,7 +21,7 @@ pub const CHARACTER_DEMO: Character = Character {
         hp: 15.0,
         mana: 10.0,
         stamina: 5.0,
-        move_speed: 0.1, // 0.03,
+        move_speed: 0.03, // 0.03,
         armor: 1.0,
         range: 40.0,
         damage: 4.0,
