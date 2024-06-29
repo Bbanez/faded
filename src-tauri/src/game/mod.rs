@@ -10,3 +10,4 @@ pub mod size;
 pub mod data;
 pub mod manager;
 pub mod nav_mesh;
+pub mod enemy;

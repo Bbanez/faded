@@ -23,6 +23,7 @@ import { Lights } from './lights.ts';
 import { FPS } from './fps.ts';
 import { GrassSystem } from './grass-system.ts';
 import { createLandscape, Landscape } from './landscape.ts';
+import { createEnemy, Enemy } from './enemy.ts';
 
 export interface GameConfig {
     el: HTMLElement;
@@ -47,6 +48,7 @@ export class Game {
     camera: Camera;
     fps: FPS;
     player: Player = null as never;
+    enemies: Enemy[] = [];
     fpsEl = document.createElement('div');
     lights: Lights = null as never;
     grassSystem: GrassSystem = null as never;
@@ -105,7 +107,7 @@ export class Game {
             new MeshBasicMaterial({
                 color: 0x004477,
                 transparent: true,
-                opacity: 0.4,
+                opacity: 0.95,
             }),
         );
         water.rotation.x = -PI12;
@@ -118,6 +120,10 @@ export class Game {
         this.renderer.onResize();
 
         this.player = await createPlayer(this, this.manager, this.character);
+        for (let i = 0; i < this.manager.enemies.length; i++) {
+            const enemy = this.manager.enemies[i];
+            this.enemies.push(await createEnemy(this, enemy));
+        }
         await this.player.update(0);
         this.camera.follow(this.player);
 

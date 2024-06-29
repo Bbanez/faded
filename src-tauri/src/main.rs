@@ -9,7 +9,7 @@ use actix_web::{get, HttpResponse, Responder};
 use game::{
     data::{
         data_characters,
-        data_maps
+        data_maps,
     },
     manager::{
         manager_create,
@@ -19,8 +19,20 @@ use game::{
     player::{
         player_get,
         player_motion,
-        player_set_wanted_position
-    }
+        player_set_wanted_position,
+    },
+};
+use map_maker::landscape::{
+    landscape_create,
+    landscape_get,
+    landscape_get_all,
+    landscape_get_set_chunks,
+    landscape_get_sets,
+    landscape_save,
+    landscape_set_camera,
+    landscape_set_chunk,
+    landscape_set_selected_level,
+    landscape_update,
 };
 use models::{
     account::{
@@ -28,7 +40,7 @@ use models::{
         account_create,
         account_get_active,
         account_get_by_username,
-        account_load
+        account_load,
     },
     settings::{settings_get, settings_set}};
 use storage::Storage;
@@ -38,9 +50,10 @@ pub mod game;
 pub mod models;
 pub mod state;
 pub mod storage;
-mod server;
-mod util;
-mod response;
+pub mod server;
+pub mod util;
+pub mod response;
+pub mod map_maker;
 
 pub struct GameState(pub Mutex<state::State>);
 
@@ -55,26 +68,7 @@ async fn hello() -> impl Responder {
 }
 
 fn main() {
-    let storage_data = Storage::read();
-    let accounts;
-    match storage_data.accounts {
-        Some(accounts_str) => {
-            accounts = serde_json::from_str(&accounts_str).unwrap();
-        }
-        None => {
-            accounts = vec![];
-        }
-    }
-    let settings;
-    match storage_data.settings
-    {
-        Some(settings_str) => {
-            settings = serde_json::from_str(&settings_str).unwrap();
-        }
-        None => {
-            settings = None;
-        }
-    }
+    let storage_data = Storage::read_unpacked();
     tauri::Builder::default()
         .setup(|app| {
             let handler = app.handle();
@@ -86,8 +80,9 @@ fn main() {
         })
         .manage(GameState(Mutex::new(state::State {
             manager: None,
-            accounts,
-            settings,
+            accounts: storage_data.accounts,
+            settings: storage_data.settings,
+            landscapes: storage_data.landscapes,
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
@@ -112,6 +107,17 @@ fn main() {
 
             manager_create,
             manager_get,
+
+            landscape_get_set_chunks,
+            landscape_create,
+            landscape_get,
+            landscape_save,
+            landscape_update,
+            landscape_get_all,
+            landscape_get_sets,
+            landscape_set_chunk,
+            landscape_set_camera,
+            landscape_set_selected_level,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

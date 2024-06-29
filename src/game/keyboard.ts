@@ -27,11 +27,21 @@ export class Keyboard {
     }> = [];
     static state: KeyboardState = {};
 
+    private static shouldEmit() {
+        const el =
+            document.getElementById('game_canvas') ||
+            document.getElementById('renderer');
+        return el && el.getAttribute('data-in-focus') === 'true';
+
+    }
+
     private static trigger(type: KeyboardEventType, event: KeyboardEvent) {
-        for (let i = 0; i < Keyboard.subs.length; i++) {
-            const sub = Keyboard.subs[i];
-            if (sub.type === type || sub.type === KeyboardEventType.ALL) {
-                sub.cb(Keyboard.state, event);
+        if (this.shouldEmit()) {
+            for (let i = 0; i < Keyboard.subs.length; i++) {
+                const sub = Keyboard.subs[i];
+                if (sub.type === type || sub.type === KeyboardEventType.ALL) {
+                    sub.cb(Keyboard.state, event);
+                }
             }
         }
     }

@@ -5,7 +5,8 @@ use crate::response::TauriResponse;
 pub fn on_tick(state: tauri::State<GameState>) -> TauriResponse<usize> {
     let mut state_guard = state.0.lock().unwrap();
     if let Some(mut manager) = state_guard.manager.clone() {
-        manager.player.on_tick();
+        // manager.player.on_tick();
+        manager.on_tick();
         state_guard.manager = Some(manager);
     }
     // Loop over enemies

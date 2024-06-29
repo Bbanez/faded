@@ -1,11 +1,11 @@
 import { defineComponent, onBeforeUpdate, onMounted, ref } from 'vue';
+import { type Queue, QueueError } from '@banez/queue/types';
 import { createQueue } from '@banez/queue';
 import { DefaultComponentProps } from './_default.ts';
 
 const cache: {
     [src: string]: string;
 } = {};
-const queue = createQueue();
 
 function styleInjection(input: string, cls?: string, style?: string): string {
     let output = '' + input;
@@ -26,13 +26,17 @@ export async function iconLoad(
     if (cache[path]) {
         return styleInjection(cache[path], cls, style);
     } else {
-        const response = await fetch(path);
+        const response = await fetch(`/assets/icons${path}.svg`);
         const value = await response.text();
         const src = styleInjection(value, cls, style);
         cache[path] = src;
         return src;
     }
 }
+
+const queue: {
+    [id: string]: Queue<void>;
+} = {};
 
 export const Icon = defineComponent({
     props: {
@@ -41,17 +45,21 @@ export const Icon = defineComponent({
             type: String,
             required: true,
         },
+        title: String,
     },
     setup(props) {
         let srcBuffer = '';
         const container = ref<HTMLElement | undefined>();
 
-        function init() {
+        async function init() {
             const path = props.src;
             if (path) {
-                queue({
-                    name: 'icon',
-                    async handler() {
+                if (!queue[path]) {
+                    queue[path] = createQueue();
+                }
+                const result = await queue[path]({
+                    name: 'init',
+                    handler: async () => {
                         if (cache[path]) {
                             const el = container.value;
                             if (el) {
@@ -59,16 +67,16 @@ export const Icon = defineComponent({
                                 el.innerHTML = styleInjection(
                                     cache[path],
                                     props.class,
-                                    props.style as string,
+                                    props.style,
                                 );
                             }
                         } else {
-                            const response = await fetch(path);
+                            const response = await fetch(`/icons${path}.svg`);
                             const value = await response.text();
                             const src = styleInjection(
                                 value,
                                 props.class,
-                                props.style as string,
+                                props.style,
                             );
                             const el = container.value;
                             if (el) {
@@ -76,31 +84,40 @@ export const Icon = defineComponent({
                                 el.innerHTML = styleInjection(
                                     src,
                                     props.class,
-                                    props.style as string,
+                                    props.style,
                                 );
                             }
                             cache[path] = value;
                         }
                     },
-                }).wait.catch((error) => {
-                    console.error(error);
-                });
+                }).wait;
+                if (result instanceof QueueError) {
+                    console.error(result.error);
+                }
             }
         }
-        onMounted(() => {
+
+        onMounted(async () => {
             srcBuffer = props.src + '';
-            init();
+            await init();
         });
 
-        onBeforeUpdate(() => {
+        onBeforeUpdate(async () => {
             if (srcBuffer !== props.src) {
                 srcBuffer = props.src + '';
-                init();
+                await init();
             }
         });
 
         return () => {
-            return <div ref={container} class="icon" data-src={props.src} />;
+            return (
+                <div
+                    ref={container}
+                    class="icon"
+                    data-src={props.src}
+                    title={props.title}
+                />
+            );
         };
     },
 });

@@ -1,4 +1,4 @@
-import { Group } from 'three';
+import { Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { Animation, AnimationConfigItem } from './animation';
 import { Game } from './main';
 import { AssetLoader } from './asset-loader';
@@ -9,6 +9,7 @@ import { PI12 } from './consts';
 import type { Character, Manager, Point } from '../types/rs';
 import { Sdk, useSdk } from '../sdk/main.ts';
 import { Ticker } from './ticker.ts';
+import { callAndClearUnsubscribeFns } from '../util/sub.ts';
 
 export interface PlayerAnimation {
     idle: AnimationConfigItem;
@@ -26,6 +27,7 @@ export interface PlayerAssets {
 export class Player {
     animation: Animation<keyof PlayerAnimation>;
     mouseRay: MouseRay;
+    boundingBoxG: Mesh | null = null;
 
     private unsubs: Array<() => void> = [];
 
@@ -144,16 +146,44 @@ export class Player {
             ),
             this.manager.player.bounding_box.position.y,
         );
+        if (this.boundingBoxG) {
+            this.boundingBoxG.position.set(
+                this.manager.player.bounding_box.position.x,
+                this.assets.t.position.y + 0.2,
+                this.manager.player.bounding_box.position.y,
+            );
+        }
         this.animation.mixer.update(timeStep);
     }
 
-    destroy() {
-        while (this.unsubs.length > 0) {
-            const unsub = this.unsubs.pop();
-            if (unsub) {
-                unsub();
-            }
+    showBb() {
+        this.boundingBoxG = new Mesh(
+            new PlaneGeometry(
+                this.manager.player.bounding_box.size.width,
+                this.manager.player.bounding_box.size.height,
+            ),
+            new MeshBasicMaterial({
+                color: '#ff00ff',
+            }),
+        );
+        this.boundingBoxG.rotateX(-PI12);
+        this.boundingBoxG.position.set(
+            this.manager.player.bounding_box.position.x,
+            this.assets.t.position.y + 1.1,
+            this.manager.player.bounding_box.position.y,
+        );
+        this.game.scene.add(this.boundingBoxG);
+    }
+
+    disableBb() {
+        if (this.boundingBoxG) {
+            this.game.scene.remove(this.boundingBoxG);
+            this.boundingBoxG = null;
         }
+    }
+
+    destroy() {
+        callAndClearUnsubscribeFns(this.unsubs);
         this.mouseRay.destroy().catch((err) => console.error(err));
     }
 }

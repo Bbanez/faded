@@ -3,6 +3,7 @@ import { PlayerHandler } from './handlers/player.ts';
 import { ManagerHandler } from './handlers/manager.ts';
 import { DataHandler } from './handlers/data.ts';
 import { SettingsHandler } from './handlers/settings.ts';
+import { LandscapeHandler } from './handlers/landscape.ts';
 
 export class Sdk {
     account = new AccountHandler();
@@ -10,6 +11,7 @@ export class Sdk {
     manager = new ManagerHandler();
     data = new DataHandler();
     settings = new SettingsHandler();
+    landscape = new LandscapeHandler();
 }
 
 const sdk = new Sdk();

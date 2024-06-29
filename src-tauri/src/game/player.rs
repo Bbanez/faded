@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::{GameState, util};
 use crate::game::bounding_box::BoundingBox;
-use crate::game::data::character::{Character, CharacterBaseStats};
+use crate::game::data::characters::{Character, CharacterBaseStats};
 use crate::game::math::MathFnLinear2D;
 use crate::game::point::Point;
 use crate::game::size::Size;
-use crate::{GameState, util};
 use crate::response::TauriResponse;
 
 use super::{math::Math, path_finding};
@@ -88,14 +88,13 @@ impl Player {
         account_id: String,
         character: Character,
         position: Point,
-        size: Size,
     ) -> Player {
         Player {
             account_id,
             stats: PlayerStats::new_from_character_stats(&character.base_stats),
             angle: 0.0,
             motion: Point::new(0.0, 0.0),
-            bounding_box: BoundingBox::new(size, position),
+            bounding_box: BoundingBox::new(Size::new(character.bb.x, character.bb.z), position),
             wanted_positions: vec![],
             wanted_position: None,
             character_id: character.id.to_string(),
@@ -178,6 +177,7 @@ pub fn player_motion(state: tauri::State<GameState>, motion: Point) -> TauriResp
     return if let Some(mut manager) = state_guard.manager.clone() {
         manager.player.set_motion(motion);
         manager.updated_at = util::time::get_current_millis();
+        state_guard.manager = Some(manager.clone());
         TauriResponse::new(manager.player)
     } else {
         TauriResponse::new_error(

@@ -16,7 +16,7 @@ export const InputWrapper = defineComponent({
     },
     setup(props, ctx) {
         return () => (
-            <div class="flex flex-col">
+            <div class="flex flex-col w-full">
                 {props.label || props.error ? (
                     <div
                         class={`flex gap-2 items-center mb-1 ${

@@ -6,6 +6,6 @@ export interface DefaultComponentProps {
 
 export const DefaultComponentProps = {
     id: String,
-    class: String,
+    class: { type: String, default: '' },
     style: String,
 };

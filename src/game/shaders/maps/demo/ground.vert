@@ -28,9 +28,13 @@ varying vec3 vViewPosition;
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
 
+#include "../../common"
+
+varying vec2 vUv;
 varying vec3 vNorm;
 varying vec3 vPosition;
 varying vec3 vPos;
+varying vec3 vViewPos;
 
 void main() {
     #include <uv_vertex>
@@ -58,7 +62,14 @@ void main() {
         vWorldPosition = worldPosition.xyz;
     #endif
 
+    vUv = uv;
     vNorm = (modelMatrix * vec4(normal, 0.0)).xyz;
+    //    mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
+    //    vNorm = normalize(normalMatrix * normal);
     vPos = position;
     vPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+
+    vec4 pos = vec4(position, 1.0);
+    vec4 mpos = modelViewMatrix * pos;
+    vViewPos = -mpos.xyz;
 }

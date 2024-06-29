@@ -33,14 +33,14 @@ export const NewAccountView = defineComponent({
             }
             await throwable(
                 async () => {
-                    await sdk.account.create(data.value.username.value);
+                    return await sdk.account.create(data.value.username.value);
                 },
-                async () => {
+                async (account) => {
                     NotificationService.push(
                         'success',
                         'Account created successfully',
                     );
-                    await router.push('/account');
+                    await router.push(`/account/${account.username}`);
                 },
             );
         }

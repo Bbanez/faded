@@ -9,8 +9,12 @@ import { Layouts } from './layout';
 import { P404View } from './views/404.tsx';
 import { AccountLoadView } from './views/account-load.tsx';
 import { GameStartView } from './views/game-start.tsx';
+import { MapMakerView } from './views/map-maker.tsx';
+import { MapMakerSelectView } from './views/map-maker-select.tsx';
 
 export const views = {
+    MapMakerView,
+    MapMakerSelectView,
     HomeView,
     GameView,
     GameStartView,
@@ -104,6 +108,23 @@ const routes: Array<RouteRecordRawExtended> = [
             title: 'Game',
         },
         component: GameView,
+    },
+    {
+        path: '/account/:username/map-maker',
+        name: 'MapMakerSelectView',
+        meta: {
+            title: 'Map maker list',
+            layout: 'DefaultLayout',
+        },
+        component: MapMakerSelectView,
+    },
+    {
+        path: '/account/:username/map-maker/:mapId',
+        name: 'MapMakerView',
+        meta: {
+            title: 'Map maker',
+        },
+        component: MapMakerView,
     },
     {
         path: '/settings',

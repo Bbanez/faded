@@ -3,6 +3,8 @@ use ts_rs::TS;
 
 use crate::{GameState, util};
 use crate::game::data::Data;
+use crate::game::data::enemies::demo::ENEMY_DEMO;
+use crate::game::enemy::Enemy;
 use crate::game::nav_mesh::NavMesh;
 use crate::game::player::Player;
 use crate::game::point::Point;
@@ -17,12 +19,22 @@ pub struct Manager {
     pub created_at: u128,
     pub updated_at: u128,
     pub player: Player,
+    pub enemies: Vec<Enemy>,
     pub map_id: String,
     pub nav_mesh: NavMesh,
 }
 
+impl Manager {
+    pub fn on_tick(&mut self) {
+        self.player.on_tick();
+        for i in 0..self.enemies.len() {
+            // self.enemies[i].on_tick(self);
+        }
+    }
+}
+
 #[tauri::command]
-pub fn manager_get(state: tauri::State<GameState>, manager_id: &str) -> TauriResponse<Manager> {
+pub fn manager_get(state: tauri::State<GameState>, _manager_id: &str) -> TauriResponse<Manager> {
     let state_guard = state.0.lock().unwrap();
     match state_guard.manager.clone() {
         Some(manager) => {
@@ -54,7 +66,6 @@ pub fn manager_create(state: tauri::State<GameState>, character_id: &str, map_id
                                 account_id,
                                 char,
                                 Point::new(map.start_x, map.start_z),
-                                Size::new(map.width, map.height),
                             );
                             let nav_mesh = NavMesh::new(
                                 pixels,
@@ -72,7 +83,11 @@ pub fn manager_create(state: tauri::State<GameState>, character_id: &str, map_id
                                 id: util::id::generate(),
                                 created_at: time,
                                 updated_at: time,
-                                player,
+                                player: player.clone(),
+                                enemies: vec![Enemy::new(
+                                    ENEMY_DEMO,
+                                    player.bounding_box.get_position(),
+                                )],
                                 nav_mesh,
                                 map_id: map.id.to_string(),
                             };

@@ -54,12 +54,11 @@ export class Landscape {
         this.group.scale.set(map.width / 2, 50, map.height / 2);
         this.group.traverse((g) => {
             g.receiveShadow = true;
+            g.castShadow = true;
         });
         this.shader = new ShaderManager(
             shadersByMap[map.id].vsh,
             shadersByMap[map.id].fsh,
-            true,
-            FrontSide,
             {
                 uTime: 0,
                 uScreen: new Vector2(
@@ -69,9 +68,17 @@ export class Landscape {
                 uBaseColor: new Color('#68554e'),
                 uMapSize: this.group.scale,
             },
+            {
+                lights: true,
+                side: FrontSide,
+            },
         );
         const mesh = this.group.children[0] as Mesh;
         mesh.material = this.shader.material;
+        // mesh.material.flatShading = false;
+        // mesh.material.needsUpdate = true;
+        // mesh.geometry = mergeVertices(mesh.geometry, 0.05);
+        // mesh.geometry.computeVertexNormals();
         // (group as any).children[0].material.onBeforeCompile = (shader: any) => {
         //     console.log('FSH', shader.fragmentShader);
         //     console.log('VSH', shader.vertexShader);

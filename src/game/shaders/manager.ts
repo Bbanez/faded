@@ -1,7 +1,6 @@
 import {
-    FrontSide,
     ShaderMaterial,
-    Side,
+    ShaderMaterialParameters,
     UniformsLib,
     UniformsUtils,
 } from 'three';
@@ -18,9 +17,8 @@ export class ShaderManager<Uniforms = unknown> {
     constructor(
         public vert: string,
         public frag: string,
-        lights?: boolean,
-        side?: Side,
         uniforms?: Uniforms,
+        options?: Omit<ShaderMaterialParameters, 'uniforms' | 'fragmentShader' | 'vertexShader'>,
     ) {
         const shaderUniforms: ShaderUniforms = {};
         if (uniforms) {
@@ -30,12 +28,14 @@ export class ShaderManager<Uniforms = unknown> {
                 };
             }
         }
+        if (!options) {
+            options = {};
+        }
         this.material = new ShaderMaterial({
             uniforms: UniformsUtils.merge([UniformsLib.lights, shaderUniforms]),
             fragmentShader: frag,
             vertexShader: vert,
-            lights: !!lights,
-            side: side || FrontSide,
+            ...options,
         });
     }
 

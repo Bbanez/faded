@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { computed, defineComponent, onMounted } from 'vue';
 import type { JSX } from 'vue/jsx-runtime';
 import { useRoute, useRouter } from 'vue-router';
@@ -59,7 +60,7 @@ export const DefaultLayout = defineComponent({
                         items.push({
                             text: 'Back',
                             href: '/',
-                            class: 'mt-auto'
+                            class: 'mt-auto',
                         });
                     }
                     break;
@@ -83,6 +84,10 @@ export const DefaultLayout = defineComponent({
                             {
                                 text: 'Load a game',
                                 href: `/account/${activeAccount.value?.username}/load-game`,
+                            },
+                            {
+                                text: 'Map maker',
+                                href: `/account/${activeAccount.value?.username}/map-maker`,
                             },
                             {
                                 class: 'mt-auto',
@@ -109,6 +114,36 @@ export const DefaultLayout = defineComponent({
                             class: 'mt-auto',
                             href: '/',
                         });
+                    }
+                    break;
+
+                case 'MapMakerSelectView':
+                    {
+                        items.push(
+                            {
+                                text: 'Create new map',
+                                onClick: async () => {
+                                    const landscape =
+                                        await sdk.landscape.create(
+                                            uuidv4(),
+                                            '',
+                                            {
+                                                width: 100,
+                                                depth: 100,
+                                                height: 5,
+                                            },
+                                        );
+                                    await router.push(
+                                        `/account/${activeAccount.value?.username}/map-maker/${landscape.id}`,
+                                    );
+                                },
+                            },
+                            {
+                                class: 'mt-auto',
+                                text: 'Back',
+                                href: `/account/${activeAccount.value?.username}/map-maker`,
+                            },
+                        );
                     }
                     break;
             }

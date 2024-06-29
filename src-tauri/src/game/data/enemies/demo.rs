@@ -1,14 +1,14 @@
-use crate::game::data::character::{Character, CharacterBaseStats, CharacterBoundingBox};
+use crate::game::data::enemies::{EnemyData, EnemyDataBaseStats, EnemyDataBoundingBox};
 
-pub const CHARACTER_DEMO: Character = Character {
+pub const ENEMY_DEMO: EnemyData = EnemyData {
     id: "demo",
     title: "Demo",
-    bb: CharacterBoundingBox {
+    bb: EnemyDataBoundingBox {
         x: 1.0,
         y: 1.0,
         z: 1.0,
     },
-    base_stats: CharacterBaseStats {
+    base_stats: EnemyDataBaseStats {
         str: 4.0,
         str_to_hp: 0.05,
         str_to_dmg: 0.01,
@@ -21,7 +21,7 @@ pub const CHARACTER_DEMO: Character = Character {
         hp: 15.0,
         mana: 10.0,
         stamina: 5.0,
-        move_speed: 0.03, // 0.03,
+        move_speed: 0.03,
         armor: 1.0,
         range: 40.0,
         damage: 4.0,

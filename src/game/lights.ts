@@ -11,25 +11,26 @@ export class Lights {
     private unsubs: UnsubscribeFns = [];
 
     constructor(private game: Game) {
-        this.sun = new DirectionalLight(0x2351A3, 10);
+        // this.sun = new DirectionalLight(0x2351A3, 10);
+        this.sun = new DirectionalLight(0x66aaff, 2);
         this.sun.position.set(0, 50, 0);
         this.sun.castShadow = true;
         const sunRes = 2000;
-        const sunGroundSize = 20;
+        const sunGroundSize = 8;
         this.sun.shadow.mapSize.width = sunRes;
         this.sun.shadow.mapSize.height = sunRes;
         this.sun.shadow.camera.left = sunGroundSize;
         this.sun.shadow.camera.right = -sunGroundSize;
-        this.sun.shadow.camera.top = sunGroundSize;
-        this.sun.shadow.camera.bottom = -sunGroundSize;
+        this.sun.shadow.camera.top = sunGroundSize / 2;
+        this.sun.shadow.camera.bottom = -sunGroundSize / 2;
         this.sun.target.position.set(30, 0, 85);
         this.game.scene.add(this.sun);
         this.game.scene.add(this.sun.target);
 
-        this.ambientLight = new AmbientLight(0xFFFFFF, 0.1);
+        this.ambientLight = new AmbientLight(0xffffff, 0.1);
         this.game.scene.add(this.ambientLight);
 
-        this.playerLight = new PointLight(0xaabbff, 4);
+        this.playerLight = new PointLight(0xaabbff, 1);
         this.playerLight.position.set(
             this.game.player.manager.player.bounding_box.position.x,
             this.game.player.assets.t.position.y + 10,

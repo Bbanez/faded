@@ -69,10 +69,14 @@ export class Mouse {
         }
     }
     private static onMouseDown(event: MouseEvent) {
-        const el = findParent(event.target as HTMLElement, (node) => {
-            return node.id === 'game_canvas';
+        let el = findParent(event.target as HTMLElement, (node) => {
+            return node.id === 'game_canvas' || node.id === 'renderer';
         });
         if (el) {
+            if (el.getAttribute('data-in-focus') !== 'true') {
+                el.setAttribute('data-in-focus', 'true');
+                return;
+            }
             if (event.button === 0) {
                 if (!Mouse.state.left) {
                     Mouse.state.left = true;
@@ -89,6 +93,15 @@ export class Mouse {
                     Mouse.trigger(MouseEventType.MOUSE_DOWN, event);
                 }
             }
+        } else {
+            el = document.getElementById('game_canvas');
+            if (!el) {
+                el = document.getElementById('renderer');
+            }
+            if (!el) {
+                return;
+            }
+            el.removeAttribute('data-in-focus');
         }
     }
     private static onMouseUp(event: MouseEvent) {
