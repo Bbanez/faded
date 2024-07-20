@@ -14,8 +14,8 @@ import { callAndClearUnsubscribeFns, UnsubscribeFns } from '../util/sub.ts';
 import { Mouse, MouseEventType, MouseState } from '../game/mouse.ts';
 import { FunctionBuilder, Linear2DFn } from '../game/math/function-builder.ts';
 import { MapMaker } from './main.ts';
-import { matToVecIndex } from '../game/math/transform.ts';
 import { Keyboard, KeyboardEventType } from '../game/keyboard.ts';
+import { ChunkManipulation } from './chunk.ts';
 
 export class MapMakerGridPlane {
     mesh: Mesh;
@@ -42,16 +42,21 @@ export class MapMakerGridPlane {
     private maker: MapMaker | null = null;
     private unsubs: UnsubscribeFns = [];
     private ray = new Raycaster();
-    private sizeTransFn: {
+    private worldToShaderTransform: {
         x: Linear2DFn;
         z: Linear2DFn;
     };
     private previewChunkIdx = 0;
     private previewSetIdx = 0;
 
-    constructor(width: number, depth: number, selectedLevel: number) {
+    constructor(
+        public width: number,
+        public depth: number,
+        public height: number,
+        selectedLevel: number,
+    ) {
         this.level = selectedLevel;
-        this.sizeTransFn = {
+        this.worldToShaderTransform = {
             x: FunctionBuilder.linear2D([
                 [0, 0],
                 [width, 1],
@@ -70,7 +75,10 @@ export class MapMakerGridPlane {
         this.shader.setUniform('uSize', new Vector2(width, depth));
         this.shader.setUniform(
             'uStepSize',
-            new Vector2(this.sizeTransFn.x(1), this.sizeTransFn.z(1)),
+            new Vector2(
+                this.worldToShaderTransform.x(1),
+                this.worldToShaderTransform.z(1),
+            ),
         );
         this.previewChunkMesh = new Mesh(
             new PlaneGeometry(1, 1),
@@ -87,8 +95,8 @@ export class MapMakerGridPlane {
         // Initialize preview mesh
         {
             const set = this.maker.landscape.sets[this.previewSetIdx];
-            const chunk = set.chunks[this.previewChunkIdx];
-            this.setPreviewChunkMesh(set.name, chunk.name);
+            const meshData = set.chunks[this.previewChunkIdx];
+            this.setPreviewChunkMesh(set.id, meshData.id);
         }
         this.unsubs.push(
             Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state) => {
@@ -132,28 +140,38 @@ export class MapMakerGridPlane {
                     const inter = this.getIntersectionWithGrid(state);
                     if (inter[0]) {
                         const setId = this.maker.landscape.sets[0].id;
-                        const setName = this.maker.landscape.sets[0].name;
                         const chunkData =
                             this.maker.landscape.sets[0].chunks[
                                 this.previewChunkIdx
-                                ];
-                        maker.landscape.setChunk({
-                            mesh: chunkData.name,
-                            set_id: setId,
-                            set_name: setName,
-                            id: matToVecIndex(
+                            ];
+                        maker.landscape.setChunk(
+                            ChunkManipulation.create(
+                                chunkData.id,
+                                setId,
                                 this.activeCell[0],
                                 this.activeCell[1],
-                                maker.landscape.data.size.width,
+                                this.level,
+                                [this.mirror[0], this.mirror[1]],
+                                this.rotation,
                             ),
-                            position: {
-                                x: this.activeCell[0],
-                                y: this.level,
-                                z: this.activeCell[1],
-                            },
-                            mirror: [...this.mirror],
-                            rotation: this.rotation,
-                        });
+                            //     {
+                            //     mesh: chunkData.name,
+                            //     set_id: setId,
+                            //     set_name: setName,
+                            //     id: matToVecIndex(
+                            //         this.activeCell[0],
+                            //         this.activeCell[1],
+                            //         maker.landscape.data.size.width,
+                            //     ),
+                            //     position: {
+                            //         x: this.activeCell[0],
+                            //         y: this.level,
+                            //         z: this.activeCell[1],
+                            //     },
+                            //     mirror: [...this.mirror],
+                            //     rotation: this.rotation,
+                            // }
+                        );
                         this.activeCell = this.getCell(
                             inter[0].point.x,
                             inter[0].point.z,
@@ -164,13 +182,13 @@ export class MapMakerGridPlane {
             Keyboard.subscribe(KeyboardEventType.KEY_DOWN, (state) => {
                 if (state.r) {
                     const set = maker.landscape.sets[this.previewSetIdx];
-                    const chunkData = set.chunks[this.previewChunkIdx];
+                    const meshData = set.chunks[this.previewChunkIdx];
                     if (state.shift) {
                         this.rotation = (this.rotation - 1) % 4;
                     } else {
                         this.rotation = (this.rotation + 1) % 4;
                     }
-                    this.setPreviewChunkMesh(set.name, chunkData.name);
+                    this.setPreviewChunkMesh(set.id, meshData.id);
                 }
                 if (state.q) {
                     if (state.shift) {
@@ -185,44 +203,44 @@ export class MapMakerGridPlane {
                                 .length;
                     }
                     const set = maker.landscape.sets[this.previewSetIdx];
-                    const chunkData = set.chunks[this.previewChunkIdx];
-                    this.setPreviewChunkMesh(set.name, chunkData.name);
+                    const meshData = set.chunks[this.previewChunkIdx];
+                    this.setPreviewChunkMesh(set.id, meshData.id);
                 }
                 if (state.x) {
                     const set = maker.landscape.sets[this.previewSetIdx];
-                    const chunkData = set.chunks[this.previewChunkIdx];
+                    const meshData = set.chunks[this.previewChunkIdx];
                     this.mirror[0] *= -1;
-                    this.setPreviewChunkMesh(set.name, chunkData.name);
+                    this.setPreviewChunkMesh(set.id, meshData.id);
                 }
                 if (state.z) {
                     const set = maker.landscape.sets[this.previewSetIdx];
-                    const chunkData = set.chunks[this.previewChunkIdx];
+                    const meshData = set.chunks[this.previewChunkIdx];
                     this.mirror[1] *= -1;
-                    this.setPreviewChunkMesh(set.name, chunkData.name);
+                    this.setPreviewChunkMesh(set.id, meshData.id);
                 }
                 if (state['>'] || state['<']) {
                     if (!this.maker) {
                         return;
                     }
-                    const data = this.maker.landscape.data;
+                    // const data = this.maker.landscape.data;
                     const set = maker.landscape.sets[this.previewSetIdx];
-                    const chunkData = set.chunks[this.previewChunkIdx];
+                    const meshData = set.chunks[this.previewChunkIdx];
                     if (state['>']) {
                         this.level++;
                     } else if (state['<']) {
                         this.level--;
                     }
-                    if (data.levels.length === this.level) {
+                    if (this.level > this.height) {
                         this.level--;
                     } else if (this.level < 0) {
                         this.level = 0;
                     }
-                    if (!data.levels[this.level]) {
-                        data.levels[this.level] = {
-                            chunks: [],
-                        };
-                    }
-                    this.setPreviewChunkMesh(set.name, chunkData.name);
+                    // if (!data.levels[this.level]) {
+                    //     data.levels[this.level] = {
+                    //         chunks: [],
+                    //     };
+                    // }
+                    this.setPreviewChunkMesh(set.id, meshData.id);
                     this.mesh.position.set(
                         this.maker.landscape.data.size.width / 2,
                         this.level + 0.1,
@@ -243,14 +261,14 @@ export class MapMakerGridPlane {
         );
     }
 
-    private setPreviewChunkMesh(setName: string, meshName: string) {
+    private setPreviewChunkMesh(setId: number, meshId: number) {
         if (!this.maker) {
             return;
         }
         this.maker?.scene.remove(this.previewChunkMesh);
         this.previewChunkMesh = this.maker.landscape.getChunkMesh(
-            setName,
-            meshName,
+            setId,
+            meshId,
         );
         this.previewChunkMesh.scale.x *= this.mirror[0];
         this.previewChunkMesh.scale.z *= this.mirror[1];
@@ -287,7 +305,10 @@ export class MapMakerGridPlane {
     }
 
     transformXZ(x: number, z: number): [number, number] {
-        return [this.sizeTransFn.x(x), this.sizeTransFn.z(z)];
+        return [
+            this.worldToShaderTransform.x(x),
+            this.worldToShaderTransform.z(z),
+        ];
     }
 
     destroy() {

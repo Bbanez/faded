@@ -29,7 +29,7 @@ impl Data {
         CHARACTERS.iter().cloned().find(|e| e.id == id)
     }
 
-    pub fn find_landscape_by_id(id: usize) -> Option<LandscapeSet> {
+    pub fn find_landscape_by_id(id: u32) -> Option<LandscapeSet> {
         LANDSCAPES.iter().cloned().find(|e| e.id == id)
     }
 

@@ -1,14 +1,9 @@
 import { api_call } from '../../rust/api-call.ts';
-import {
-    Landscape,
-    LandscapeChunk,
-    LandscapeSet,
-    Point3,
-    USize3,
-} from '../../types/rs';
+import { Landscape, LandscapeSet, Point3, USize3 } from '../../types/rs';
 import { createQueue } from '@banez/queue';
 import { createArrayStore } from '@banez/vue-array-store';
 import { QueueError } from '@banez/queue/types';
+import { Chunk } from '../../map-maker/chunk.ts';
 
 export class LandscapeHandler {
     private rust_landscape_create = api_call<
@@ -22,11 +17,9 @@ export class LandscapeHandler {
     private rust_landscape_set_chunk = api_call<
         {
             id: string;
-            levelIdx: number;
-            chunkIdx: number;
-            chunk: LandscapeChunk;
+            chunkData: number;
         },
-        LandscapeChunk
+        number
     >('landscape_set_chunk');
     private rust_landscape_save = api_call<void, Landscape[]>('landscape_save');
     private rust_landscape_get = api_call<{ id: string }, Landscape>(
@@ -36,14 +29,20 @@ export class LandscapeHandler {
         'landscape_get_all',
     );
     private rust_landscape_get_set_chunks = api_call<
-        { setId: string },
-        LandscapeChunk[]
+        { setId: number },
+        number[]
     >('landscape_get_set_chunks');
     private rust_landscape_get_sets = api_call<void, LandscapeSet[]>(
         'landscape_get_sets',
     );
     private rust_landscape_set_camera = api_call<
-        { id: string; position: Point3; rotation: number; distance: number, speed: number },
+        {
+            id: string;
+            position: Point3;
+            rotation: number;
+            distance: number;
+            speed: number;
+        },
         Point3
     >('landscape_set_camera');
     private rust_landscape_set_selected_level = api_call<
@@ -66,19 +65,18 @@ export class LandscapeHandler {
 
     async setChunk(
         id: string,
-        levelIdx: number,
-        chunkIdx: number,
-        chunk: LandscapeChunk,
+        chunkBits: number,
+        mapWidth: number,
+        mapDepth: number,
     ) {
         const result = await this.rust_landscape_set_chunk({
             id,
-            chunk,
-            chunkIdx,
-            levelIdx,
+            chunkData: chunkBits,
         });
         const landscape = this.store.findById(id);
         if (landscape) {
-            landscape.levels[levelIdx].chunks[chunkIdx] = chunk;
+            const chunk = new Chunk(chunkBits, mapWidth, mapDepth);
+            landscape.chunks[chunk.id] = chunkBits;
         }
         return result;
     }
@@ -163,7 +161,7 @@ export class LandscapeHandler {
         return queue.data;
     }
 
-    async getSetChunks(setId: string) {
+    async getSetChunks(setId: number) {
         return await this.rust_landscape_get_set_chunks({ setId });
     }
 

@@ -6,7 +6,7 @@ pub mod demo;
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct LandscapeChunkData {
-    pub id: usize,
+    pub id: u32,
     pub name: &'static str,
     pub rotation: usize,
     pub sock_x: (usize, usize),
@@ -17,7 +17,7 @@ pub struct LandscapeChunkData {
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct LandscapeSet {
-    pub id: usize,
+    pub id: u32,
     pub name: &'static str,
     pub chunks: [LandscapeChunkData; 27],
 }
