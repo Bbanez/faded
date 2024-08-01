@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::{GameState, util};
-use crate::game::data::Data;
 use crate::game::data::landscapes::LandscapeSet;
+use crate::game::data::Data;
 use crate::game::point::Point3;
 use crate::game::size::USize3;
-use crate::map_maker::chunk;
+use crate::map_maker::chunk_64;
 use crate::response::TauriResponse;
 use crate::storage::Storage;
+use crate::{util, GameState};
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
@@ -19,7 +19,7 @@ pub struct Landscape {
     pub name: String,
     pub desc: String,
     pub size: USize3,
-    pub chunks: Vec<u32>,
+    pub chunks: Vec<(u32, u32)>,
     pub camera_position: Point3,
     pub camera_rotation: f32,
     pub camera_d: f32,
@@ -28,7 +28,16 @@ pub struct Landscape {
 }
 
 impl Landscape {
-    pub fn new(name: String, desc: String, size: USize3, camera_position: Point3, camera_rotation: f32, camera_d: f32, camera_speed: f32, selected_level: usize) -> Landscape {
+    pub fn new(
+        name: String,
+        desc: String,
+        size: USize3,
+        camera_position: Point3,
+        camera_rotation: f32,
+        camera_d: f32,
+        camera_speed: f32,
+        selected_level: usize,
+    ) -> Landscape {
         let time = util::time::get_current_millis();
         let id = util::id::generate();
         let mut landscape = Landscape {
@@ -48,13 +57,9 @@ impl Landscape {
         for y in 0..size.height as u32 {
             for z in 0..size.depth as u32 {
                 for x in 0..size.width as u32 {
-                    landscape.chunks.push(chunk::create(
-                        0,
-                        0,
-                        x, z, y,
-                        (0, 0),
-                        0)
-                    );
+                    landscape
+                        .chunks
+                        .push(chunk_64::create(0, 0, x, z, y, (0, 0), 0));
                 }
             }
         }
@@ -63,7 +68,12 @@ impl Landscape {
 }
 
 #[tauri::command]
-pub fn landscape_create(state: tauri::State<GameState>, name: &str, desc: &str, size: USize3) -> TauriResponse<Landscape> {
+pub fn landscape_create(
+    state: tauri::State<GameState>,
+    name: &str,
+    desc: &str,
+    size: USize3,
+) -> TauriResponse<Landscape> {
     let mut state_guard = state.0.lock().unwrap();
     let landscape = Landscape::new(
         name.to_string(),
@@ -80,7 +90,14 @@ pub fn landscape_create(state: tauri::State<GameState>, name: &str, desc: &str, 
 }
 
 #[tauri::command]
-pub fn landscape_set_camera(state: tauri::State<GameState>, id: &str, position: Point3, rotation: f32, distance: f32, speed: f32) -> TauriResponse<Point3> {
+pub fn landscape_set_camera(
+    state: tauri::State<GameState>,
+    id: &str,
+    position: Point3,
+    rotation: f32,
+    distance: f32,
+    speed: f32,
+) -> TauriResponse<Point3> {
     let mut state_guard = state.0.lock().unwrap();
     for i in 0..state_guard.landscapes.len() {
         if state_guard.landscapes[i].id == id {
@@ -92,14 +109,15 @@ pub fn landscape_set_camera(state: tauri::State<GameState>, id: &str, position: 
             return TauriResponse::new(position);
         }
     }
-    TauriResponse::new_error_string(
-        404,
-        format!("Landscape with ID '{}' does not exist", id),
-    )
+    TauriResponse::new_error_string(404, format!("Landscape with ID '{}' does not exist", id))
 }
 
 #[tauri::command]
-pub fn landscape_set_selected_level(state: tauri::State<GameState>, id: &str, level: usize) -> TauriResponse<usize> {
+pub fn landscape_set_selected_level(
+    state: tauri::State<GameState>,
+    id: &str,
+    level: usize,
+) -> TauriResponse<usize> {
     let mut state_guard = state.0.lock().unwrap();
     for i in 0..state_guard.landscapes.len() {
         if state_guard.landscapes[i].id == id {
@@ -108,14 +126,14 @@ pub fn landscape_set_selected_level(state: tauri::State<GameState>, id: &str, le
             return TauriResponse::new(level);
         }
     }
-    TauriResponse::new_error_string(
-        404,
-        format!("Landscape with ID '{}' does not exist", id),
-    )
+    TauriResponse::new_error_string(404, format!("Landscape with ID '{}' does not exist", id))
 }
 
 #[tauri::command]
-pub fn landscape_update(state: tauri::State<GameState>, landscape: Landscape) -> TauriResponse<Landscape> {
+pub fn landscape_update(
+    state: tauri::State<GameState>,
+    landscape: Landscape,
+) -> TauriResponse<Landscape> {
     let mut state_guard = state.0.lock().unwrap();
     for i in 0..state_guard.landscapes.len() {
         if state_guard.landscapes[i].id == landscape.id {
@@ -132,24 +150,25 @@ pub fn landscape_update(state: tauri::State<GameState>, landscape: Landscape) ->
 }
 
 #[tauri::command]
-pub fn landscape_set_chunk(state: tauri::State<GameState>, id: &str, chunk_data: u32) -> TauriResponse<u32> {
+pub fn landscape_set_chunk(
+    state: tauri::State<GameState>,
+    id: &str,
+    chunk_data: (u32, u32),
+) -> TauriResponse<(u32, u32)> {
     let mut state_guard = state.0.lock().unwrap();
     for i in 0..state_guard.landscapes.len() {
         if state_guard.landscapes[i].id == id {
             state_guard.landscapes[i].updated_at = util::time::get_current_millis();
-            let chunk_id = chunk::get_id(
+            let chunk_id = chunk_64::get_id(
                 chunk_data,
                 state_guard.landscapes[i].size.width as u32,
-                state_guard.landscapes[i].size.depth as u32
+                state_guard.landscapes[i].size.depth as u32,
             ) as usize;
             state_guard.landscapes[i].chunks[chunk_id] = chunk_data;
             return TauriResponse::new(state_guard.landscapes[i].chunks[chunk_id].clone());
         }
     }
-    TauriResponse::new_error_string(
-        404,
-        format!("Landscape with ID '{}' does not exist", id),
-    )
+    TauriResponse::new_error_string(404, format!("Landscape with ID '{}' does not exist", id))
 }
 
 #[tauri::command]
@@ -168,10 +187,7 @@ pub fn landscape_get(state: tauri::State<GameState>, id: &str) -> TauriResponse<
     if let Some(landscape) = state_guard.landscapes.iter().find(|l| l.id == id) {
         return TauriResponse::new(landscape.clone());
     }
-    TauriResponse::new_error_string(
-        404,
-        format!("Landscape with ID '{}' does not exist", id),
-    )
+    TauriResponse::new_error_string(404, format!("Landscape with ID '{}' does not exist", id))
 }
 
 #[tauri::command]
@@ -181,29 +197,21 @@ pub fn landscape_get_all(state: tauri::State<GameState>) -> TauriResponse<Vec<La
 }
 
 #[tauri::command]
-pub fn landscape_get_set_chunks(set_id: u32) -> TauriResponse<Vec<u32>> {
+pub fn landscape_get_set_chunks(set_id: u32) -> TauriResponse<Vec<(u32, u32)>> {
     let landscape_set_opt = Data::find_landscape_by_id(set_id);
     match landscape_set_opt {
-        Some(landscape_set) => {
-            TauriResponse::new(
-                landscape_set.chunks.iter().map(|c| chunk::create(
-                    c.id,
-                    landscape_set.id,
-                    0,
-                    0,
-                    0,
-                    (0, 0),
-                    0,
-                )).collect()
-            )
-
-        }
+        Some(landscape_set) => TauriResponse::new(
+            landscape_set
+                .chunks
+                .iter()
+                .map(|c| chunk_64::create(c.id, landscape_set.id, 0, 0, 0, (0, 0), 0))
+                .collect(),
+        ),
         None => {
             return TauriResponse::new_error_string(
                 404,
                 format!("Landscape set '{}' does not exist", set_id),
             )
-
         }
     }
 }

@@ -15,7 +15,7 @@ import { Mouse, MouseEventType, MouseState } from '../game/mouse.ts';
 import { FunctionBuilder, Linear2DFn } from '../game/math/function-builder.ts';
 import { MapMaker } from './main.ts';
 import { Keyboard, KeyboardEventType } from '../game/keyboard.ts';
-import { ChunkManipulation } from './chunk.ts';
+import { ChunkManipulation64 } from './chunk-64.ts';
 
 export class MapMakerGridPlane {
     mesh: Mesh;
@@ -144,8 +144,9 @@ export class MapMakerGridPlane {
                             this.maker.landscape.sets[0].chunks[
                                 this.previewChunkIdx
                             ];
+                        console.log({ chunkData });
                         maker.landscape.setChunk(
-                            ChunkManipulation.create(
+                            ChunkManipulation64.create(
                                 chunkData.id,
                                 setId,
                                 this.activeCell[0],

@@ -2,9 +2,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { computed, defineComponent, onMounted } from 'vue';
 import type { JSX } from 'vue/jsx-runtime';
 import { useRoute, useRouter } from 'vue-router';
-import { Views } from '../router.ts';
-import { useSdk } from '../sdk/main.ts';
-import { throwable } from '../util/throwable.ts';
+import { useSdk } from '@fdd/sdk/main.ts';
+import { Views } from '@fdd/router.ts';
+import { throwable } from '@fdd/util/throwable.ts';
 
 export interface DefaultLayoutNavItem {
     text: string;

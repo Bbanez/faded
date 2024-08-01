@@ -3,7 +3,7 @@ import { Landscape, LandscapeSet, Point3, USize3 } from '../../types/rs';
 import { createQueue } from '@banez/queue';
 import { createArrayStore } from '@banez/vue-array-store';
 import { QueueError } from '@banez/queue/types';
-import { Chunk } from '../../map-maker/chunk.ts';
+import { ChunkManipulation64 } from '@fdd/map-maker/chunk-64.ts';
 
 export class LandscapeHandler {
     private rust_landscape_create = api_call<
@@ -17,9 +17,9 @@ export class LandscapeHandler {
     private rust_landscape_set_chunk = api_call<
         {
             id: string;
-            chunkData: number;
+            chunkData: [number, number];
         },
-        number
+        [number, number]
     >('landscape_set_chunk');
     private rust_landscape_save = api_call<void, Landscape[]>('landscape_save');
     private rust_landscape_get = api_call<{ id: string }, Landscape>(
@@ -30,7 +30,7 @@ export class LandscapeHandler {
     );
     private rust_landscape_get_set_chunks = api_call<
         { setId: number },
-        number[]
+        Array<[number, number]>
     >('landscape_get_set_chunks');
     private rust_landscape_get_sets = api_call<void, LandscapeSet[]>(
         'landscape_get_sets',
@@ -65,7 +65,7 @@ export class LandscapeHandler {
 
     async setChunk(
         id: string,
-        chunkBits: number,
+        chunkBits: [number, number],
         mapWidth: number,
         mapDepth: number,
     ) {
@@ -75,8 +75,12 @@ export class LandscapeHandler {
         });
         const landscape = this.store.findById(id);
         if (landscape) {
-            const chunk = new Chunk(chunkBits, mapWidth, mapDepth);
-            landscape.chunks[chunk.id] = chunkBits;
+            const chunkId = ChunkManipulation64.getId(
+                chunkBits,
+                mapWidth,
+                mapDepth,
+            );
+            landscape.chunks[chunkId] = chunkBits;
         }
         return result;
     }

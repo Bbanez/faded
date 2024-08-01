@@ -1,13 +1,19 @@
 import { PropType, defineComponent } from 'vue';
 import { DefaultComponentProps } from './_default';
-
-export type ButtonType = 'primary';
+import { clsx } from 'clsx';
 
 export const buttonStyle = {
     primary: {
-        class: 'bg-slate-400 px-4 py-2 hover:bg-slate-600 transition-all',
+        class: clsx('bg-slate-400 px-4 py-2 hover:bg-slate-600 transition-all'),
+    },
+    ghost: {
+        class: clsx(
+            'text-slate-400 px-4 py-2 hover:text-slate-100 transition-all',
+        ),
     },
 };
+
+export type ButtonType = keyof typeof buttonStyle;
 
 export const Button = defineComponent({
     props: {

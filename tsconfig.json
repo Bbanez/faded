@@ -20,7 +20,12 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "types": ["vite-plugin-glsl/ext", "node"]
+        "esModuleInterop": true,
+        "types": ["vite-plugin-glsl/ext", "node"],
+        "paths": {
+            "@fdd": ["./src"],
+            "@fdd/*": ["./src/*"]
+        }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
     "references": [{ "path": "./tsconfig.node.json" }]

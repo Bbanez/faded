@@ -25,7 +25,7 @@ import {
     scaleGeometry,
     translateGeometry,
 } from '../game/util/geometry.ts';
-import { Chunk } from './chunk.ts';
+import { Chunk64 } from './chunk-64.ts';
 
 export interface LandscapeMesh {
     setId: number;
@@ -85,7 +85,7 @@ export class Landscape {
         );
         this.mountedMashes = Array(this.data.chunks.length).fill(undefined);
         for (let i = 0; i < this.data.chunks.length; i++) {
-            const chunk = new Chunk(
+            const chunk = new Chunk64(
                 this.data.chunks[i],
                 data.size.width,
                 data.size.depth,
@@ -106,14 +106,15 @@ export class Landscape {
                 mesh,
             };
         }
-        console.log(this.mountedMashes);
+        const meshesFiltered = this.mountedMashes
+            .filter((e) => e && e.mesh.name !== 'air')
+            .map((e) => {
+                console.log({ e });
+                return e.mesh.geometry;
+            });
         const mergedGeo =
-            this.mountedMashes.length > 0
-                ? mergeGeometries(
-                      this.mountedMashes
-                          .filter((e) => e.mesh.name !== 'air')
-                          .map((e) => e.mesh.geometry),
-                  )
+            meshesFiltered.length > 0
+                ? mergeGeometries(meshesFiltered)
                 : new BufferGeometry();
         this.mesh = new Mesh(mergedGeo, this.shader.material);
         this.mesh.receiveShadow = true;
@@ -121,12 +122,13 @@ export class Landscape {
         this.container.add(this.mesh);
     }
 
-    setChunk(chunkBits: number) {
-        const chunk = new Chunk(
+    setChunk(chunkBits: [number, number]) {
+        const chunk = new Chunk64(
             chunkBits,
             this.data.size.width,
             this.data.size.depth,
         );
+        console.log({ chunk });
         const mesh = this.getChunkMesh(chunk.setId, chunk.meshId);
         mesh.position.set(chunk.x, chunk.y, chunk.z);
         mesh.rotateY(PI12 * chunk.rotation);
@@ -142,11 +144,16 @@ export class Landscape {
             mesh,
             chunkIdx: chunk.id,
         };
-        const mergedGeo = mergeGeometries(
-            this.mountedMashes
-                .filter((e) => e.mesh.name !== 'air')
-                .map((e) => e.mesh.geometry),
-        );
+        console.log({ mesh });
+        const meshesFilterd = this.mountedMashes
+            .filter((e) => e && e.mesh.name !== 'air')
+            .map((e) => {
+                return e.mesh.geometry;
+            });
+        const mergedGeo =
+            meshesFilterd.length > 0
+                ? mergeGeometries(meshesFilterd)
+                : new BufferGeometry();
         this.container.remove(this.mesh);
         this.mesh = new Mesh(mergedGeo, this.shader.material);
         this.mesh.receiveShadow = true;

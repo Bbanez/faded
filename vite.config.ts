@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import glsl from 'vite-plugin-glsl';
+import { fileURLToPath, URL } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -18,6 +19,11 @@ export default defineConfig(async () => ({
         watch: {
             // 3. tell vite to ignore watching `src-tauri`
             ignored: ['**/src-tauri/**'],
+        },
+    },
+    resolve: {
+        alias: {
+            '@fdd': fileURLToPath(new URL('./src', import.meta.url)),
         },
     },
     // 3. to make use of `TAURI_DEBUG` and other env variables

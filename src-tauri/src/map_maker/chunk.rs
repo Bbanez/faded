@@ -35,6 +35,8 @@
 //  |        |      ┕ y-position
 //  |        ┕ set ID
 //  ┕ mesh ID
+//
+//   00000000   0000000000   0000000000   0   0   00
 
 pub struct LandscapeChunk {
     pub id: u32,
@@ -62,11 +64,27 @@ impl LandscapeChunk {
     }
 
     pub fn pack(self) -> u32 {
-        create(self.mesh_id, self.set_id, self.x, self.z, self.y, self.mirror, self.rotation)
+        create(
+            self.mesh_id,
+            self.set_id,
+            self.x,
+            self.z,
+            self.y,
+            self.mirror,
+            self.rotation,
+        )
     }
 }
 
-pub fn create(mesh_id: u32, set_id: u32, x_pos: u32, z_pos: u32, y_pos: u32, mirror: (u32, u32), rotation: u32) -> u32 {
+pub fn create(
+    mesh_id: u32,
+    set_id: u32,
+    x_pos: u32,
+    z_pos: u32,
+    y_pos: u32,
+    mirror: (u32, u32),
+    rotation: u32,
+) -> u32 {
     let mut chunk: u32 = 0;
     chunk = set_mesh_id(chunk, mesh_id);
     chunk = set_set_id(chunk, set_id);
