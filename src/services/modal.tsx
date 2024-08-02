@@ -2,6 +2,10 @@ import {
     ModalConfirm,
     ModalConfirmInput,
 } from '@fdd/components/modals/confirm';
+import {
+    ModalLandscapeCreate,
+    ModalLanscapeCreateOutput,
+} from '@fdd/components/modals/map-maker/landscape-create';
 import type { DefineComponent } from 'vue';
 
 export interface ModalHandlerOptions<Output = unknown> {
@@ -54,6 +58,11 @@ export class ModalHandler<Input = unknown, Output = unknown> {
 export class ModalService {
     handlers = {
         confirm: new ModalHandler<ModalConfirmInput>(ModalConfirm),
+
+        mapMakerLandscapeCreate: new ModalHandler<
+            void,
+            ModalLanscapeCreateOutput
+        >(ModalLandscapeCreate),
     };
 
     mount() {
@@ -72,6 +81,6 @@ export class ModalService {
     }
 }
 
-export const modalService = new ModalService();
+export const modal = new ModalService();
 
-export type ModalHandlers = keyof typeof modalService.handlers;
+export type ModalHandlers = keyof typeof modal.handlers;

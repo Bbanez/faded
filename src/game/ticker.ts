@@ -24,8 +24,6 @@ export class Ticker {
 
     static async tick() {
         if (!Ticker.paused) {
-            Ticker.timeDelta = Date.now() - Ticker.time;
-            Ticker.time = Date.now();
             for (let i = 0; i < Ticker.subs.length; i++) {
                 await Ticker.subs[i].callback(Ticker.time, Ticker.timeDelta);
             }

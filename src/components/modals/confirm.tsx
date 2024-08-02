@@ -6,7 +6,7 @@ import { TextInput } from '../inputs/text';
 
 export interface ModalConfirmInput {
     title: string;
-    content: string | JSX.Element;
+    content: string | (() => JSX.Element);
     prompt?: string;
 }
 
@@ -52,7 +52,11 @@ export const ModalConfirm = defineComponent({
                 doneText={'Confirm'}
             >
                 <div>
-                    <div>{data.value.content}</div>
+                    <div>
+                        {typeof data.value.content === 'function'
+                            ? data.value.content()
+                            : data.value.content}
+                    </div>
                     {data.value.prompt && (
                         <TextInput
                             id={`confirm_prompt`}

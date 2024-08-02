@@ -21,7 +21,7 @@ export class MapMakerGridPlane {
     mesh: Mesh;
     rotation = 0;
     level = 0;
-    mirror: [number, number] = [1, 1];
+    mirror: [number, number] = [0, 0];
     shader = new ShaderManager(
         gridPlaneVsh,
         gridPlaneFsh,
@@ -144,7 +144,6 @@ export class MapMakerGridPlane {
                             this.maker.landscape.sets[0].chunks[
                                 this.previewChunkIdx
                             ];
-                        console.log({ chunkData });
                         maker.landscape.setChunk(
                             ChunkManipulation64.create(
                                 chunkData.id,
@@ -155,23 +154,6 @@ export class MapMakerGridPlane {
                                 [this.mirror[0], this.mirror[1]],
                                 this.rotation,
                             ),
-                            //     {
-                            //     mesh: chunkData.name,
-                            //     set_id: setId,
-                            //     set_name: setName,
-                            //     id: matToVecIndex(
-                            //         this.activeCell[0],
-                            //         this.activeCell[1],
-                            //         maker.landscape.data.size.width,
-                            //     ),
-                            //     position: {
-                            //         x: this.activeCell[0],
-                            //         y: this.level,
-                            //         z: this.activeCell[1],
-                            //     },
-                            //     mirror: [...this.mirror],
-                            //     rotation: this.rotation,
-                            // }
                         );
                         this.activeCell = this.getCell(
                             inter[0].point.x,
@@ -210,13 +192,13 @@ export class MapMakerGridPlane {
                 if (state.x) {
                     const set = maker.landscape.sets[this.previewSetIdx];
                     const meshData = set.chunks[this.previewChunkIdx];
-                    this.mirror[0] *= -1;
+                    this.mirror[0] = this.mirror[0] ? 0 : 1;
                     this.setPreviewChunkMesh(set.id, meshData.id);
                 }
                 if (state.z) {
                     const set = maker.landscape.sets[this.previewSetIdx];
                     const meshData = set.chunks[this.previewChunkIdx];
-                    this.mirror[1] *= -1;
+                    this.mirror[1] = this.mirror[1] ? 0 : 1;
                     this.setPreviewChunkMesh(set.id, meshData.id);
                 }
                 if (state['>'] || state['<']) {
@@ -271,8 +253,8 @@ export class MapMakerGridPlane {
             setId,
             meshId,
         );
-        this.previewChunkMesh.scale.x *= this.mirror[0];
-        this.previewChunkMesh.scale.z *= this.mirror[1];
+        this.previewChunkMesh.scale.x = this.mirror[0] ? -1 : 1;
+        this.previewChunkMesh.scale.z = this.mirror[1] ? -1 : 1;
         this.previewChunkMesh.rotateY(PI12 * this.rotation);
         this.previewChunkMesh.position.set(
             this.activeCell[0] + 0.5,

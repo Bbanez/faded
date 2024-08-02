@@ -149,13 +149,13 @@ export const ModalWrapper = defineComponent({
                 {show.value ? (
                     <Teleport to={`body`}>
                         <div
-                            class={`fixed top-0 left-0 z-100 w-screen h-screen bg-dark/50 flex items-center justify-center text-dark dark:text-white`}
+                            class={`fixed top-0 left-0 z-[100] w-screen h-screen bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center text-white`}
                             onClick={() => {
                                 props.handler.close();
                             }}
                         >
                             <div
-                                class={`flex flex-col bg-white dark:bg-darkGray rounded-xl shadow-xl max-w-[500px] w-full max-h-full overflow-auto`}
+                                class={`flex flex-col bg-gray-950 rounded-xl shadow-xl max-w-[500px] w-full max-h-full overflow-auto`}
                                 onClick={(event) => {
                                     event.stopPropagation();
                                 }}

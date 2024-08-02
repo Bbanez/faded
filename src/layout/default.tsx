@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useSdk } from '@fdd/sdk/main.ts';
 import { Views } from '@fdd/router.ts';
 import { throwable } from '@fdd/util/throwable.ts';
+import { modal } from '@fdd/services/modal';
 
 export interface DefaultLayoutNavItem {
     text: string;
@@ -123,19 +124,7 @@ export const DefaultLayout = defineComponent({
                             {
                                 text: 'Create new map',
                                 onClick: async () => {
-                                    const landscape =
-                                        await sdk.landscape.create(
-                                            uuidv4(),
-                                            '',
-                                            {
-                                                width: 100,
-                                                depth: 100,
-                                                height: 5,
-                                            },
-                                        );
-                                    await router.push(
-                                        `/account/${activeAccount.value?.username}/map-maker/${landscape.id}`,
-                                    );
+                                    await createLandscape();
                                 },
                             },
                             {
@@ -149,6 +138,25 @@ export const DefaultLayout = defineComponent({
             }
             return items;
         });
+
+        function createLandscape() {
+            modal.handlers.mapMakerLandscapeCreate.open({
+                async onDone(output) {
+                    const landscape = await sdk.landscape.create(
+                        output.name,
+                        '',
+                        {
+                            width: output.width,
+                            depth: output.depth,
+                            height: output.height,
+                        },
+                    );
+                    await router.push(
+                        `/account/${activeAccount.value?.username}/map-maker/${landscape.id}`,
+                    );
+                },
+            });
+        }
 
         onMounted(async () => {
             await throwable(async () => {

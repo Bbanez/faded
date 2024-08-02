@@ -93,7 +93,11 @@ export class Landscape {
             const mesh = this.getChunkMesh(chunk.setId, chunk.meshId);
             mesh.position.set(chunk.x + 0.5, chunk.y, chunk.z + 0.5);
             const meshGeo = mesh.geometry.clone();
-            scaleGeometry(meshGeo, [chunk.mirror[0], 1, chunk.mirror[1]]);
+            scaleGeometry(meshGeo, [
+                chunk.mirror[0] ? -1 : 1,
+                1,
+                chunk.mirror[1] ? -1 : 1,
+            ]);
             rotateYGeometry(meshGeo, PI12 * chunk.rotation);
             translateGeometry(meshGeo, [chunk.x + 0.5, chunk.y, chunk.z + 0.5]);
             meshGeo.computeVertexNormals();
@@ -109,7 +113,6 @@ export class Landscape {
         const meshesFiltered = this.mountedMashes
             .filter((e) => e && e.mesh.name !== 'air')
             .map((e) => {
-                console.log({ e });
                 return e.mesh.geometry;
             });
         const mergedGeo =
@@ -128,12 +131,15 @@ export class Landscape {
             this.data.size.width,
             this.data.size.depth,
         );
-        console.log({ chunk });
         const mesh = this.getChunkMesh(chunk.setId, chunk.meshId);
         mesh.position.set(chunk.x, chunk.y, chunk.z);
         mesh.rotateY(PI12 * chunk.rotation);
         const meshGeo = mesh.geometry.clone();
-        scaleGeometry(meshGeo, [chunk.mirror[0], 1, chunk.mirror[1]]);
+        scaleGeometry(meshGeo, [
+            chunk.mirror[0] ? -1 : 1,
+            1,
+            chunk.mirror[1] ? -1 : 1,
+        ]);
         rotateYGeometry(meshGeo, PI12 * chunk.rotation);
         translateGeometry(meshGeo, [chunk.x + 0.5, chunk.y, chunk.z + 0.5]);
         meshGeo.computeVertexNormals();
@@ -144,7 +150,6 @@ export class Landscape {
             mesh,
             chunkIdx: chunk.id,
         };
-        console.log({ mesh });
         const meshesFilterd = this.mountedMashes
             .filter((e) => e && e.mesh.name !== 'air')
             .map((e) => {
@@ -214,7 +219,6 @@ export async function createLandscape(
 ) {
     const sets = await sdk.landscape.getSets();
     const landscape = await sdk.landscape.get(id);
-    console.log({ landscape });
     const chunkNames: {
         [name: string]: boolean;
     } = {};
@@ -229,7 +233,6 @@ export async function createLandscape(
     }
     AssetLoader.register(
         ...Object.keys(chunkNames).map((itemName) => {
-            // const [setName, setId, chunkName, chunkId] = itemName.split('.');
             const itemParts = itemName.split('.');
             const item: AssetLoaderItem = {
                 name: itemName,
@@ -255,10 +258,6 @@ export async function createLandscape(
             meshId: parseInt(meshId),
             data: mesh,
         });
-        // if (!meshes[setName]) {
-        //     meshes[setName] = {};
-        // }
-        // meshes[setName][modelName] = mesh;
     });
     await AssetLoader.run();
     loaderUnsub();

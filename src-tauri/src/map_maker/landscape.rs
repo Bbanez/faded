@@ -55,11 +55,26 @@ impl Landscape {
             selected_level,
         };
         for y in 0..size.height as u32 {
+            let mut mesh_id: u32 = 0;
+            if y == 1 {
+                mesh_id = 1;
+            }
             for z in 0..size.depth as u32 {
                 for x in 0..size.width as u32 {
-                    landscape
-                        .chunks
-                        .push(chunk_64::create(0, 0, x, z, y, (0, 0), 0));
+                    let mut walkable = 0;
+                    if mesh_id == 1 {
+                        walkable = 1;
+                    }
+                    landscape.chunks.push(chunk_64::create(
+                        mesh_id,
+                        0,
+                        x,
+                        z,
+                        y,
+                        (0, 0),
+                        0,
+                        walkable,
+                    ));
                 }
             }
         }
@@ -83,7 +98,7 @@ pub fn landscape_create(
         0.0,
         0.0,
         0.1,
-        0,
+        1,
     );
     state_guard.landscapes.push(landscape.clone());
     return TauriResponse::new(landscape);
@@ -204,7 +219,18 @@ pub fn landscape_get_set_chunks(set_id: u32) -> TauriResponse<Vec<(u32, u32)>> {
             landscape_set
                 .chunks
                 .iter()
-                .map(|c| chunk_64::create(c.id, landscape_set.id, 0, 0, 0, (0, 0), 0))
+                .map(|c| {
+                    chunk_64::create(
+                        c.id,
+                        landscape_set.id,
+                        0,
+                        0,
+                        0,
+                        (0, 0),
+                        0,
+                        c.walkable as u32,
+                    )
+                })
                 .collect(),
         ),
         None => {

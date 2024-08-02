@@ -9,6 +9,7 @@ pub struct LandscapeChunkData {
     pub id: u32,
     pub name: &'static str,
     pub rotation: usize,
+    pub walkable: bool,
     pub sock_x: (usize, usize),
     pub sock_y: (usize, usize),
     pub sock_z: (usize, usize),

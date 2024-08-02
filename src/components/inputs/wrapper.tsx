@@ -30,8 +30,11 @@ export const InputWrapper = defineComponent({
                             <div class="uppercase text-xs">{props.label}</div>
                         )}
                         {props.error && (
-                            <div class={`flex gap-2`}>
-                                <Icon src={`/alert-circle`} class="w-4 h-4" />
+                            <div class={`flex gap-2 text-xs`}>
+                                <Icon
+                                    src={`/feather/alert-circle`}
+                                    class="w-4 h-4"
+                                />
                                 <div>
                                     {typeof props.error === 'function'
                                         ? props.error()

@@ -1,3 +1,5 @@
+export type Chunk64Mirror = [0 | 1, 0 | 1];
+
 export class Chunk64 {
     id: number;
     meshId: number;
@@ -5,7 +7,7 @@ export class Chunk64 {
     y: number;
     z: number;
     x: number;
-    mirror: [number, number];
+    mirror: Chunk64Mirror;
     rotation: number;
 
     constructor(
@@ -73,7 +75,6 @@ export class ChunkManipulation64 {
     }
 
     static setMeshId(chunk: [number, number], mesh_id: number) {
-        console.log({ mesh_id });
         chunk[0] = (chunk[0] & 0xfff003ff) | ((mesh_id & 0x3ff) << 10);
     }
     static getMeshId(chunk: [number, number]): number {
@@ -108,14 +109,14 @@ export class ChunkManipulation64 {
         return (chunk[1] & 0x7f0) >> 4;
     }
 
-    static setZMirror(chunk: [number, number], z_mirror: number) {
+    static setZMirror(chunk: [number, number], z_mirror: 0 | 1) {
         chunk[1] = (chunk[1] & 0xfffffff7) | ((z_mirror & 0x1) << 3);
     }
     static getZMirror(chunk: [number, number]): number {
         return (chunk[1] & 0x8) >> 3;
     }
 
-    static setXMirror(chunk: [number, number], x_mirror: number) {
+    static setXMirror(chunk: [number, number], x_mirror: 0 | 1) {
         chunk[1] = (chunk[1] & 0xfffffffb) | ((x_mirror & 0x1) << 2);
     }
     static getXMirror(chunk: [number, number]): number {

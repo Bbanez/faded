@@ -3,6 +3,7 @@ import { RouterView, useRoute } from 'vue-router';
 import { RouteMeta } from './router.ts';
 import { layouts } from './layout';
 import { Toast } from './components/toast.tsx';
+import { modal } from './services/modal.tsx';
 
 export const App = defineComponent({
     setup() {
@@ -18,6 +19,7 @@ export const App = defineComponent({
                     <RouterView />
                 </Layout.value>
 
+                {modal.mount()}
                 <Toast />
             </div>
         );

@@ -11,19 +11,20 @@
 // 8     | set ID
 // 10    | mesh ID
 //
-//   0                                          1
-//   |--------------------------------------|   |-----------------------------------------------|
-//    31             19           9              31         23           13           3   2   1
-//    000000000000   0000000000   0000000000 <-> 00000000   0000000000   0000000000   0   0   00
-//   |------------| |----------| |----------|   |--------| |----------| |----------| |-| |-| |--|
-//   |              |            |              |          |            |            |   |   ┕ rotation
-//   |              |            |              |          |            |            |   ┕ x-mirror
-//   |              |            |              |          |            |            ┕ z-mirror
-//   |              |            |              |          |            ┕ x-position
-//   |              |            |              |          ┕ z-position
-//   |              |            |              ┕ set ID
-//   |              |            ┕ y-position
-//   |              ┕ mesh ID
+//   0                                             1
+//   |-----------------------------------------|   |-----------------------------------------------|
+//    31            20  19           9              31         23           13           3   2   1
+//    00000000000   0   0000000000   0000000000 <-> 00000000   0000000000   0000000000   0   0   00
+//   |-----------| |-| |----------| |----------|   |--------| |----------| |----------| |-| |-| |--|
+//   |             |   |            |              |          |            |            |   |   ┕ rotation
+//   |             |   |            |              |          |            |            |   ┕ x-mirror
+//   |             |   |            |              |          |            |            ┕ z-mirror
+//   |             |   |            |              |          |            ┕ x-position
+//   |             |   |            |              |          ┕ z-position
+//   |             |   |            |              ┕ set ID
+//   |             |   |            ┕ y-position
+//   |             |   ┕ mesh ID
+//   |             ┕ walkable
 //   ┕ NOT USED
 
 pub struct LandscapeChunk64 {
@@ -35,6 +36,7 @@ pub struct LandscapeChunk64 {
     pub x: u32,
     pub mirror: (u32, u32),
     pub rotation: u32,
+    pub walkable: u32,
 }
 
 impl LandscapeChunk64 {
@@ -48,6 +50,7 @@ impl LandscapeChunk64 {
             x: get_x_pos(chunk),
             mirror: (get_x_mirror(chunk), get_z_mirror(chunk)),
             rotation: get_rotation(chunk),
+            walkable: get_walkable(chunk),
         }
     }
 
@@ -60,6 +63,7 @@ impl LandscapeChunk64 {
             self.y,
             self.mirror,
             self.rotation,
+            self.walkable,
         )
     }
 }
@@ -72,6 +76,7 @@ pub fn create(
     y_pos: u32,
     mirror: (u32, u32),
     rotation: u32,
+    walkable: u32,
 ) -> (u32, u32) {
     let mut chunk: (u32, u32) = (0, 0);
     set_mesh_id(&mut chunk, mesh_id);
@@ -82,6 +87,7 @@ pub fn create(
     set_x_mirror(&mut chunk, mirror.0);
     set_z_mirror(&mut chunk, mirror.1);
     set_rotation(&mut chunk, rotation);
+    set_walkable(&mut chunk, walkable);
     chunk
 }
 
@@ -90,6 +96,13 @@ pub fn get_id(chunk: (u32, u32), map_width: u32, map_depth: u32) -> u32 {
     let y = get_y_pos(chunk);
     let z = get_z_pos(chunk);
     x + z * map_width + y * map_width * map_depth
+}
+
+pub fn set_walkable(chunk: &mut (u32, u32), walkable: u32) {
+    chunk.0 = (chunk.0 & 0xFFEFFFFF) | ((walkable & 0x1) << 20);
+}
+pub fn get_walkable(chunk: (u32, u32)) -> u32 {
+    (chunk.0 & 0x100000) >> 20
 }
 
 pub fn set_mesh_id(chunk: &mut (u32, u32), mesh_id: u32) {
