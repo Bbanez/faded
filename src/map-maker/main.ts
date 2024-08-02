@@ -10,6 +10,7 @@ import { MapMakerRenderer } from './renderer.ts';
 import { createLandscape, Landscape } from './landscape.ts';
 import { MapMakerLights } from './lights.ts';
 import { AssetLoader } from '../game/asset-loader.ts';
+import { Water, createWater } from '@fdd/game/water.ts';
 
 export class MapMaker {
     public fps: FPS = new FPS();
@@ -25,7 +26,8 @@ export class MapMaker {
         public el: HTMLElement,
         public sdk: Sdk,
         public landscape: Landscape,
-        skybox: CubeTexture,
+        public skybox: CubeTexture,
+        public water: Water,
     ) {
         this.lights = new MapMakerLights(this);
         this.scene.background = skybox;
@@ -45,6 +47,7 @@ export class MapMaker {
             this.scene,
             this.camera.cam,
         );
+        this.scene.add(this.water.mesh);
         Mouse.init();
         Keyboard.init();
         Ticker.reset();
@@ -78,12 +81,13 @@ export class MapMaker {
         if (this.landscape) {
             this.landscape.destroy();
         }
+        this.water.destroy();
     }
 }
 
 export async function createMapMaker(el: HTMLElement, landscapeId: string) {
     const sdk = useSdk();
-    const landscape = await createLandscape(landscapeId, sdk, 10, 10);
+    const landscape = await createLandscape(landscapeId, sdk);
     AssetLoader.register({
         name: 'skybox',
         path: [
@@ -104,7 +108,17 @@ export async function createMapMaker(el: HTMLElement, landscapeId: string) {
     });
     await AssetLoader.run();
     loaderUnsub();
-    const maker = new MapMaker(el, sdk, landscape, skybox);
+    const maker = new MapMaker(
+        el,
+        sdk,
+        landscape,
+        skybox,
+        await createWater(
+            landscape.data.size.width,
+            landscape.data.size.depth,
+            0.8,
+        ),
+    );
     landscape.initialize(maker);
     return maker;
 }

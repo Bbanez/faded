@@ -73,8 +73,6 @@ export class Landscape {
         public data: RustLandscape,
         public sets: LandscapeSet[],
         public meshes: LandscapeMeshes,
-        public width: number,
-        public height: number,
     ) {
         this.container = new Group();
         this.gridPlane = new MapMakerGridPlane(
@@ -211,12 +209,7 @@ export class Landscape {
     }
 }
 
-export async function createLandscape(
-    id: string,
-    sdk: Sdk,
-    width: number,
-    height: number,
-) {
+export async function createLandscape(id: string, sdk: Sdk) {
     const sets = await sdk.landscape.getSets();
     const landscape = await sdk.landscape.get(id);
     const chunkNames: {
@@ -261,5 +254,5 @@ export async function createLandscape(
     });
     await AssetLoader.run();
     loaderUnsub();
-    return new Landscape(sdk, landscape, sets, meshes, width, height);
+    return new Landscape(sdk, landscape, sets, meshes);
 }

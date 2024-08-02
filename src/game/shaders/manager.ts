@@ -18,7 +18,10 @@ export class ShaderManager<Uniforms = unknown> {
         public vert: string,
         public frag: string,
         uniforms?: Uniforms,
-        options?: Omit<ShaderMaterialParameters, 'uniforms' | 'fragmentShader' | 'vertexShader'>,
+        options?: Omit<
+            ShaderMaterialParameters,
+            'uniforms' | 'fragmentShader' | 'vertexShader'
+        >,
     ) {
         const shaderUniforms: ShaderUniforms = {};
         if (uniforms) {
