@@ -1,9 +1,14 @@
 import { api_call } from '../../rust/api-call.ts';
-import { Landscape, LandscapeSet, Point3, USize3 } from '../../types/rs';
+import {
+    Landscape,
+    LandscapeLite,
+    LandscapeSet,
+    Point3,
+    USize3,
+} from '../../types/rs';
 import { createQueue } from '@banez/queue';
 import { createArrayStore } from '@banez/vue-array-store';
 import { QueueError } from '@banez/queue/types';
-import { ChunkManipulation64 } from '@fdd/map-maker/chunk-64.ts';
 
 export class LandscapeHandler {
     private rust_landscape_create = api_call<
@@ -25,7 +30,7 @@ export class LandscapeHandler {
     private rust_landscape_get = api_call<{ id: string }, Landscape>(
         'landscape_get',
     );
-    private rust_landscape_get_all = api_call<void, Landscape[]>(
+    private rust_landscape_get_all = api_call<void, LandscapeLite[]>(
         'landscape_get_all',
     );
     private rust_landscape_get_set_chunks = api_call<
@@ -50,12 +55,12 @@ export class LandscapeHandler {
         number
     >('landscape_set_selected_level');
 
-    private getAllQueue = createQueue<Landscape[]>();
+    private getAllQueue = createQueue<LandscapeLite[]>();
     private latch: {
         [name: string]: boolean;
     } = {};
 
-    store = createArrayStore<Landscape>('id', []);
+    store = createArrayStore<LandscapeLite>('id', []);
 
     async create(name: string, desc: string, size: USize3) {
         const result = await this.rust_landscape_create({ name, desc, size });
@@ -66,22 +71,22 @@ export class LandscapeHandler {
     async setChunk(
         id: string,
         chunkBits: [number, number],
-        mapWidth: number,
-        mapDepth: number,
+        // mapWidth: number,
+        // mapDepth: number,
     ) {
         const result = await this.rust_landscape_set_chunk({
             id,
             chunkData: chunkBits,
         });
-        const landscape = this.store.findById(id);
-        if (landscape) {
-            const chunkId = ChunkManipulation64.getId(
-                chunkBits,
-                mapWidth,
-                mapDepth,
-            );
-            landscape.chunks[chunkId] = chunkBits;
-        }
+        // const landscape = this.store.findById(id);
+        // if (landscape) {
+        //     const chunkId = ChunkManipulation64.getId(
+        //         chunkBits,
+        //         mapWidth,
+        //         mapDepth,
+        //     );
+        //     landscape.chunks[chunkId] = chunkBits;
+        // }
         return result;
     }
 
@@ -135,16 +140,8 @@ export class LandscapeHandler {
         return result;
     }
 
-    async get(id: string, skipCache?: boolean) {
-        if (!skipCache) {
-            const cacheHit = this.store.findById(id);
-            if (cacheHit) {
-                return cacheHit;
-            }
-        }
-        const result = await this.rust_landscape_get({ id });
-        this.store.set(result);
-        return result;
+    async get(id: string): Promise<Landscape> {
+        return await this.rust_landscape_get({ id });
     }
 
     async getAll(skipCache?: boolean) {

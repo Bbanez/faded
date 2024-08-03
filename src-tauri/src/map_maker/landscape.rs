@@ -82,6 +82,40 @@ impl Landscape {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[ts(export)]
+pub struct LandscapeLite {
+    pub id: String,
+    pub created_at: u128,
+    pub updated_at: u128,
+    pub name: String,
+    pub desc: String,
+    pub size: USize3,
+    pub camera_position: Point3,
+    pub camera_rotation: f32,
+    pub camera_d: f32,
+    pub camera_speed: f32,
+    pub selected_level: usize,
+}
+
+impl LandscapeLite {
+    pub fn new_form_landscape(landscape: &Landscape) -> LandscapeLite {
+        LandscapeLite {
+            id: landscape.id.clone(),
+            created_at: landscape.created_at,
+            updated_at: landscape.updated_at,
+            name: landscape.name.clone(),
+            desc: landscape.desc.clone(),
+            size: landscape.size.clone(),
+            camera_position: landscape.camera_position.clone(),
+            camera_rotation: landscape.camera_rotation,
+            camera_d: landscape.camera_d,
+            camera_speed: landscape.camera_speed,
+            selected_level: landscape.selected_level,
+        }
+    }
+}
+
 #[tauri::command]
 pub fn landscape_create(
     state: tauri::State<GameState>,
@@ -206,9 +240,15 @@ pub fn landscape_get(state: tauri::State<GameState>, id: &str) -> TauriResponse<
 }
 
 #[tauri::command]
-pub fn landscape_get_all(state: tauri::State<GameState>) -> TauriResponse<Vec<Landscape>> {
+pub fn landscape_get_all(state: tauri::State<GameState>) -> TauriResponse<Vec<LandscapeLite>> {
     let state_guard = state.0.lock().unwrap();
-    return TauriResponse::new(state_guard.landscapes.clone());
+    return TauriResponse::new(
+        state_guard
+            .landscapes
+            .iter()
+            .map(|l| LandscapeLite::new_form_landscape(l))
+            .collect(),
+    );
 }
 
 #[tauri::command]

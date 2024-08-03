@@ -7,6 +7,10 @@ import {
     Material,
     Mesh,
     MeshBasicMaterial,
+    MirroredRepeatWrapping,
+    RepeatWrapping,
+    Texture,
+    Vector3,
 } from 'three';
 import { Sdk } from '../sdk/main.ts';
 import { AssetLoader, AssetLoaderItem } from '../game/asset-loader.ts';
@@ -26,6 +30,7 @@ import {
     translateGeometry,
 } from '../game/util/geometry.ts';
 import { Chunk64 } from './chunk-64.ts';
+import { Water, createWater } from '@fdd/game/water.ts';
 
 export interface LandscapeMesh {
     setId: number;
@@ -50,10 +55,12 @@ export class Landscape {
         vsh,
         fsh,
         {
-            uGrassColor: new Color('#00ff00'),
+            uGrassColor: new Color('#1f7a39'),
             uCliffColor: new Color('#aaaaaa'),
             uSandColor: new Color('#aa9900'),
             uSnowColor: new Color('#ffffff'),
+            uGrassNoiseTexture: new Texture(),
+            uMapSize: new Vector3(1, 1, 1),
         },
         {
             lights: true,
@@ -73,7 +80,20 @@ export class Landscape {
         public data: RustLandscape,
         public sets: LandscapeSet[],
         public meshes: LandscapeMeshes,
+        grassNoiseTexture: Texture,
+        public water: Water,
     ) {
+        grassNoiseTexture.wrapS = RepeatWrapping;
+        grassNoiseTexture.wrapT = RepeatWrapping;
+        this.shader.setUniform('uGrassNoiseTexture', grassNoiseTexture);
+        this.shader.setUniform(
+            'uMapSize',
+            new Vector3(
+                this.data.size.width,
+                this.data.size.height,
+                this.data.size.depth,
+            ),
+        );
         this.container = new Group();
         this.gridPlane = new MapMakerGridPlane(
             data.size.width,
@@ -121,6 +141,7 @@ export class Landscape {
         this.mesh.receiveShadow = true;
         // this.mesh.castShadow = true;
         this.container.add(this.mesh);
+        this.container.add(this.water.mesh);
     }
 
     setChunk(chunkBits: [number, number]) {
@@ -167,8 +188,8 @@ export class Landscape {
             .setChunk(
                 this.data.id,
                 chunkBits,
-                this.data.size.width,
-                this.data.size.depth,
+                // this.data.size.width,
+                // this.data.size.depth,
             )
             .then(() => {
                 console.log('t1', Date.now() - timeOffset);
@@ -206,6 +227,7 @@ export class Landscape {
 
     destroy() {
         this.gridPlane.destroy();
+        this.water.destroy();
     }
 }
 
@@ -234,25 +256,47 @@ export async function createLandscape(id: string, sdk: Sdk) {
             };
             return item;
         }),
+        {
+            name: 'other-grass-noise-texture',
+            type: 'texture',
+            path: `/assets/maps/grass_noise.jpg`,
+        },
     );
+    let grassNoiseTexture: Texture = undefined as never;
     const meshes: LandscapeMeshes = [];
     const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
-        const mesh = (data as GLTF).scene.children[0] as Mesh;
-        mesh.castShadow = true;
-        mesh.name = item.name;
-        (mesh.material as Material).side = DoubleSide;
-        mesh.position.set(0, 0, 0);
-        scaleGeometry(mesh.geometry, [0.5, 0.5, 0.5]);
-        const [setName, setId, meshName, meshId] = item.name.split('.');
-        meshes.push({
-            setName,
-            setId: parseInt(setId),
-            meshName,
-            meshId: parseInt(meshId),
-            data: mesh,
-        });
+        if (item.name.startsWith('other-')) {
+            grassNoiseTexture = data as Texture;
+        } else {
+            const mesh = (data as GLTF).scene.children[0] as Mesh;
+            mesh.castShadow = true;
+            mesh.name = item.name;
+            (mesh.material as Material).side = DoubleSide;
+            mesh.position.set(0, 0, 0);
+            scaleGeometry(mesh.geometry, [0.5, 0.5, 0.5]);
+            const [setName, setId, meshName, meshId] = item.name.split('.');
+            meshes.push({
+                setName,
+                setId: parseInt(setId),
+                meshName,
+                meshId: parseInt(meshId),
+                data: mesh,
+            });
+        }
     });
     await AssetLoader.run();
     loaderUnsub();
-    return new Landscape(sdk, landscape, sets, meshes);
+    const water = await createWater(
+        landscape.size.width,
+        landscape.size.depth,
+        0.8,
+    );
+    return new Landscape(
+        sdk,
+        landscape,
+        sets,
+        meshes,
+        grassNoiseTexture,
+        water,
+    );
 }

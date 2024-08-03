@@ -10,7 +10,7 @@ export class MapMakerLights {
 
     constructor(private maker: MapMaker) {
         // this.sun = new DirectionalLight(0x2351A3, 10);
-        this.sun = new DirectionalLight(0xffffff, 10);
+        this.sun = new DirectionalLight(0xffffff, 4);
         this.sun.position.set(
             maker.landscape.data.size.width + 10,
             50,

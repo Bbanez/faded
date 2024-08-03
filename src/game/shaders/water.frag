@@ -15,7 +15,8 @@ void main() {
     vec4 normalTextureColor = texture2D(normalTexture, uvs);
     // vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
     // vec4 color = vec4(remap(sin(uMillis / 60.0), -1.0, 1.0, 0.0, 1.0));
-    vec4 color = vec4(0.0, 0.2, 0.8, 0.8) * normalTextureColor;
+    vec3 color = vec3(0.0, 0.6, 0.8) * (normalTextureColor.g / 2.0);
+    float alpha = 0.95;
     // vec4 color = normalTextureColor;
-    gl_FragColor = color;
+    gl_FragColor = vec4(color, alpha);
 }

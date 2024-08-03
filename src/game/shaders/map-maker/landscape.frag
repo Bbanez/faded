@@ -1,7 +1,7 @@
 #define STANDARD
 #ifdef PHYSICAL
-    #define IOR
-    #define USE_SPECULAR
+#define IOR
+#define USE_SPECULAR
 #endif
 uniform vec3 diffuse;
 uniform vec3 emissive;
@@ -9,42 +9,42 @@ uniform float roughness;
 uniform float metalness;
 uniform float opacity;
 #ifdef IOR
-    uniform float ior;
+uniform float ior;
 #endif
 #ifdef USE_SPECULAR
-    uniform float specularIntensity;
+uniform float specularIntensity;
 uniform vec3 specularColor;
 #ifdef USE_SPECULAR_COLORMAP
-        uniform sampler2D specularColorMap;
+uniform sampler2D specularColorMap;
 #endif
-    #ifdef USE_SPECULAR_INTENSITYMAP
-        uniform sampler2D specularIntensityMap;
+#ifdef USE_SPECULAR_INTENSITYMAP
+uniform sampler2D specularIntensityMap;
 #endif
 #endif
 #ifdef USE_CLEARCOAT
-    uniform float clearcoat;
+uniform float clearcoat;
 uniform float clearcoatRoughness;
 #endif
 #ifdef USE_IRIDESCENCE
-    uniform float iridescence;
+uniform float iridescence;
 uniform float iridescenceIOR;
 uniform float iridescenceThicknessMinimum;
 uniform float iridescenceThicknessMaximum;
 #endif
 #ifdef USE_SHEEN
-    uniform vec3 sheenColor;
+uniform vec3 sheenColor;
 uniform float sheenRoughness;
 #ifdef USE_SHEEN_COLORMAP
-        uniform sampler2D sheenColorMap;
+uniform sampler2D sheenColorMap;
 #endif
-    #ifdef USE_SHEEN_ROUGHNESSMAP
-        uniform sampler2D sheenRoughnessMap;
+#ifdef USE_SHEEN_ROUGHNESSMAP
+uniform sampler2D sheenRoughnessMap;
 #endif
 #endif
 #ifdef USE_ANISOTROPY
-    uniform vec2 anisotropyVector;
+uniform vec2 anisotropyVector;
 #ifdef USE_ANISOTROPYMAP
-        uniform sampler2D anisotropyMap;
+uniform sampler2D anisotropyMap;
 #endif
 #endif
 varying vec3 vViewPosition;
@@ -82,7 +82,9 @@ varying vec3 vViewPosition;
 #include "../common"
 
 varying vec2 vUv;
+// Vertex position normalized
 varying vec3 vPosition;
+// Vertex position
 varying vec3 vPos;
 varying vec3 vNorm;
 varying vec3 vViewPos;
@@ -91,28 +93,49 @@ uniform vec3 uGrassColor;
 uniform vec3 uCliffColor;
 uniform vec3 uSnowColor;
 uniform vec3 uSandColor;
+uniform sampler2D uGrassNoiseTexture;
+uniform vec3 uMapSize;
 
 vec4 calcColor() {
+    vec2 grassUVs = vec2(
+            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
+            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
+        ) * 100.0;
+    vec2 sandUVs = vec2(
+            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
+            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
+        ) * 200.0;
+    vec2 cliffUVs = vec2(
+            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
+            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
+        ) * 200.0;
+
+    vec4 grassNoiseTexture = texture2D(uGrassNoiseTexture, grassUVs);
+    vec4 sandNoiseTexture = texture2D(uGrassNoiseTexture, sandUVs);
+    vec4 cliffNoiseTexture = texture2D(uGrassNoiseTexture, cliffUVs);
+
+    float grassNoise = remap(grassNoiseTexture.r, 0.0, 1.0, 0.5, 1.0);
+    float sandNoise = remap(sandNoiseTexture.r, 0.0, 1.0, 0.2, 1.0);
+    float cliffNoise = remap(sandNoiseTexture.r, 0.0, 1.0, 0.5, 1.0);
+
     vec3 normal = normalize(vNorm);
     float topNormal = normal.y;
 
-    vec3 cliffColor = uCliffColor;
-    vec3 grassColor = uGrassColor;
+    vec3 cliffColor = uCliffColor * cliffNoise;
+    vec3 grassColor = uGrassColor * grassNoise;
     vec3 snowColor = uSnowColor;
-    vec3 sandColor = uSandColor;
+    vec3 sandColor = uSandColor * sandNoise;
     vec3 color = vec3(0.0);
-
 
     float grassMulti = smoothstep(0.7, 0.95, topNormal);
     float cliffMulti = 1.0 - grassMulti;
     float snowMulti = smoothstep(7.0, 10.0, vPosition.y);
     float sandMulti = 1.0 - smoothstep(0.0, 0.9, vPosition.y);
     color = grassColor * grassMulti
-    + cliffColor * cliffMulti
-    + snowColor * snowMulti
-    + sandColor * sandMulti;
+            + cliffColor * cliffMulti
+            + snowColor * snowMulti
+            + sandColor * sandMulti;
 
-//    color = vec3(grassMulti);
     color = linearTosRGB(color);
 
     return vec4(color, 1.0);
@@ -120,9 +143,9 @@ vec4 calcColor() {
 
 void main() {
     #include <clipping_planes_fragment>
-//	vec4 diffuseColor = vec4( diffuse, opacity );
-//    vec4 diffuseColor = vec4(vec3(1.0, 1.0, 0.0), opacity);
-        vec4 diffuseColor = calcColor();
+    //	vec4 diffuseColor = vec4( diffuse, opacity );
+    //    vec4 diffuseColor = vec4(vec3(1.0, 1.0, 0.0), opacity);
+    vec4 diffuseColor = calcColor();
     ReflectedLight reflectedLight = ReflectedLight(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
     vec3 totalEmissiveRadiance = emissive;
     #include <logdepthbuf_fragment>
@@ -152,11 +175,11 @@ void main() {
     vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;
     //    vec3 outgoingLight = vec3(0.0);
     #ifdef USE_SHEEN
-        float sheenEnergyComp = 1.0 - 0.157 * max3(material.sheenColor);
+    float sheenEnergyComp = 1.0 - 0.157 * max3(material.sheenColor);
     outgoingLight = outgoingLight * sheenEnergyComp + sheenSpecularDirect + sheenSpecularIndirect;
     #endif
     #ifdef USE_CLEARCOAT
-        float dotNVcc = saturate(dot(geometryClearcoatNormal, geometryViewDir));
+    float dotNVcc = saturate(dot(geometryClearcoatNormal, geometryViewDir));
     vec3 Fcc = F_Schlick(material.clearcoatF0, material.clearcoatF90, dotNVcc);
     outgoingLight = outgoingLight * (1.0 - material.clearcoat * Fcc) + (clearcoatSpecularDirect + clearcoatSpecularIndirect) * material.clearcoat;
     #endif
@@ -166,5 +189,5 @@ void main() {
     #include <fog_fragment>
     #include <premultiplied_alpha_fragment>
     #include <dithering_fragment>
-//    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+    //    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
 }
