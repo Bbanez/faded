@@ -286,3 +286,35 @@ pub fn landscape_get_set_chunks(set_id: u32) -> TauriResponse<Vec<(u32, u32)>> {
 pub fn landscape_get_sets() -> TauriResponse<Vec<LandscapeSet>> {
     TauriResponse::new(Data::landscape_sets())
 }
+
+#[tauri::command]
+pub fn landscape_get_nav_map(
+    state: tauri::State<GameState>,
+    landscape_id: String,
+) -> TauriResponse<Vec<u8>> {
+    let state_guard = state.0.lock().unwrap();
+    if let Some(landscape) = state_guard.landscapes.iter().find(|l| l.id == landscape_id) {
+        let mut nav_map: Vec<u8> = vec![];
+        for _ in 0..landscape.size.depth {
+            for _ in 0..landscape.size.width {
+                nav_map.push(0);
+            }
+        }
+        println!("Chunk count: {}", landscape.chunks.len());
+        for i in 0..landscape.chunks.len() {
+            let chunk = landscape.chunks[i];
+            let walkable = chunk_64::get_walkable(chunk);
+            if walkable > 0 {
+                let x = chunk_64::get_x_pos(chunk);
+                let z = chunk_64::get_z_pos(chunk);
+                let nav_map_id = x as usize + z as usize * landscape.size.width;
+                nav_map[nav_map_id] = walkable as u8;
+            }
+        }
+        return TauriResponse::new(nav_map);
+    }
+    TauriResponse::new_error_string(
+        404,
+        format!("Landscape with ID '{}' does not exist", landscape_id),
+    )
+}

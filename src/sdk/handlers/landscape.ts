@@ -30,6 +30,10 @@ export class LandscapeHandler {
     private rust_landscape_get = api_call<{ id: string }, Landscape>(
         'landscape_get',
     );
+    private rust_landscape_get_nav_map = api_call<
+        { landscapeId: string },
+        number[]
+    >('landscape_get_nav_map');
     private rust_landscape_get_all = api_call<void, LandscapeLite[]>(
         'landscape_get_all',
     );
@@ -168,5 +172,9 @@ export class LandscapeHandler {
 
     async getSets() {
         return await this.rust_landscape_get_sets();
+    }
+
+    async getNavMap(landscapeId: string) {
+        return await this.rust_landscape_get_nav_map({ landscapeId });
     }
 }

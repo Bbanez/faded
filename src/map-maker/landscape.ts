@@ -7,7 +7,6 @@ import {
     Material,
     Mesh,
     MeshBasicMaterial,
-    MirroredRepeatWrapping,
     RepeatWrapping,
     Texture,
     Vector3,
@@ -42,12 +41,6 @@ export interface LandscapeMesh {
 
 export type LandscapeMeshes = Array<LandscapeMesh>;
 
-// export interface LandscapeMeshes {
-//     [setId: string]: {
-//         [name: string]: Mesh;
-//     };
-// }
-
 export class Landscape {
     container: Group;
     mesh: Mesh;
@@ -60,6 +53,7 @@ export class Landscape {
             uSandColor: new Color('#aa9900'),
             uSnowColor: new Color('#ffffff'),
             uGrassNoiseTexture: new Texture(),
+            uGrassTexture: new Texture(),
             uMapSize: new Vector3(1, 1, 1),
         },
         {
@@ -81,11 +75,15 @@ export class Landscape {
         public sets: LandscapeSet[],
         public meshes: LandscapeMeshes,
         grassNoiseTexture: Texture,
+        grassTexture: Texture,
         public water: Water,
     ) {
         grassNoiseTexture.wrapS = RepeatWrapping;
         grassNoiseTexture.wrapT = RepeatWrapping;
+        grassTexture.wrapS = RepeatWrapping;
+        grassTexture.wrapT = RepeatWrapping;
         this.shader.setUniform('uGrassNoiseTexture', grassNoiseTexture);
+        this.shader.setUniform('uGrassTexture', grassTexture);
         this.shader.setUniform(
             'uMapSize',
             new Vector3(
@@ -261,12 +259,22 @@ export async function createLandscape(id: string, sdk: Sdk) {
             type: 'texture',
             path: `/assets/maps/grass_noise.jpg`,
         },
+        {
+            name: 'other-grass-texture',
+            type: 'texture',
+            path: `/assets/maps/grass_texture.jpg`,
+        },
     );
     let grassNoiseTexture: Texture = undefined as never;
+    let grassTexture: Texture = undefined as never;
     const meshes: LandscapeMeshes = [];
     const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
         if (item.name.startsWith('other-')) {
-            grassNoiseTexture = data as Texture;
+            if (item.name === 'other-grass-noise-texture') {
+                grassNoiseTexture = data as Texture;
+            } else if (item.name === 'other-grass-texture') {
+                grassTexture = data as Texture;
+            }
         } else {
             const mesh = (data as GLTF).scene.children[0] as Mesh;
             mesh.castShadow = true;
@@ -297,6 +305,7 @@ export async function createLandscape(id: string, sdk: Sdk) {
         sets,
         meshes,
         grassNoiseTexture,
+        grassTexture,
         water,
     );
 }

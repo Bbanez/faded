@@ -102,10 +102,17 @@ export class MapMakerGridPlane {
             Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state) => {
                 const inter = this.getIntersectionWithGrid(state);
                 if (inter[0]) {
-                    this.activeCell = this.getCell(
+                    const newActiveCell = this.getCell(
                         inter[0].point.x,
                         inter[0].point.z,
                     );
+                    if (
+                        newActiveCell[0] === this.activeCell[0] &&
+                        newActiveCell[1] === this.activeCell[1]
+                    ) {
+                        return;
+                    }
+                    this.activeCell = newActiveCell;
                     const activeCellTransformed = this.transformXZ(
                         ...this.activeCell,
                     );
@@ -130,6 +137,24 @@ export class MapMakerGridPlane {
                         this.level,
                         this.activeCell[1] + 0.5,
                     );
+                    if (state.left && this.maker) {
+                        const setId = this.maker.landscape.sets[0].id;
+                        const chunkData =
+                            this.maker.landscape.sets[0].chunks[
+                                this.previewChunkIdx
+                            ];
+                        maker.landscape.setChunk(
+                            ChunkManipulation64.create(
+                                chunkData.id,
+                                setId,
+                                this.activeCell[0],
+                                this.activeCell[1],
+                                this.level,
+                                [this.mirror[0], this.mirror[1]],
+                                this.rotation,
+                            ),
+                        );
+                    }
                 }
             }),
             Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {

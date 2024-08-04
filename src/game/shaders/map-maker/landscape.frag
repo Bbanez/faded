@@ -94,27 +94,40 @@ uniform vec3 uCliffColor;
 uniform vec3 uSnowColor;
 uniform vec3 uSandColor;
 uniform sampler2D uGrassNoiseTexture;
+uniform sampler2D uGrassTexture;
 uniform vec3 uMapSize;
 
 vec4 calcColor() {
+    vec2 grassNoiseUVs = vec2(
+            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
+            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
+        ) * 1.0 + vPos.y / 2.0;
+    vec2 sandNoiseUVs = vec2(
+            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
+            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
+        ) * 200.0;
+    vec2 cliffNoiseUVs = vec2(
+            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
+            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
+        ) * 200.0;
+
+    vec4 grassNoiseTexture = texture2D(uGrassNoiseTexture, grassNoiseUVs);
+    vec4 sandNoiseTexture = texture2D(uGrassNoiseTexture, sandNoiseUVs);
+    vec4 cliffNoiseTexture = texture2D(uGrassNoiseTexture, cliffNoiseUVs);
+
     vec2 grassUVs = vec2(
             remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
             remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
-        ) * 100.0;
-    vec2 sandUVs = vec2(
-            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
-            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
-        ) * 200.0;
-    vec2 cliffUVs = vec2(
-            remap(vPos.x, 0.0, uMapSize.x, 0.0, 1.0),
-            remap(vPos.z, 0.0, uMapSize.z, 0.0, 1.0)
-        ) * 200.0;
+        ) * 40.0 + vPos.y / 2.0;
 
-    vec4 grassNoiseTexture = texture2D(uGrassNoiseTexture, grassUVs);
-    vec4 sandNoiseTexture = texture2D(uGrassNoiseTexture, sandUVs);
-    vec4 cliffNoiseTexture = texture2D(uGrassNoiseTexture, cliffUVs);
+    vec4 grassTexture = texture2D(uGrassTexture, grassUVs);
+    float grassTextureColor = remap(
+            (grassTexture.r + grassTexture.g + grassTexture.b) / 3.0,
+            0.0, 1.0,
+            0.3, 1.0
+        );
 
-    float grassNoise = remap(grassNoiseTexture.r, 0.0, 1.0, 0.5, 1.0);
+    float grassNoise = remap(grassNoiseTexture.r, 0.0, 1.0, 0.1, 0.5);
     float sandNoise = remap(sandNoiseTexture.r, 0.0, 1.0, 0.2, 1.0);
     float cliffNoise = remap(sandNoiseTexture.r, 0.0, 1.0, 0.5, 1.0);
 
@@ -122,12 +135,17 @@ vec4 calcColor() {
     float topNormal = normal.y;
 
     vec3 cliffColor = uCliffColor * cliffNoise;
-    vec3 grassColor = uGrassColor * grassNoise;
+    vec3 grassColor = vec3(
+            uGrassColor.r,
+            uGrassColor.g * grassNoise,
+            uGrassColor.b * grassNoise
+        );
+    grassColor *= vec3(grassTextureColor);
     vec3 snowColor = uSnowColor;
     vec3 sandColor = uSandColor * sandNoise;
     vec3 color = vec3(0.0);
 
-    float grassMulti = smoothstep(0.7, 0.95, topNormal);
+    float grassMulti = smoothstep(0.3, 0.9, topNormal);
     float cliffMulti = 1.0 - grassMulti;
     float snowMulti = smoothstep(7.0, 10.0, vPosition.y);
     float sandMulti = 1.0 - smoothstep(0.0, 0.9, vPosition.y);
@@ -168,8 +186,8 @@ void main() {
     #include <aomap_fragment>
     vec3 totalDiffuse = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
     //    vec3 totalDiffuse = diffuseColor.xyz;
-    //    vec3 totalDiffuse = reflectedLight.directDiffuse;
-    //        vec3 totalSpecular = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+    // vec3 totalDiffuse = reflectedLight.directDiffuse;
+    // vec3 totalSpecular = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
     vec3 totalSpecular = vec3(0.0);
     #include <transmission_fragment>
     vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;

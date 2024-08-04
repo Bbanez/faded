@@ -40,16 +40,51 @@ export const MapMakerView = defineComponent({
             }
         }, 100);
 
+        const navMapData = ref<Array<number[]>>([]);
+
         onMounted(async () => {
             const el = document.getElementById('renderer');
             if (el) {
-                await throwable(async () => {
-                    maker = await createMapMaker(
-                        el,
-                        route.params.mapId as string,
-                    );
-                    gridData.value.cameraSpeed = maker.camera.camSpeed;
-                });
+                await throwable(
+                    async () => {
+                        maker = await createMapMaker(
+                            el,
+                            route.params.mapId as string,
+                        );
+                        gridData.value.cameraSpeed = maker.camera.camSpeed;
+                        const navMap = await sdk.landscape.getNavMap(
+                            route.params.mapId as string,
+                        );
+                        return {
+                            maker,
+                            navMap,
+                        };
+                    },
+                    async (result) => {
+                        console.log(result.navMap);
+                        for (
+                            let z = 0;
+                            z < result.maker.landscape.data.size.depth;
+                            z++
+                        ) {
+                            navMapData.value.push([]);
+                            for (
+                                let x = 0;
+                                x < result.maker.landscape.data.size.width;
+                                x++
+                            ) {
+                                navMapData.value[z].push(
+                                    result.navMap[
+                                        x +
+                                            z *
+                                                result.maker.landscape.data.size
+                                                    .width
+                                    ],
+                                );
+                            }
+                        }
+                    },
+                );
             }
         });
 
@@ -114,6 +149,21 @@ export const MapMakerView = defineComponent({
                                     gridData.value.cameraSpeed = value;
                                 }}
                             />
+                        </div>
+                        <div class={`flex flex-col`}>
+                            {navMapData.value.map((cols) => {
+                                return (
+                                    <div class={`flex`}>
+                                        {cols.map((col) => {
+                                            return (
+                                                <div
+                                                    class={`w-1 h-1 ${col > 0 ? 'bg-red-500' : 'bg-white'}`}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
