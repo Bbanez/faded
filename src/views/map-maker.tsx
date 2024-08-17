@@ -1,12 +1,12 @@
 import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
-import { createMapMaker, MapMaker } from '../map-maker/main.ts';
 import { useRoute } from 'vue-router';
-import { throwable } from '../util/throwable.ts';
-import { SliderInput } from '../components/inputs/slider.tsx';
-import { Button } from '../components/button.tsx';
-import { useSdk } from '../sdk/main.ts';
-import { NotificationService } from '../services/notification.ts';
-import { LoaderPage } from '../components/loader.tsx';
+import { useSdk } from '@fdd/sdk/main.ts';
+import { MapMaker, createMapMaker } from '@fdd/map-maker/main';
+import { throwable } from '@fdd/util/throwable';
+import { NotificationService } from '@fdd/services/notification';
+import { Button } from '@fdd/components/button';
+import { SliderInput } from '@fdd/components/inputs/slider';
+import { LoaderPage } from '@fdd/components/loader';
 
 export const MapMakerView = defineComponent({
     setup() {
@@ -25,6 +25,7 @@ export const MapMakerView = defineComponent({
             cameraSpeed: 0,
             cameraPosition: [0, 0],
         });
+        const showWater = ref(true);
 
         const watchInterval = setInterval(() => {
             if (maker) {
@@ -40,56 +41,72 @@ export const MapMakerView = defineComponent({
             }
         }, 100);
 
-        const navMapData = ref<Array<number[]>>([]);
+        const navMeshData = ref<Array<number[]>>([]);
+        let reFetchNavMeshInterval: NodeJS.Timeout | undefined = undefined;
+
+        async function fetchNavMeshData() {
+            await throwable(
+                async () => {
+                    const navMap = await sdk.gameMap.navMeshMetadata(
+                        route.params.mapId as string,
+                    );
+                    return {
+                        navMap,
+                    };
+                },
+                async (result) => {
+                    if (!maker) {
+                        return;
+                    }
+                    navMeshData.value = [];
+                    for (
+                        let z = 0;
+                        z < maker.landscape.gameMap.landscape.size.depth;
+                        z++
+                    ) {
+                        navMeshData.value.push([]);
+                        for (
+                            let x = 0;
+                            x < maker.landscape.gameMap.landscape.size.width;
+                            x++
+                        ) {
+                            navMeshData.value[z].push(
+                                result.navMap[
+                                    x +
+                                        z *
+                                            maker.landscape.gameMap.landscape
+                                                .size.width
+                                ],
+                            );
+                        }
+                    }
+                },
+            );
+        }
 
         onMounted(async () => {
-            const el = document.getElementById('renderer');
+            const el = document.getElementById('map-maker-renderer-container');
             if (el) {
-                await throwable(
-                    async () => {
-                        maker = await createMapMaker(
-                            el,
-                            route.params.mapId as string,
-                        );
-                        gridData.value.cameraSpeed = maker.camera.camSpeed;
-                        const navMap = await sdk.landscape.getNavMap(
-                            route.params.mapId as string,
-                        );
-                        return {
-                            maker,
-                            navMap,
-                        };
-                    },
-                    async (result) => {
-                        console.log(result.navMap);
-                        for (
-                            let z = 0;
-                            z < result.maker.landscape.data.size.depth;
-                            z++
-                        ) {
-                            navMapData.value.push([]);
-                            for (
-                                let x = 0;
-                                x < result.maker.landscape.data.size.width;
-                                x++
-                            ) {
-                                navMapData.value[z].push(
-                                    result.navMap[
-                                        x +
-                                            z *
-                                                result.maker.landscape.data.size
-                                                    .width
-                                    ],
-                                );
-                            }
-                        }
-                    },
-                );
+                await throwable(async () => {
+                    maker = await createMapMaker(
+                        el,
+                        route.params.mapId as string,
+                    );
+                    gridData.value.cameraSpeed = maker.camera.camSpeed;
+                    return {
+                        maker,
+                    };
+                });
+                await fetchNavMeshData();
+                reFetchNavMeshInterval = setInterval(() => {
+                    fetchNavMeshData();
+                }, 100);
             }
         });
 
         onBeforeUnmount(() => {
             clearInterval(watchInterval);
+            clearInterval(reFetchNavMeshInterval);
             if (maker) {
                 maker.destroy();
             }
@@ -100,7 +117,7 @@ export const MapMakerView = defineComponent({
             setTimeout(async () => {
                 await throwable(
                     async () => {
-                        await sdk.landscape.save();
+                        await sdk.gameMap.save(route.params.mapId as string);
                     },
                     async () => {
                         NotificationService.push(
@@ -116,7 +133,7 @@ export const MapMakerView = defineComponent({
         return () => (
             <div>
                 <div
-                    id={`renderer`}
+                    id={`map-maker-renderer-container`}
                     class={`fixed top-0 left-0 w-screen h-screen`}
                 ></div>
                 <div
@@ -135,7 +152,9 @@ export const MapMakerView = defineComponent({
                         </div>
                         <div>Chunk: {gridData.value.activeChunkName}</div>
                     </div>
-                    <div class={`w-full h-full mt-4 overflow-y-auto`}>
+                    <div
+                        class={`w-full h-full mt-4 overflow-y-auto flex flex-col gap-4`}
+                    >
                         <div class={`flex gap-4`}>
                             <Button class={`flex-shrink-0`} onClick={save}>
                                 Save changes
@@ -150,8 +169,21 @@ export const MapMakerView = defineComponent({
                                 }}
                             />
                         </div>
+                        <Button
+                            onClick={() => {
+                                if (!maker) {
+                                    return;
+                                }
+                                maker.landscape.water.mesh.visible =
+                                    !maker.landscape.water.mesh.visible;
+                                showWater.value =
+                                    maker.landscape.water.mesh.visible;
+                            }}
+                        >
+                            {showWater.value ? 'Hide water' : 'Show water'}
+                        </Button>
                         <div class={`flex flex-col`}>
-                            {navMapData.value.map((cols) => {
+                            {navMeshData.value.map((cols) => {
                                 return (
                                     <div class={`flex`}>
                                         {cols.map((col) => {

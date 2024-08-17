@@ -1,28 +1,24 @@
-import { createQueue } from '@banez/queue';
-import { Account } from '../../types/rs';
-import { QueueError } from '@banez/queue/types';
-import { api_call } from '../../rust/api-call.ts';
-import { createArrayStore } from '@banez/vue-array-store';
+import { api_call } from '@fdd/rust/api-call';
+import type { Account } from '@fdd/types/rs';
+import { createArrayStore } from '@fdd/util/array-store';
+import { QueueError, createQueue } from '@fdd/util/queue';
 
 export interface AccountStoreMethods {
     findActive(): Account | null;
 }
 
 export class AccountHandler {
-    private rust_create = api_call<{ username: string }, Account>(
-        'account_create',
-    );
-    private rust_load = api_call<{ username: string }, Account>('account_load');
-    private rust_get_active = api_call<void, Account | null>(
-        'account_get_active',
-    );
-    private rust_get_by_username = api_call<
-        { username: string },
-        Account | null
-    >('account_get_by_username');
-    private rust_account_all = api_call<void, Account[]>('account_all');
+    rust = {
+        create: api_call<{ username: string }, Account>('account_create'),
+        load: api_call<{ id: string }, Account>('account_load'),
+        getActive: api_call<void, Account | null>('account_get_active'),
+        getByUsername: api_call<{ username: string }, Account | null>(
+            'account_get_by_username',
+        ),
+        all: api_call<void, Account[]>('account_all'),
+    };
 
-    private get_all_queue = createQueue<Account[]>();
+    private getAllQueue = createQueue<Account[]>();
     private latch: {
         [name: string]: boolean;
     } = {};
@@ -42,13 +38,13 @@ export class AccountHandler {
     constructor() {}
 
     async get_all(skip_cache?: boolean) {
-        const result = await this.get_all_queue({
+        const result = await this.getAllQueue({
             name: 'get_all',
             handler: async () => {
                 if (!skip_cache && this.latch.all) {
                     return this.store.items();
                 }
-                const accounts = await this.rust_account_all();
+                const accounts = await this.rust.all();
                 this.store.set(accounts);
                 return accounts;
             },
@@ -66,7 +62,7 @@ export class AccountHandler {
                 return cache_hit;
             }
         }
-        const account = await this.rust_get_by_username({ username });
+        const account = await this.rust.getByUsername({ username });
         if (account) {
             this.store.set(account);
             return account;
@@ -75,8 +71,8 @@ export class AccountHandler {
         }
     }
 
-    async load(username: string) {
-        const account = await this.rust_load({ username });
+    async load(id: string) {
+        const account = await this.rust.load({ id });
         this.store.items().forEach((e) => (e.active = false));
         this.store.set(account);
         return account;
@@ -89,7 +85,7 @@ export class AccountHandler {
                 return cache_hit;
             }
         }
-        const account = await this.rust_get_active();
+        const account = await this.rust.getActive();
         if (account) {
             this.store.set(account);
         }
@@ -97,7 +93,7 @@ export class AccountHandler {
     }
 
     async create(username: string) {
-        const account = await this.rust_create({ username });
+        const account = await this.rust.create({ username });
         this.store.set(account);
         return account;
     }

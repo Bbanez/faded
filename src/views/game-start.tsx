@@ -1,44 +1,55 @@
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 import { Button } from '../components/button.tsx';
-import { useRoute, useRouter } from 'vue-router';
-import { Map } from '../types/rs';
+// import { useRoute, useRouter } from 'vue-router';
 import { useSdk } from '../sdk/main.ts';
 import { throwable } from '../util/throwable.ts';
+import { GameMapLite } from '@fdd/types/rs/GameMapLite.ts';
+import { Character } from '@fdd/types/rs/Character.ts';
 
 export const GameStartView = defineComponent({
     setup() {
         const sdk = useSdk();
-        const router = useRouter();
-        const route = useRoute();
+        // const router = useRouter();
+        // const route = useRoute();
         const loaded = ref(false);
-        const selected_map = ref<Map>();
-        const maps = computed(() => sdk.data.mapStore.items());
-        const characters = computed(() => sdk.data.characterStore.items());
+        const selected_map = ref<GameMapLite>();
+        const gameMaps = ref<GameMapLite[]>([]);
+        const characters = ref<Character[]>([]);
 
         onMounted(async () => {
-            await throwable(async () => {
-                await sdk.data.maps();
-                await sdk.data.characters();
-            });
+            await throwable(
+                async () => {
+                    return {
+                        gameMaps: await sdk.gameMap.getAll(),
+                        characters: await sdk.character.getAll(),
+                    };
+                },
+                async (result) => {
+                    gameMaps.value = result.gameMaps;
+                    characters.value = result.characters;
+                },
+            );
 
             loaded.value = true;
         });
 
         function getListItem(
-            image: string,
+            image: string | null,
             title: string,
             description: string,
             onClick: () => Promise<void>,
         ) {
             return (
                 <Button class={`flex bg-gray-300 p-2`} onClick={onClick}>
-                    <div class={`w-40 h-40 flex-shrink-0`}>
-                        <img
-                            class={`w-full h-full object-cover`}
-                            src={image}
-                            alt={title}
-                        />
-                    </div>
+                    {image && (
+                        <div class={`w-40 h-40 flex-shrink-0`}>
+                            <img
+                                class={`w-full h-full object-cover`}
+                                src={image}
+                                alt={title}
+                            />
+                        </div>
+                    )}
                     <div class={`text-left text-black flex flex-col pl-2`}>
                         <div class={`text-lg`}>{title}</div>
                         <div class={`text-xs`}>{description}</div>
@@ -58,21 +69,21 @@ export const GameStartView = defineComponent({
                                 {characters.value.map((char) => {
                                     return getListItem(
                                         `/assets/characters/${char.id}/cover.png`,
-                                        char.title,
-                                        char.description,
+                                        char.name,
+                                        char.desc,
                                         async () => {
                                             await throwable(
                                                 async () => {
-                                                    return await sdk.manager.create(
-                                                        selected_map.value
-                                                            ?.id as string,
-                                                        char.id,
-                                                    );
+                                                    // return await sdk.manager.create(
+                                                    //     selected_map.value
+                                                    //         ?.id as string,
+                                                    //     char.id,
+                                                    // );
                                                 },
                                                 async (manager) => {
-                                                    await router.push(
-                                                        `/account/${route.params.account_id}/map/${selected_map.value?.id}/character/${char.id}/game/${manager.id}`,
-                                                    );
+                                                    // await router.push(
+                                                    //     `/account/${route.params.account_id}/map/${selected_map.value?.id}/character/${char.id}/game/${manager.id}`,
+                                                    // );
                                                 },
                                             );
                                         },
@@ -82,13 +93,14 @@ export const GameStartView = defineComponent({
                         ) : (
                             <>
                                 <h1>Select a map</h1>
-                                {maps.value.map((map) => {
+                                {gameMaps.value.map((gameMap) => {
                                     return getListItem(
-                                        `/assets/maps/${map.id}/cover.png`,
-                                        map.title,
-                                        map.description,
+                                        // `/assets/maps/${map.id}/cover.png`,
+                                        null,
+                                        gameMap.name,
+                                        gameMap.desc,
                                         async () => {
-                                            selected_map.value = map;
+                                            selected_map.value = gameMap;
                                         },
                                     );
                                 })}

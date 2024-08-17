@@ -11,25 +11,25 @@ import {
     Texture,
     Vector3,
 } from 'three';
-import { Sdk } from '../sdk/main.ts';
-import { AssetLoader, AssetLoaderItem } from '../game/asset-loader.ts';
+import { Sdk } from '@fdd/sdk';
+import { AssetLoader, AssetLoaderItem } from '@fdd/util/asset-loader.ts';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-import type { Landscape as RustLandscape, LandscapeSet } from '../types/rs';
+import type { GameMap, GameMapLandscapeSet } from '@fdd/types/rs';
 import { MapMakerGridPlane } from './grid-plane.ts';
 import { MapMaker } from './main.ts';
-import { ShaderManager } from '../game/shaders/manager.ts';
+import { ShaderManager } from '@fdd/shaders/manager.ts';
 
-import vsh from '../game/shaders/map-maker/landscape.vert';
-import fsh from '../game/shaders/map-maker/landscape.frag';
+import vsh from '@fdd/shaders/map-maker/landscape.vert';
+import fsh from '@fdd/shaders/map-maker/landscape.frag';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
-import { PI12 } from '../game/consts.ts';
 import {
     rotateYGeometry,
     scaleGeometry,
     translateGeometry,
-} from '../game/util/geometry.ts';
-import { Chunk64 } from './chunk-64.ts';
+} from '@fdd/util/geometry.ts';
+import { GameMapLandscapeChunk } from './chunk.ts';
 import { Water, createWater } from '@fdd/game/water.ts';
+import { PI12 } from '@fdd/util/math.ts';
 
 export interface LandscapeMesh {
     setId: number;
@@ -71,8 +71,8 @@ export class Landscape {
 
     constructor(
         private sdk: Sdk,
-        public data: RustLandscape,
-        public sets: LandscapeSet[],
+        public gameMap: GameMap,
+        public sets: GameMapLandscapeSet[],
         public meshes: LandscapeMeshes,
         grassNoiseTexture: Texture,
         grassTexture: Texture,
@@ -87,24 +87,26 @@ export class Landscape {
         this.shader.setUniform(
             'uMapSize',
             new Vector3(
-                this.data.size.width,
-                this.data.size.height,
-                this.data.size.depth,
+                this.gameMap.landscape.size.width,
+                this.gameMap.landscape.size.height,
+                this.gameMap.landscape.size.depth,
             ),
         );
         this.container = new Group();
         this.gridPlane = new MapMakerGridPlane(
-            data.size.width,
-            data.size.depth,
-            data.size.height,
-            data.selected_level,
+            gameMap.landscape.size.width,
+            gameMap.landscape.size.depth,
+            gameMap.landscape.size.height,
+            gameMap.landscape.selected_level,
         );
-        this.mountedMashes = Array(this.data.chunks.length).fill(undefined);
-        for (let i = 0; i < this.data.chunks.length; i++) {
-            const chunk = new Chunk64(
-                this.data.chunks[i],
-                data.size.width,
-                data.size.depth,
+        this.mountedMashes = Array(this.gameMap.landscape.chunks.length).fill(
+            undefined,
+        );
+        for (let i = 0; i < this.gameMap.landscape.chunks.length; i++) {
+            const chunk = new GameMapLandscapeChunk(
+                this.gameMap.landscape.chunks[i],
+                gameMap.landscape.size.width,
+                gameMap.landscape.size.depth,
             );
             const mesh = this.getChunkMesh(chunk.setId, chunk.meshId);
             mesh.position.set(chunk.x + 0.5, chunk.y, chunk.z + 0.5);
@@ -143,10 +145,10 @@ export class Landscape {
     }
 
     setChunk(chunkBits: [number, number]) {
-        const chunk = new Chunk64(
+        const chunk = new GameMapLandscapeChunk(
             chunkBits,
-            this.data.size.width,
-            this.data.size.depth,
+            this.gameMap.landscape.size.width,
+            this.gameMap.landscape.size.depth,
         );
         const mesh = this.getChunkMesh(chunk.setId, chunk.meshId);
         mesh.position.set(chunk.x, chunk.y, chunk.z);
@@ -180,15 +182,10 @@ export class Landscape {
         this.mesh = new Mesh(mergedGeo, this.shader.material);
         this.mesh.receiveShadow = true;
         this.container.add(this.mesh);
-        this.data.chunks[chunk.id] = chunkBits;
+        this.gameMap.landscape.chunks[chunk.id] = chunkBits;
         const timeOffset = Date.now();
-        this.sdk.landscape
-            .setChunk(
-                this.data.id,
-                chunkBits,
-                // this.data.size.width,
-                // this.data.size.depth,
-            )
+        this.sdk.gameMap
+            .landscapeSetChunk(this.gameMap.id, chunkBits)
             .then(() => {
                 console.log('t1', Date.now() - timeOffset);
             })
@@ -230,8 +227,8 @@ export class Landscape {
 }
 
 export async function createLandscape(id: string, sdk: Sdk) {
-    const sets = await sdk.landscape.getSets();
-    const landscape = await sdk.landscape.get(id);
+    const sets = await sdk.gameMap.landscapeGetSets();
+    const gameMap = await sdk.gameMap.get(id);
     const chunkNames: {
         [name: string]: boolean;
     } = {};
@@ -295,13 +292,13 @@ export async function createLandscape(id: string, sdk: Sdk) {
     await AssetLoader.run();
     loaderUnsub();
     const water = await createWater(
-        landscape.size.width,
-        landscape.size.depth,
+        gameMap.landscape.size.width,
+        gameMap.landscape.size.depth,
         0.8,
     );
     return new Landscape(
         sdk,
-        landscape,
+        gameMap,
         sets,
         meshes,
         grassNoiseTexture,

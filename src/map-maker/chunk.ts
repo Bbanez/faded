@@ -1,33 +1,41 @@
-export class Chunk {
+export type GameMapLandscapeChunkMirror = [0 | 1, 0 | 1];
+
+export class GameMapLandscapeChunk {
     id: number;
     meshId: number;
     setId: number;
     y: number;
     z: number;
     x: number;
-    mirror: [number, number];
+    mirror: GameMapLandscapeChunkMirror;
     rotation: number;
+    walkable: number;
 
     constructor(
-        chunk: number,
+        chunk: [number, number],
         public mapWidth: number,
         public mapDepth: number,
     ) {
-        this.id = ChunkManipulation.getId(chunk, mapWidth, mapDepth);
-        this.meshId = ChunkManipulation.getMeshId(chunk);
-        this.setId = ChunkManipulation.getSetId(chunk);
-        this.y = ChunkManipulation.getYPos(chunk);
-        this.z = ChunkManipulation.getZPos(chunk);
-        this.x = ChunkManipulation.getXPos(chunk);
+        this.id = GameMapLandscapeChunkManipulation.getId(
+            chunk,
+            mapWidth,
+            mapDepth,
+        );
+        this.meshId = GameMapLandscapeChunkManipulation.getMeshId(chunk);
+        this.setId = GameMapLandscapeChunkManipulation.getSetId(chunk);
+        this.y = GameMapLandscapeChunkManipulation.getYPos(chunk);
+        this.z = GameMapLandscapeChunkManipulation.getZPos(chunk);
+        this.x = GameMapLandscapeChunkManipulation.getXPos(chunk);
         this.mirror = [
-            ChunkManipulation.getXMirror(chunk),
-            ChunkManipulation.getZMirror(chunk),
+            GameMapLandscapeChunkManipulation.getXMirror(chunk) as 0 | 1,
+            GameMapLandscapeChunkManipulation.getZMirror(chunk) as 0 | 1,
         ];
-        this.rotation = ChunkManipulation.getRotation(chunk);
+        this.rotation = GameMapLandscapeChunkManipulation.getRotation(chunk);
+        this.walkable = GameMapLandscapeChunkManipulation.getWalkable(chunk);
     }
 
-    pack(): number {
-        return ChunkManipulation.create(
+    pack(): [number, number] {
+        return GameMapLandscapeChunkManipulation.create(
             this.meshId,
             this.setId,
             this.x,
@@ -35,11 +43,12 @@ export class Chunk {
             this.y,
             this.mirror,
             this.rotation,
+            this.walkable,
         );
     }
 }
 
-export class ChunkManipulation {
+export class GameMapLandscapeChunkManipulation {
     static create(
         mesh_id: number,
         set_id: number,
@@ -48,81 +57,92 @@ export class ChunkManipulation {
         y_pos: number,
         mirror: [number, number],
         rotation: number,
-    ): number {
-        let chunk: number = 0;
-        chunk = this.setMeshId(chunk, mesh_id);
-        chunk = this.setSetId(chunk, set_id);
-        chunk = this.setXPos(chunk, x_pos);
-        chunk = this.setZPos(chunk, z_pos);
-        chunk = this.setYPos(chunk, y_pos);
-        chunk = this.setXMirror(chunk, mirror[0]);
-        chunk = this.setZMirror(chunk, mirror[1]);
-        chunk = this.setRotation(chunk, rotation);
+        walkable: number,
+    ): [number, number] {
+        const chunk: [number, number] = [0, 0];
+        this.setMeshId(chunk, mesh_id);
+        this.setSetId(chunk, set_id);
+        this.setXPos(chunk, x_pos);
+        this.setZPos(chunk, z_pos);
+        this.setYPos(chunk, y_pos);
+        this.setXMirror(chunk, mirror[0]);
+        this.setZMirror(chunk, mirror[1]);
+        this.setRotation(chunk, rotation);
+        this.setWalkable(chunk, walkable);
         return chunk;
     }
 
-    static getId(chunk: number, mapWidth: number, mapDepth: number): number {
+    static getId(
+        chunk: [number, number],
+        map_width: number,
+        map_depth: number,
+    ): number {
         const x = this.getXPos(chunk);
         const y = this.getYPos(chunk);
         const z = this.getZPos(chunk);
-        return x + z * mapWidth + y * mapWidth * mapDepth;
+        return x + z * map_width + y * map_width * map_depth;
+    }
+    static setWalkable(chunk: [number, number], walkable: number) {
+        chunk[0] = (chunk[0] & 0xffefffff) | ((walkable & 0x1) << 20);
     }
 
-    static setMeshId(chunk: number, mesh_id: number): number {
-        return (chunk & 0x3ffffff) | ((mesh_id & 0x3f) << 26);
-    }
-    static getMeshId(chunk: number): number {
-        return (chunk & 0xfc000000) >> 26;
+    static getWalkable(chunk: [number, number]): number {
+        return (chunk[0] & 0x100000) >> 20;
     }
 
-    static setSetId(chunk: number, set_id: number): number {
-        return (chunk & 0xfc3fffff) | ((set_id & 0xf) << 22);
+    static setMeshId(chunk: [number, number], mesh_id: number) {
+        chunk[0] = (chunk[0] & 0xfff003ff) | ((mesh_id & 0x3ff) << 10);
     }
-    static getSetId(chunk: number): number {
-        return (chunk & 0x3c00000) >> 22;
-    }
-
-    static setYPos(chunk: number, y_pos: number): number {
-        return (chunk & 0xffc3ffff) | ((y_pos & 0xf) << 18);
-    }
-    static getYPos(chunk: number): number {
-        return (chunk & 0x3c0000) >> 18;
+    static getMeshId(chunk: [number, number]): number {
+        return (chunk[0] & 0xffc00) >> 10;
     }
 
-    static setZPos(chunk: number, z_pos: number): number {
-        return (chunk & 0xfffc07ff) | ((z_pos & 0x7f) << 11);
+    static setSetId(chunk: [number, number], set_id: number) {
+        chunk[1] = (chunk[1] & 0xffffff) | ((set_id & 0xff) << 24);
     }
-    static getZPos(chunk: number): number {
-        return (chunk & 0x3f800) >> 11;
-    }
-
-    static setXPos(chunk: number, x_pos: number): number {
-        return (chunk & 0xfffff80f) | ((x_pos & 0x7f) << 4);
-    }
-    static getXPos(chunk: number): number {
-        return (chunk & 0x7f0) >> 4;
+    static getSetId(chunk: [number, number]): number {
+        return (chunk[1] & 0xff000000) >> 24;
     }
 
-    static setZMirror(chunk: number, z_mirror: number): number {
-        return (chunk & 0xfffffff7) | ((z_mirror & 0x1) << 3);
+    static setYPos(chunk: [number, number], y_pos: number) {
+        chunk[0] = (chunk[0] & 0xfffffc00) | (y_pos & 0x3ff);
     }
-    static getZMirror(chunk: number): number {
-        return (chunk & 0x8) >> 3;
-    }
-
-    static setXMirror(chunk: number, x_mirror: number): number {
-        return (chunk & 0xfffffffb) | ((x_mirror & 0x1) << 2);
-    }
-    static getXMirror(chunk: number): number {
-        return (chunk & 0x4) >> 2;
+    static getYPos(chunk: [number, number]): number {
+        return chunk[0] & 0x3ff;
     }
 
-    static setRotation(chunk: number, rotation: number): number {
-        return (chunk & 0xfffffffc) | (rotation & 0b11);
+    static setZPos(chunk: [number, number], z_pos: number) {
+        chunk[1] = (chunk[1] & 0xff003fff) | ((z_pos & 0x3ff) << 14);
     }
-    static getRotation(chunk: number): number {
-        return chunk & 0x3;
+    static getZPos(chunk: [number, number]): number {
+        return (chunk[1] & 0xffc000) >> 14;
+    }
+
+    static setXPos(chunk: [number, number], x_pos: number) {
+        chunk[1] = (chunk[1] & 0xfffffc0f) | ((x_pos & 0x3ff) << 4);
+    }
+    static getXPos(chunk: [number, number]): number {
+        return (chunk[1] & 0x7f0) >> 4;
+    }
+
+    static setZMirror(chunk: [number, number], z_mirror: number) {
+        chunk[1] = (chunk[1] & 0xfffffff7) | ((z_mirror & 0x1) << 3);
+    }
+    static getZMirror(chunk: [number, number]): number {
+        return (chunk[1] & 0x8) >> 3;
+    }
+
+    static setXMirror(chunk: [number, number], x_mirror: number) {
+        chunk[1] = (chunk[1] & 0xfffffffb) | ((x_mirror & 0x1) << 2);
+    }
+    static getXMirror(chunk: [number, number]): number {
+        return (chunk[1] & 0x4) >> 2;
+    }
+
+    static setRotation(chunk: [number, number], rotation: number) {
+        chunk[1] = (chunk[1] & 0xfffffffc) | (rotation & 0b11);
+    }
+    static getRotation(chunk: [number, number]): number {
+        return chunk[1] & 0x3;
     }
 }
-
-(window as any).chunk = Chunk;

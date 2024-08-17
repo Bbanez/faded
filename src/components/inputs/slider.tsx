@@ -1,9 +1,6 @@
 import { computed, defineComponent, onBeforeUnmount, onMounted } from 'vue';
-import {
-    FunctionBuilder,
-    Linear2DFn,
-} from '../../game/math/function-builder.ts';
 import { InputWrapper, InputWrapperProps } from './wrapper.tsx';
+import { Linear2D, createLinear2D } from '@fdd/util/math.ts';
 
 export const SliderInput = defineComponent({
     props: {
@@ -27,12 +24,9 @@ export const SliderInput = defineComponent({
     setup(props, ctx) {
         let changeValue = false;
         let bBox: DOMRect | null = null;
-        let mousePositionToValue: Linear2DFn | null = null;
+        let mousePositionToValue: Linear2D | null = null;
         const toPercent = computed(() =>
-            FunctionBuilder.linear2D([
-                [props.min, 0],
-                [props.max, 100],
-            ]),
+            createLinear2D([props.min, 0], [props.max, 100]),
         );
 
         function onMouseUp() {
@@ -43,7 +37,7 @@ export const SliderInput = defineComponent({
 
         function onMouseMove(event: MouseEvent) {
             if (changeValue && mousePositionToValue) {
-                let value = mousePositionToValue(event.clientX);
+                let value = mousePositionToValue.call(event.clientX);
                 if (value < props.min) {
                     value = props.min;
                 } else if (value > props.max) {
@@ -58,10 +52,10 @@ export const SliderInput = defineComponent({
             if (target && target.parentElement) {
                 changeValue = true;
                 bBox = target.parentElement.getBoundingClientRect();
-                mousePositionToValue = FunctionBuilder.linear2D([
+                mousePositionToValue = createLinear2D(
                     [bBox.left, props.min],
                     [bBox.right, props.max],
-                ]);
+                );
                 onMouseMove(event);
             }
         }
@@ -88,7 +82,7 @@ export const SliderInput = defineComponent({
                     <button
                         onMousedown={onMouseDown}
                         class={`absolute w-2 h-full bg-gray-500`}
-                        style={`left: ${toPercent.value(props.value)}%;`}
+                        style={`left: ${toPercent.value.call(props.value)}%;`}
                     ></button>
                 </button>
             </InputWrapper>

@@ -1,5 +1,5 @@
-import postProcessingVert from '../game/shaders/post-processing.vert';
-import postProcessingFrag from '../game/shaders/post-processing.frag';
+import postProcessingVert from '@fdd/shaders/post-processing.vert';
+import postProcessingFrag from '@fdd/shaders/post-processing.frag';
 
 import {
     PCFSoftShadowMap,
@@ -12,9 +12,9 @@ import {
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
-import { ShaderPassManager } from '../game/shaders/manager.ts';
-import { Ticker } from '../game/ticker.ts';
-import { Mouse, MouseEventType } from '../game/mouse.ts';
+import { ShaderPassManager } from '@fdd/shaders/manager.ts';
+import { Ticker } from '@fdd/util/ticker.ts';
+import { Mouse, MouseEventType } from '@fdd/user-input/mouse.ts';
 
 export class MapMakerRenderer {
     r = new WebGLRenderer();

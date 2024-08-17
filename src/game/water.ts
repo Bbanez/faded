@@ -1,11 +1,11 @@
-import { ShaderManager } from './shaders/manager';
-import fsh from '@fdd/game/shaders/water.frag';
-import vsh from '@fdd/game/shaders/water.vert';
+import { ShaderManager } from '@fdd/shaders/manager';
+import fsh from '@fdd/shaders/water.frag';
+import vsh from '@fdd/shaders/water.vert';
 import { Mesh, PlaneGeometry, RepeatWrapping, Texture } from 'three';
-import { PI12 } from './consts';
-import { AssetLoader } from './asset-loader';
+import { PI12 } from '@fdd/util/math';
+import { AssetLoader } from '@fdd/util/asset-loader';
 import { UnsubscribeFns, callAndClearUnsubscribeFns } from '@fdd/util/sub';
-import { Ticker } from './ticker';
+import { Ticker } from '@fdd/util/ticker';
 
 export class Water {
     shader = new ShaderManager<{

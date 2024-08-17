@@ -1,13 +1,27 @@
 import { PerspectiveCamera } from 'three';
-import { PI12, PI_2 } from '../game/consts.ts';
 import { degToRad } from 'three/src/math/MathUtils';
-import { FunctionBuilder } from '../game/math/function-builder.ts';
 import { MapMaker } from './main.ts';
-import { Mouse, MouseEventType } from '../game/mouse.ts';
-import { Ticker } from '../game/ticker.ts';
-import { Point, Point3 } from '../types/rs';
-import { Keyboard, KeyboardEventType } from '../game/keyboard.ts';
-import { useSdk } from '../sdk/main.ts';
+import { Ticker } from '@fdd/util/ticker.ts';
+import { Point, Point3 } from '@fdd/types/rs';
+import { useSdk } from '@fdd/sdk';
+import {
+    PI12,
+    PI_2,
+    createLinear2D,
+    createStepedLinear2D,
+} from '@fdd/util/math.ts';
+import { Mouse, MouseEventType } from '@fdd/user-input/mouse.ts';
+import { Keyboard, KeyboardEventType } from '@fdd/user-input/keyboard.ts';
+import { findParent } from '@fdd/util/dom.ts';
+
+function filterEvents(e: HTMLElement | EventTarget | null | undefined) {
+    return findParent(
+        e as HTMLElement,
+        (el) => el.id === 'map-maker-renderer-container',
+    )
+        ? true
+        : false;
+}
 
 export class MapMakerCamera {
     cam: PerspectiveCamera;
@@ -34,14 +48,11 @@ export class MapMakerCamera {
         z: 0,
     };
 
-    private angleChangeFn = FunctionBuilder.linear2D([
+    private angleChangeFn = createLinear2D(
         [0, 0],
         [window.innerWidth / 2, PI_2],
-    ]);
-    private distanceChangeFn = FunctionBuilder.linear2D([
-        [0, 0],
-        [0, 0],
-    ]);
+    );
+    private distanceChangeFn = createLinear2D([0, 0], [0, 0]);
     private unsubs: Array<() => void> = [];
     // ---- Camera distance ----
     //          min
@@ -81,27 +92,30 @@ export class MapMakerCamera {
         ];
         this.position.wanted = [...this.position.curr];
         window.addEventListener('resize', () => {
-            this.angleChangeFn = FunctionBuilder.linear2D([
+            this.angleChangeFn = createLinear2D(
                 [0, 0],
                 [window.innerWidth / 2, PI12],
-            ]);
+            );
         });
         const interval = setInterval(() => this.sendCameraData(), 1000);
         this.unsubs.push(
             () => {
                 clearInterval(interval);
             },
-            Mouse.subscribe(MouseEventType.MOUSE_DOWN, async (state) => {
+            Mouse.subscribe(MouseEventType.MOUSE_DOWN, async (state, event) => {
+                if (!filterEvents(event.target)) {
+                    return;
+                }
                 if (state.middle) {
-                    this.distanceChangeFn = FunctionBuilder.linear2D([
+                    this.distanceChangeFn = createStepedLinear2D([
                         [0, this.D[0]],
                         [state.y, this.D[2]],
                         [window.innerHeight, this.D[1]],
                     ]);
-                    this.angleChangeFn = FunctionBuilder.linear2D([
+                    this.angleChangeFn = createLinear2D(
                         [state.x, 0],
                         [state.x + window.innerWidth / 2, PI12],
-                    ]);
+                    );
                     this.alpha.old = this.alpha.curr;
                 }
             }),
@@ -111,14 +125,22 @@ export class MapMakerCamera {
                 }
             }),
             Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state, event) => {
+                if (!filterEvents(event.target)) {
+                    return;
+                }
                 event.preventDefault();
                 if (state.middle) {
-                    const alphaDelta = this.angleChangeFn(state.x);
+                    const alphaDelta = this.angleChangeFn.call(state.x);
                     this.alpha.curr = this.alpha.old + alphaDelta;
-                    this.D[2] = this.distanceChangeFn(state.y);
+                    this.D[2] = this.distanceChangeFn.call(state.y);
                 }
             }),
-            Keyboard.subscribe(KeyboardEventType.ALL, (state) => {
+            Keyboard.subscribe(KeyboardEventType.ALL, (state, _) => {
+                if (!filterEvents(Mouse.state.elUnderCursor)) {
+                    this.move.y = 0;
+                    this.move.x = 0;
+                    return;
+                }
                 if (state.w) {
                     this.move.y = this.camSpeed;
                 }
@@ -147,9 +169,9 @@ export class MapMakerCamera {
 
     private sendCameraData() {
         const sdk = useSdk();
-        sdk.landscape
-            .setCamera(
-                this.maker.landscape.data.id,
+        sdk.gameMap
+            .landscapeSetCamera(
+                this.maker.landscape.gameMap.id,
                 {
                     x: this.followPoint.x,
                     y: this.followPoint.y,

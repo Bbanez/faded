@@ -1,7 +1,6 @@
 import { defineComponent, onBeforeUpdate, onMounted, ref } from 'vue';
-import { type Queue, QueueError } from '@banez/queue/types';
-import { createQueue } from '@banez/queue';
 import { DefaultComponentProps } from './_default.ts';
+import { Queue, QueueError, createQueue } from '@fdd/util/queue.ts';
 
 const cache: {
     [src: string]: string;

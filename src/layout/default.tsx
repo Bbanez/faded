@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { computed, defineComponent, onMounted } from 'vue';
 import type { JSX } from 'vue/jsx-runtime';
 import { useRoute, useRouter } from 'vue-router';
@@ -34,7 +33,7 @@ export const DefaultLayout = defineComponent({
                         if (activeAccount.value) {
                             items.push({
                                 text: 'Continue',
-                                href: `/account/${activeAccount.value.username}`,
+                                href: `/account/${activeAccount.value.id}`,
                             });
                         }
                         if (accounts.length > 1) {
@@ -80,15 +79,15 @@ export const DefaultLayout = defineComponent({
                         items.push(
                             {
                                 text: 'Start a game',
-                                href: `/account/${activeAccount.value?.username}/map`,
+                                href: `/account/${activeAccount.value?.id}/map`,
                             },
                             {
                                 text: 'Load a game',
-                                href: `/account/${activeAccount.value?.username}/load-game`,
+                                href: `/account/${activeAccount.value?.id}/load-game`,
                             },
                             {
                                 text: 'Map maker',
-                                href: `/account/${activeAccount.value?.username}/map-maker`,
+                                href: `/account/${activeAccount.value?.id}/map-maker`,
                             },
                             {
                                 class: 'mt-auto',
@@ -103,7 +102,7 @@ export const DefaultLayout = defineComponent({
                     {
                         items.push({
                             text: 'Back',
-                            href: `/account/${route.params.username}`,
+                            href: `/account/${route.params.id}`,
                         });
                     }
                     break;
@@ -123,14 +122,14 @@ export const DefaultLayout = defineComponent({
                         items.push(
                             {
                                 text: 'Create new map',
-                                onClick: async () => {
-                                    await createLandscape();
+                                onClick: () => {
+                                    createLandscape();
                                 },
                             },
                             {
                                 class: 'mt-auto',
                                 text: 'Back',
-                                href: `/account/${activeAccount.value?.username}/map-maker`,
+                                href: `/account/${activeAccount.value?.id}`,
                             },
                         );
                     }
@@ -142,7 +141,7 @@ export const DefaultLayout = defineComponent({
         function createLandscape() {
             modal.handlers.mapMakerLandscapeCreate.open({
                 async onDone(output) {
-                    const landscape = await sdk.landscape.create(
+                    const landscape = await sdk.gameMap.create(
                         output.name,
                         '',
                         {
@@ -152,7 +151,7 @@ export const DefaultLayout = defineComponent({
                         },
                     );
                     await router.push(
-                        `/account/${activeAccount.value?.username}/map-maker/${landscape.id}`,
+                        `/account/${activeAccount.value?.id}/map-maker/${landscape.id}`,
                     );
                 },
             });

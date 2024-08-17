@@ -1,11 +1,11 @@
 import { defineComponent, onMounted, ref } from 'vue';
 import { Button } from '../components/button.tsx';
 import { Select, SelectOption } from '../components/inputs/select.tsx';
-import { FunctionBuilder } from '../game/math/function-builder.ts';
 import { throwable } from '../util/throwable.ts';
 import { useSdk } from '../sdk/main.ts';
 import { Settings } from '../types/rs';
 import { NotificationService } from '../services/notification.ts';
+import { createLinear2D } from '@fdd/util/math.ts';
 
 export const SettingsView = defineComponent({
     setup() {
@@ -23,13 +23,10 @@ export const SettingsView = defineComponent({
         function getResolutions() {
             const aspect = window.innerWidth / window.innerHeight;
             const options: SelectOption[] = [];
-            const resFn = FunctionBuilder.linear2D([
-                [0, 50],
-                [9, window.innerWidth],
-            ]);
+            const resFn = createLinear2D([0, 50], [9, window.innerWidth]);
             let lock = false;
             for (let i = 0; i < 10; i++) {
-                const width = parseInt(resFn(i).toFixed(0));
+                const width = parseInt(resFn.call(i).toFixed(0));
                 const height = parseInt((width / aspect).toFixed(0));
                 if (!lock && width > inputs.value.width) {
                     lock = true;

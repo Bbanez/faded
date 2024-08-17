@@ -1,41 +1,37 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+pub mod account;
+pub mod character;
+pub mod db;
+pub mod game;
+pub mod game_map;
+pub mod objects;
+pub mod settings;
+pub mod util;
+
+pub mod state;
+
 use std::sync::Mutex;
-use std::thread;
 
 use actix_web::{get, HttpResponse, Responder};
 
-use game::{
-    data::{data_characters, data_maps},
-    manager::{manager_create, manager_get},
-    on_tick::on_tick,
-    player::{player_get, player_motion, player_set_wanted_position},
+use account::repo::create_account_repo;
+use account::tauri_api::{
+    account_all, account_create, account_get_active, account_get_by_username, account_load,
 };
-use map_maker::landscape::{
-    landscape_create, landscape_get, landscape_get_all, landscape_get_nav_map,
-    landscape_get_set_chunks, landscape_get_sets, landscape_save, landscape_set_camera,
-    landscape_set_chunk, landscape_set_selected_level, landscape_update,
-};
-use models::{
-    account::{
-        account_all, account_create, account_get_active, account_get_by_username, account_load,
-    },
-    settings::{settings_get, settings_set},
-};
-use storage::Storage;
 
-pub mod bcms;
-pub mod game;
-pub mod map_maker;
-pub mod models;
-pub mod response;
-pub mod server;
-pub mod state;
-pub mod storage;
-pub mod util;
+use game_map::repo::create_game_map_repo;
+use game_map::tauri_api::{
+    game_map_create, game_map_get, game_map_get_all, game_map_landscape_get_sets,
+    game_map_landscape_set_camera, game_map_landscape_set_chunk,
+    game_map_landscape_set_selected_level, game_map_nav_mesh_metadata, game_map_save,
+};
 
-pub struct GameState(pub Mutex<state::State>);
+use settings::repo::create_settings_repo;
+use settings::tauri_api::{settings_get, settings_set};
+
+use character::tauri_api::{character_get, character_get_all};
 
 #[tauri::command]
 fn report_error(err: &str) {
@@ -48,50 +44,44 @@ async fn hello() -> impl Responder {
 }
 
 fn main() {
-    let storage_data = Storage::read_unpacked();
     tauri::Builder::default()
-        .setup(|app| {
-            let handler = app.handle();
-            let boxed_handler = Box::new(handler);
-            thread::spawn(move || {
-                server::init(*boxed_handler).unwrap();
-            });
-            Ok(())
-        })
-        .manage(GameState(Mutex::new(state::State {
-            manager: None,
-            accounts: storage_data.accounts,
-            settings: storage_data.settings,
-            landscapes: storage_data.landscapes,
+        // .setup(|app| {
+        //     let handler = app.handle();
+        //     let boxed_handler = Box::new(handler);
+        //     thread::spawn(move || {
+        //         server::init(*boxed_handler).unwrap();
+        //     });
+        //     Ok(())
+        // })
+        .manage(state::AppState(Mutex::new(state::State {
+            account_repo: create_account_repo(),
+            settings_repo: create_settings_repo(),
+            game_map_repo: create_game_map_repo(),
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
-            player_motion,
-            player_get,
-            player_set_wanted_position,
-            on_tick,
+            //
             account_create,
             account_load,
             account_get_active,
             account_all,
             account_get_by_username,
+            //
             settings_get,
             settings_set,
-            data_maps,
-            data_characters,
-            manager_create,
-            manager_get,
-            landscape_get_set_chunks,
-            landscape_create,
-            landscape_get,
-            landscape_save,
-            landscape_update,
-            landscape_get_all,
-            landscape_get_sets,
-            landscape_set_chunk,
-            landscape_set_camera,
-            landscape_set_selected_level,
-            landscape_get_nav_map,
+            //
+            game_map_save,
+            game_map_nav_mesh_metadata,
+            game_map_landscape_set_selected_level,
+            game_map_landscape_set_chunk,
+            game_map_landscape_set_camera,
+            game_map_landscape_get_sets,
+            game_map_get_all,
+            game_map_get,
+            game_map_create,
+            //
+            character_get_all,
+            character_get,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

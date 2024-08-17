@@ -1,15 +1,15 @@
-import { Sdk, useSdk } from '../sdk/main.ts';
-import { FPS } from '../game/fps.ts';
+import { Sdk, useSdk } from '@fdd/sdk/main.ts';
+import { FPS } from '@fdd/util/fps.ts';
 import { AxesHelper, CubeTexture, Scene } from 'three';
 import { MapMakerCamera } from './camera.ts';
-import { Mouse } from '../game/mouse.ts';
-import { Keyboard } from '../game/keyboard.ts';
-import { Ticker } from '../game/ticker.ts';
-import { callAndClearUnsubscribeFns, UnsubscribeFns } from '../util/sub.ts';
+import { Ticker } from '@fdd/util/ticker.ts';
+import { callAndClearUnsubscribeFns, UnsubscribeFns } from '@fdd/util/sub.ts';
 import { MapMakerRenderer } from './renderer.ts';
 import { createLandscape, Landscape } from './landscape.ts';
 import { MapMakerLights } from './lights.ts';
-import { AssetLoader } from '../game/asset-loader.ts';
+import { AssetLoader } from '@fdd/util/asset-loader.ts';
+import { Mouse } from '@fdd/user-input/mouse.ts';
+import { Keyboard } from '@fdd/user-input/keyboard.ts';
 
 export class MapMaker {
     public fps: FPS = new FPS();
@@ -31,14 +31,14 @@ export class MapMaker {
         this.scene.background = skybox;
         this.camera = new MapMakerCamera(
             this,
-            this.landscape.data.camera_speed,
+            this.landscape.gameMap.landscape.camera_speed,
             [
-                this.landscape.data.camera_position.x,
-                this.landscape.data.camera_position.y,
-                this.landscape.data.camera_position.z,
+                this.landscape.gameMap.landscape.camera_position.x,
+                this.landscape.gameMap.landscape.camera_position.y,
+                this.landscape.gameMap.landscape.camera_position.z,
             ],
-            this.landscape.data.camera_rotation,
-            this.landscape.data.camera_d,
+            this.landscape.gameMap.landscape.camera_rotation,
+            this.landscape.gameMap.landscape.camera_d,
         );
         this.renderer = new MapMakerRenderer(
             this.el,

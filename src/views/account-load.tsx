@@ -27,13 +27,11 @@ export const AccountLoadView = defineComponent({
                             onClick={async () => {
                                 await throwable(
                                     async () => {
-                                        await sdk.account.load(
-                                            account.username,
-                                        );
+                                        await sdk.account.load(account.id);
                                     },
                                     async () => {
                                         await router.push(
-                                            `/account/${account.username}`,
+                                            `/account/${account.id}`,
                                         );
                                     },
                                 );

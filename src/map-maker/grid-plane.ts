@@ -6,16 +6,25 @@ import {
     Raycaster,
     Vector2,
 } from 'three';
-import { ShaderManager } from '../game/shaders/manager.ts';
-import gridPlaneVsh from '../game/shaders/map-maker/grid-plane.vert';
-import gridPlaneFsh from '../game/shaders/map-maker/grid-plane.frag';
-import { PI12 } from '../game/consts.ts';
-import { callAndClearUnsubscribeFns, UnsubscribeFns } from '../util/sub.ts';
-import { Mouse, MouseEventType, MouseState } from '../game/mouse.ts';
-import { FunctionBuilder, Linear2DFn } from '../game/math/function-builder.ts';
+import { ShaderManager } from '@fdd/shaders/manager.ts';
+import gridPlaneVsh from '@fdd/shaders/map-maker/grid-plane.vert';
+import gridPlaneFsh from '@fdd/shaders/map-maker/grid-plane.frag';
+import { Linear2D, PI12, createLinear2D } from '@fdd/util/math.ts';
+import { callAndClearUnsubscribeFns, UnsubscribeFns } from '@fdd/util/sub.ts';
 import { MapMaker } from './main.ts';
-import { Keyboard, KeyboardEventType } from '../game/keyboard.ts';
-import { ChunkManipulation64 } from './chunk-64.ts';
+import { Keyboard, KeyboardEventType } from '@fdd/user-input/keyboard.ts';
+import { Mouse, MouseEventType, MouseState } from '@fdd/user-input/mouse.ts';
+import { GameMapLandscapeChunkManipulation } from './chunk.ts';
+import { findParent } from '@fdd/util/dom.ts';
+
+function filterEvents(e: HTMLElement | EventTarget | null | undefined) {
+    return findParent(
+        e as HTMLElement,
+        (el) => el.id === 'map-maker-renderer-container',
+    )
+        ? true
+        : false;
+}
 
 export class MapMakerGridPlane {
     mesh: Mesh;
@@ -43,8 +52,8 @@ export class MapMakerGridPlane {
     private unsubs: UnsubscribeFns = [];
     private ray = new Raycaster();
     private worldToShaderTransform: {
-        x: Linear2DFn;
-        z: Linear2DFn;
+        x: Linear2D;
+        z: Linear2D;
     };
     private previewChunkIdx = 0;
     private previewSetIdx = 0;
@@ -57,14 +66,8 @@ export class MapMakerGridPlane {
     ) {
         this.level = selectedLevel;
         this.worldToShaderTransform = {
-            x: FunctionBuilder.linear2D([
-                [0, 0],
-                [width, 1],
-            ]),
-            z: FunctionBuilder.linear2D([
-                [0, 0],
-                [depth, 1],
-            ]),
+            x: createLinear2D([0, 0], [width, 1]),
+            z: createLinear2D([0, 0], [depth, 1]),
         };
         this.mesh = new Mesh(
             new PlaneGeometry(width, depth),
@@ -76,8 +79,8 @@ export class MapMakerGridPlane {
         this.shader.setUniform(
             'uStepSize',
             new Vector2(
-                this.worldToShaderTransform.x(1),
-                this.worldToShaderTransform.z(1),
+                this.worldToShaderTransform.x.call(1),
+                this.worldToShaderTransform.z.call(1),
             ),
         );
         this.previewChunkMesh = new Mesh(
@@ -98,8 +101,12 @@ export class MapMakerGridPlane {
             const meshData = set.chunks[this.previewChunkIdx];
             this.setPreviewChunkMesh(set.id, meshData.id);
         }
+
         this.unsubs.push(
-            Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state) => {
+            Mouse.subscribe(MouseEventType.MOUSE_MOVE, (state, event) => {
+                if (!filterEvents(event.target)) {
+                    return;
+                }
                 const inter = this.getIntersectionWithGrid(state);
                 if (inter[0]) {
                     const newActiveCell = this.getCell(
@@ -144,7 +151,7 @@ export class MapMakerGridPlane {
                                 this.previewChunkIdx
                             ];
                         maker.landscape.setChunk(
-                            ChunkManipulation64.create(
+                            GameMapLandscapeChunkManipulation.create(
                                 chunkData.id,
                                 setId,
                                 this.activeCell[0],
@@ -152,12 +159,16 @@ export class MapMakerGridPlane {
                                 this.level,
                                 [this.mirror[0], this.mirror[1]],
                                 this.rotation,
+                                chunkData.walkable ? 1 : 0,
                             ),
                         );
                     }
                 }
             }),
-            Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state) => {
+            Mouse.subscribe(MouseEventType.MOUSE_DOWN, (state, event) => {
+                if (!filterEvents(event.target)) {
+                    return;
+                }
                 if (state.left) {
                     if (!this.maker) {
                         return;
@@ -170,7 +181,7 @@ export class MapMakerGridPlane {
                                 this.previewChunkIdx
                             ];
                         maker.landscape.setChunk(
-                            ChunkManipulation64.create(
+                            GameMapLandscapeChunkManipulation.create(
                                 chunkData.id,
                                 setId,
                                 this.activeCell[0],
@@ -178,6 +189,7 @@ export class MapMakerGridPlane {
                                 this.level,
                                 [this.mirror[0], this.mirror[1]],
                                 this.rotation,
+                                chunkData.walkable ? 1 : 0,
                             ),
                         );
                         this.activeCell = this.getCell(
@@ -188,6 +200,9 @@ export class MapMakerGridPlane {
                 }
             }),
             Keyboard.subscribe(KeyboardEventType.KEY_DOWN, (state) => {
+                if (!filterEvents(Mouse.state.elUnderCursor)) {
+                    return;
+                }
                 if (state.r) {
                     const set = maker.landscape.sets[this.previewSetIdx];
                     const meshData = set.chunks[this.previewChunkIdx];
@@ -250,14 +265,14 @@ export class MapMakerGridPlane {
                     // }
                     this.setPreviewChunkMesh(set.id, meshData.id);
                     this.mesh.position.set(
-                        this.maker.landscape.data.size.width / 2,
+                        this.maker.landscape.gameMap.landscape.size.width / 2,
                         this.level + 0.1,
-                        this.maker.landscape.data.size.depth / 2,
+                        this.maker.landscape.gameMap.landscape.size.depth / 2,
                     );
                     this.maker.camera.followPoint.y = this.level;
-                    this.maker.sdk.landscape
-                        .setSelectedLevel(
-                            this.maker.landscape.data.id,
+                    this.maker.sdk.gameMap
+                        .landscapeSetSelectedLevel(
+                            this.maker.landscape.gameMap.id,
                             this.level,
                         )
                         .catch((err) => {
@@ -314,8 +329,8 @@ export class MapMakerGridPlane {
 
     transformXZ(x: number, z: number): [number, number] {
         return [
-            this.worldToShaderTransform.x(x),
-            this.worldToShaderTransform.z(z),
+            this.worldToShaderTransform.x.call(x),
+            this.worldToShaderTransform.z.call(z),
         ];
     }
 

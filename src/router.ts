@@ -1,13 +1,13 @@
 import { DefineComponent } from 'vue';
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 import { HomeView } from './views/home.tsx';
-import { GameView } from './views/game.tsx';
 import { AccountView } from './views/account.tsx';
 import { NewAccountView } from './views/new-account.tsx';
 import { SettingsView } from './views/settings.tsx';
 import { Layouts } from './layout';
 import { P404View } from './views/404.tsx';
 import { AccountLoadView } from './views/account-load.tsx';
+// import { GameView } from './views/game.tsx';
 import { GameStartView } from './views/game-start.tsx';
 import { MapMakerView } from './views/map-maker.tsx';
 import { MapMakerSelectView } from './views/map-maker-select.tsx';
@@ -16,7 +16,7 @@ export const views = {
     MapMakerView,
     MapMakerSelectView,
     HomeView,
-    GameView,
+    // GameView,
     GameStartView,
     AccountView,
     NewAccountView,
@@ -84,7 +84,7 @@ const routes: Array<RouteRecordRawExtended> = [
         component: AccountLoadView,
     },
     {
-        path: '/account/:username',
+        path: '/account/:accountId',
         name: 'AccountView',
         meta: {
             title: 'My account',
@@ -93,7 +93,7 @@ const routes: Array<RouteRecordRawExtended> = [
         component: AccountView,
     },
     {
-        path: '/account/:username/map',
+        path: '/account/:accountId/map',
         name: 'GameStartView',
         meta: {
             title: 'Start a game',
@@ -101,16 +101,16 @@ const routes: Array<RouteRecordRawExtended> = [
         },
         component: GameStartView,
     },
+    // {
+    //     path: '/account/:accountId/map/:mapId/character/:characterId/game/:managerId',
+    //     name: 'GameView',
+    //     meta: {
+    //         title: 'Game',
+    //     },
+    //     component: GameView,
+    // },
     {
-        path: '/account/:username/map/:mapId/character/:characterId/game/:managerId',
-        name: 'GameView',
-        meta: {
-            title: 'Game',
-        },
-        component: GameView,
-    },
-    {
-        path: '/account/:username/map-maker',
+        path: '/account/:accountId/map-maker',
         name: 'MapMakerSelectView',
         meta: {
             title: 'Map maker list',
@@ -119,7 +119,7 @@ const routes: Array<RouteRecordRawExtended> = [
         component: MapMakerSelectView,
     },
     {
-        path: '/account/:username/map-maker/:mapId',
+        path: '/account/:accountId/map-maker/:mapId',
         name: 'MapMakerView',
         meta: {
             title: 'Map maker',
