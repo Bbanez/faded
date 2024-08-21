@@ -1,81 +1,48 @@
-import { defineComponent, onMounted, onBeforeUnmount, ref } from 'vue';
-import { createGame, Game } from '../game';
-import { Minimap } from '../components/game/minimap';
-import { CharCover } from '../components/game/char-cover';
+import { AssetLoaderBar } from '@fdd/components/asset-loader';
+import { LoaderPage } from '@fdd/components/loader';
+import { useSdk } from '@fdd/sdk';
+import { throwable } from '@fdd/util/throwable';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { useSdk } from '../sdk/main.ts';
-import { throwable } from '../util/throwable.ts';
 
 export const GameView = defineComponent({
     setup() {
         const sdk = useSdk();
         const route = useRoute();
-        const el = ref<HTMLDivElement>(null as never);
-        let game: Game | null = null;
-        const mounted = ref(false);
+
+        const loaded = ref(false);
+        const params = computed(
+            () =>
+                route.params as {
+                    accountId: string;
+                    mapId: string;
+                    gameId: string;
+                },
+        );
+        const game = computed(() =>
+            sdk.game.store.findById(params.value.gameId),
+        );
+        const hero1 = computed(() =>
+            sdk.hero.store.findById(game.value?.p1.hero.id || ''),
+        );
 
         onMounted(async () => {
             await throwable(async () => {
-                if (el.value) {
-                    await sdk.settings.get({
-                        width: window.innerWidth,
-                        height: window.innerHeight,
-                    });
-                    await sdk.data.maps();
-                    await sdk.data.characters();
-                    const manager = await sdk.manager.get(
-                        route.params.managerId as string,
-                    );
-                    console.log({ m: manager });
-                    game = await createGame({
-                        el: el.value,
-                        frameTicker: true,
-                        mapId: route.params.mapId as string,
-                        characterId: route.params.characterId as string,
-                        manager,
-                    });
-                    await game.initialize();
-                    el.value.appendChild(game.fpsEl);
-                }
-                mounted.value = true;
+                await sdk.game.get(params.value.gameId);
+                await sdk.hero.getAll();
             });
         });
 
-        onBeforeUnmount(() => {
-            if (game) {
-                game.destroy();
-            }
-        });
-
         return () => (
-            <div
-                draggable={false}
-                class={`fixed top-0 left-0 w-screen h-screen`}
-            >
-                {mounted.value && (
-                    <>
-                        <Minimap game={game as Game} />
-                        <CharCover game={game as Game} />
-                    </>
+            <div class={`w-full h-full`}>
+                {!game.value || !hero1.value || !loaded.value ? (
+                    <LoaderPage show>
+                        <div>Loading game ...</div>
+                    </LoaderPage>
+                ) : (
+                    <div>YO</div>
                 )}
-                <div class={`flex fixed bottom-0`}>
-                    <div>
-                        <div class={`flex gap-1`}>
-                            <div class={`flex flex-col gap-1`}>
-                                <div class={`text-amber-700`}>Damage:</div>
-                                <div class={`flex gap-1`}>
-                                    <span>13 - 37</span>
-                                    <span class={`text-lime-700`}>+21</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    id={'game_canvas'}
-                    class="absolute top-0 left-0 w-screen h-screen -z-10"
-                    ref={el}
-                />
+                <AssetLoaderBar />
             </div>
         );
     },

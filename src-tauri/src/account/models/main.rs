@@ -60,8 +60,7 @@ impl DBStorageSerializeDeserialize for Account {
 
 impl DBEntity for Account {
     fn get_id(&self) -> String {
-        let id = self.id.clone();
-        return id;
+        self.id.clone()
     }
 
     fn set_updated_at(&mut self) {

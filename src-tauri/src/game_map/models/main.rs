@@ -1,4 +1,3 @@
-use base64::prelude::*;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -8,8 +7,8 @@ use crate::{
         storage::{DBStorageSerializeDeserialize, DB_STOREAGE_SPLIT_CHAR},
     },
     util::{
-        self,
-        math::{Point3, UPoint, USize3},
+        self, b64,
+        math::{Point, Point3, UPoint, USize3},
     },
 };
 
@@ -25,6 +24,7 @@ pub struct GameMap {
     pub name: String,
     pub desc: String,
     pub image: Option<String>,
+    pub hero_start_position: Point,
 }
 
 impl DBEntity for GameMap {
@@ -70,6 +70,7 @@ impl DBStorageSerializeDeserialize for GameMap {
             {},{}{}\
             {}{}\
             {}{}\
+            {}{}\
             {}",
             /*[0]*/ self.id,
             DB_STOREAGE_SPLIT_CHAR,
@@ -98,11 +99,13 @@ impl DBStorageSerializeDeserialize for GameMap {
             /*[10]*/ self.landscape.start_position.x,
             /*[10]*/ self.landscape.start_position.y,
             DB_STOREAGE_SPLIT_CHAR,
-            /*[11]*/ BASE64_STANDARD.encode(&self.name),
+            /*[11]*/ b64::encode(&self.name),
             DB_STOREAGE_SPLIT_CHAR,
-            /*[12]*/ BASE64_STANDARD.encode(&self.desc),
+            /*[12]*/ b64::encode(&self.desc),
             DB_STOREAGE_SPLIT_CHAR,
-            /*[13]*/ BASE64_STANDARD.encode(image_str),
+            /*[13]*/ b64::encode(&image_str),
+            DB_STOREAGE_SPLIT_CHAR,
+            /*[14]*/ Point::serialize(&self.hero_start_position),
         )
     }
 
@@ -145,16 +148,16 @@ impl DBStorageSerializeDeserialize for GameMap {
                 start_pos_parts[1].parse().unwrap(),
             ),
         };
-        self.name = String::from_utf8(BASE64_STANDARD.decode(parts[11]).unwrap()).unwrap();
-        self.desc = String::from_utf8(BASE64_STANDARD.decode(parts[12]).unwrap()).unwrap();
+        self.name = b64::decode(parts[11]);
+        self.desc = b64::decode(parts[12]);
         let image_str_parts: Vec<&str> = parts[13].split("\n").collect();
-        let image_str =
-            String::from_utf8(BASE64_STANDARD.decode(image_str_parts[0]).unwrap()).unwrap();
+        let image_str = b64::decode(image_str_parts[0]);
         if image_str == "-" {
             self.image = None
         } else {
             self.image = Some(image_str);
         }
+        self.hero_start_position = Point::deserialize(parts[14]);
     }
 }
 
@@ -164,6 +167,7 @@ impl GameMap {
         desc: String,
         image: Option<String>,
         landscape: GameMapLandscape,
+        hero_start_position: Point,
     ) -> GameMap {
         GameMap {
             id: util::id::generate(),
@@ -173,6 +177,7 @@ impl GameMap {
             desc,
             image,
             landscape,
+            hero_start_position,
         }
     }
 
@@ -185,6 +190,7 @@ impl GameMap {
             image: None,
             name: String::new(),
             landscape: GameMapLandscape::new_empty(),
+            hero_start_position: Point::new(0.0, 0.0),
         }
     }
 }

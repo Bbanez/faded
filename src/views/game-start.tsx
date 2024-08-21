@@ -1,32 +1,32 @@
 import { defineComponent, onMounted, ref } from 'vue';
-import { Button } from '../components/button.tsx';
-// import { useRoute, useRouter } from 'vue-router';
-import { useSdk } from '../sdk/main.ts';
-import { throwable } from '../util/throwable.ts';
+import { Button } from '@fdd/components/button.tsx';
+import { useSdk } from '@fdd/sdk/main.ts';
+import { throwable } from '@fdd/util/throwable.ts';
 import { GameMapLite } from '@fdd/types/rs/GameMapLite.ts';
-import { Character } from '@fdd/types/rs/Character.ts';
+import { Hero } from '@fdd/types/rs/Hero.ts';
+import { useRoute, useRouter } from 'vue-router';
 
 export const GameStartView = defineComponent({
     setup() {
         const sdk = useSdk();
-        // const router = useRouter();
-        // const route = useRoute();
+        const router = useRouter();
+        const route = useRoute();
         const loaded = ref(false);
         const selected_map = ref<GameMapLite>();
         const gameMaps = ref<GameMapLite[]>([]);
-        const characters = ref<Character[]>([]);
+        const heros = ref<Hero[]>([]);
 
         onMounted(async () => {
             await throwable(
                 async () => {
                     return {
                         gameMaps: await sdk.gameMap.getAll(),
-                        characters: await sdk.character.getAll(),
+                        heros: await sdk.hero.getAll(),
                     };
                 },
                 async (result) => {
                     gameMaps.value = result.gameMaps;
-                    characters.value = result.characters;
+                    heros.value = result.heros;
                 },
             );
 
@@ -65,25 +65,27 @@ export const GameStartView = defineComponent({
                         {}
                         {selected_map.value ? (
                             <>
-                                <h1>Select character</h1>
-                                {characters.value.map((char) => {
+                                <h1>Select a Hero</h1>
+                                {heros.value.map((hero) => {
                                     return getListItem(
-                                        `/assets/characters/${char.id}/cover.png`,
-                                        char.name,
-                                        char.desc,
+                                        `/assets/heros/${hero.id}/cover.png`,
+                                        hero.name,
+                                        hero.desc,
                                         async () => {
                                             await throwable(
                                                 async () => {
-                                                    // return await sdk.manager.create(
-                                                    //     selected_map.value
-                                                    //         ?.id as string,
-                                                    //     char.id,
-                                                    // );
+                                                    return await sdk.game.create(
+                                                        route.params
+                                                            .accountId as string,
+                                                        hero.id,
+                                                        selected_map.value
+                                                            ?.id as string,
+                                                    );
                                                 },
-                                                async (manager) => {
-                                                    // await router.push(
-                                                    //     `/account/${route.params.account_id}/map/${selected_map.value?.id}/character/${char.id}/game/${manager.id}`,
-                                                    // );
+                                                async (game) => {
+                                                    await router.push(
+                                                        `/account/${route.params.accountId}/map/${selected_map.value?.id}/game/${game.id}`,
+                                                    );
                                                 },
                                             );
                                         },

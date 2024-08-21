@@ -2,11 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 pub mod account;
-pub mod character;
 pub mod db;
 pub mod game;
 pub mod game_map;
-pub mod objects;
+pub mod hero;
 pub mod settings;
 pub mod util;
 
@@ -21,6 +20,8 @@ use account::tauri_api::{
     account_all, account_create, account_get_active, account_get_by_username, account_load,
 };
 
+use game::repo::create_game_repo;
+use game::tauri_api::{game_create, game_get, game_get_all};
 use game_map::repo::create_game_map_repo;
 use game_map::tauri_api::{
     game_map_create, game_map_get, game_map_get_all, game_map_landscape_get_sets,
@@ -31,7 +32,8 @@ use game_map::tauri_api::{
 use settings::repo::create_settings_repo;
 use settings::tauri_api::{settings_get, settings_set};
 
-use character::tauri_api::{character_get, character_get_all};
+// use character::tauri_api::{character_get, character_get_all};
+use hero::tauri_api::{hero_get, hero_get_all};
 
 #[tauri::command]
 fn report_error(err: &str) {
@@ -57,6 +59,7 @@ fn main() {
             account_repo: create_account_repo(),
             settings_repo: create_settings_repo(),
             game_map_repo: create_game_map_repo(),
+            game_repo: create_game_repo(),
         })))
         .invoke_handler(tauri::generate_handler![
             report_error,
@@ -80,8 +83,15 @@ fn main() {
             game_map_get,
             game_map_create,
             //
-            character_get_all,
-            character_get,
+            // character_get_all,
+            // character_get,
+            //
+            hero_get_all,
+            hero_get,
+            //
+            game_get_all,
+            game_get,
+            game_create,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -30,18 +30,19 @@ export const LoaderPage = defineComponent({
         ...DefaultComponentProps,
         show: { type: Boolean, default: true },
     },
-    setup(props) {
+    setup(props, ctx) {
         return () => (
             <>
                 {props.show && (
                     <div
                         id={props.id}
-                        class={`fixed z-1000 top-0 left-0 w-full h-screen bg-white dark:bg-black flex justify-center items-center ${
+                        class={`fixed z-1000 top-0 left-0 w-full h-screen bg-white dark:bg-black flex flex-col gap-8 justify-center items-center ${
                             props.class || ''
                         }`}
                         style={props.style}
                     >
                         <Loader class={'w-12 h-12'} />
+                        {ctx.slots.default?.()}
                     </div>
                 )}
             </>

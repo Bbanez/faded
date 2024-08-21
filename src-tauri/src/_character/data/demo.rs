@@ -1,6 +1,6 @@
 use crate::{
     character::models::{main::Character, stats::CharacterStats},
-    util,
+    util::{self, math::Point3},
 };
 
 pub fn character_demo() -> Character {
@@ -16,6 +16,7 @@ pub fn character_demo() -> Character {
         rev: false,
         rev_at: 0,
         rev_inc_per_lvl: 1500,
+        bb: Point3::new(0.3, 0.3, 0.3),
         stats: CharacterStats {
             base_str: 8.0,
             str: 0.0,

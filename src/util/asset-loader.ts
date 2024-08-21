@@ -22,7 +22,7 @@ export interface AssetLoaderCallbackData {
 }
 
 export interface AssetLoaderCallback {
-    (data: AssetLoaderCallbackData): Promise<void>;
+    (data: AssetLoaderCallbackData): void;
 }
 
 export interface AssetLoaderItem {
@@ -61,7 +61,7 @@ export class AssetLoader {
     private static async trigger(type: 'started' | 'done') {
         for (let i = 0; i < this.subs.length; i++) {
             const sub = this.subs[i];
-            await sub.cb({
+            sub.cb({
                 items: this.items.map((e) => e.path),
                 type,
                 loadedItemsCount: this.loadedItemsCount,
@@ -75,7 +75,7 @@ export class AssetLoader {
     ) {
         for (let i = 0; i < this.subs.length; i++) {
             const sub = this.subs[i];
-            await sub.cb({
+            sub.cb({
                 items: this.items.map((e) => e.path),
                 type: 'progress',
                 loadedItemsCount: this.loadedItemsCount,

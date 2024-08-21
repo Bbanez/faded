@@ -1,17 +1,15 @@
 import { AccountHandler } from './handlers/account.ts';
-import { CharacterHandler } from './handlers/character.ts';
 import { GameMapHandler } from './handlers/game-map.ts';
+import { GameHandler } from './handlers/game.ts';
+import { HeroHandler } from './handlers/hero.ts';
 import { SettingsHandler } from './handlers/settings.ts';
 
 export class Sdk {
     account = new AccountHandler();
-    // player = new PlayerHandler(this);
-    // manager = new ManagerHandler();
-    // data = new DataHandler();
     settings = new SettingsHandler();
     gameMap = new GameMapHandler();
-    // landscape = new LandscapeHandler();
-    character = new CharacterHandler();
+    game = new GameHandler();
+    hero = new HeroHandler();
 }
 
 const sdk = new Sdk();

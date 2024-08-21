@@ -74,6 +74,18 @@ impl Size {
             height: size.1,
         }
     }
+
+    pub fn serialize(size: &Size) -> String {
+        format!("{},{}", size.width, size.height)
+    }
+
+    pub fn deserialize(serialized: &str) -> Size {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        Size {
+            width: parts[0].parse().unwrap(),
+            height: parts[0].parse().unwrap(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -104,6 +116,19 @@ impl Size3 {
             depth: size.2,
         }
     }
+
+    pub fn serialize(size: &Size3) -> String {
+        format!("{},{},{}", size.width, size.height, size.depth)
+    }
+
+    pub fn deserialize(serialized: &str) -> Size3 {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        Size3 {
+            width: parts[0].parse().unwrap(),
+            height: parts[0].parse().unwrap(),
+            depth: parts[0].parse().unwrap(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -126,6 +151,18 @@ impl USize {
         USize {
             width: size.0,
             height: size.1,
+        }
+    }
+
+    pub fn serialize(size: &USize) -> String {
+        format!("{},{}", size.width, size.height)
+    }
+
+    pub fn deserialize(serialized: &str) -> USize {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        USize {
+            width: parts[0].parse().unwrap(),
+            height: parts[0].parse().unwrap(),
         }
     }
 }
@@ -158,6 +195,19 @@ impl USize3 {
             depth: size.2,
         }
     }
+
+    pub fn serialize(size: &USize3) -> String {
+        format!("{},{},{}", size.width, size.height, size.depth)
+    }
+
+    pub fn deserialize(serialized: &str) -> USize3 {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        USize3 {
+            width: parts[0].parse().unwrap(),
+            height: parts[0].parse().unwrap(),
+            depth: parts[0].parse().unwrap(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -185,6 +235,18 @@ impl Point {
 
     pub fn to_u_point(self) -> UPoint {
         UPoint::new(self.x as usize, self.y as usize)
+    }
+
+    pub fn serialize(point: &Point) -> String {
+        format!("{},{}", point.x, point.y)
+    }
+
+    pub fn deserialize(serialized: &str) -> Point {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        Point {
+            x: parts[0].parse().unwrap(),
+            y: parts[1].replace("\n", "").parse().unwrap(),
+        }
     }
 }
 
@@ -216,6 +278,19 @@ impl Point3 {
     pub fn to_u_point(self) -> UPoint3 {
         UPoint3::new(self.x as usize, self.y as usize, self.z as usize)
     }
+
+    pub fn serialize(point: &Point3) -> String {
+        format!("{},{},{}", point.x, point.y, point.z)
+    }
+
+    pub fn deserialize(serialized: &str) -> Point3 {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        Point3 {
+            x: parts[0].parse().unwrap(),
+            y: parts[1].parse().unwrap(),
+            z: parts[1].parse().unwrap(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -243,6 +318,18 @@ impl UPoint {
 
     pub fn to_point(self) -> Point {
         Point::new(self.x as f32, self.y as f32)
+    }
+
+    pub fn serialize(point: &UPoint) -> String {
+        format!("{},{}", point.x, point.y)
+    }
+
+    pub fn deserialize(serialized: &str) -> UPoint {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        UPoint {
+            x: parts[0].parse().unwrap(),
+            y: parts[1].parse().unwrap(),
+        }
     }
 }
 
@@ -273,5 +360,18 @@ impl UPoint3 {
 
     pub fn to_u_point(self) -> Point3 {
         Point3::new(self.x as f32, self.y as f32, self.z as f32)
+    }
+
+    pub fn serialize(point: &UPoint3) -> String {
+        format!("{},{},{}", point.x, point.y, point.z)
+    }
+
+    pub fn deserialize(serialized: &str) -> UPoint3 {
+        let parts: Vec<&str> = serialized.split(",").collect();
+        UPoint3 {
+            x: parts[0].parse().unwrap(),
+            y: parts[1].parse().unwrap(),
+            z: parts[1].parse().unwrap(),
+        }
     }
 }
