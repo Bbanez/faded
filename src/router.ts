@@ -9,6 +9,7 @@ import { P404View } from './views/404.tsx';
 import { AccountLoadView } from './views/account-load.tsx';
 import { GameView } from './views/game.tsx';
 import { GameStartView } from './views/game-start.tsx';
+import { GameLoadView } from './views/game-load.tsx';
 import { MapMakerView } from './views/map-maker.tsx';
 import { MapMakerSelectView } from './views/map-maker-select.tsx';
 
@@ -18,6 +19,7 @@ export const views = {
     HomeView,
     GameView,
     GameStartView,
+    GameLoadView,
     AccountView,
     NewAccountView,
     AccountLoadView,
@@ -93,7 +95,7 @@ const routes: Array<RouteRecordRawExtended> = [
         component: AccountView,
     },
     {
-        path: '/account/:accountId/map',
+        path: '/account/:accountId/game/start',
         name: 'GameStartView',
         meta: {
             title: 'Start a game',
@@ -102,7 +104,16 @@ const routes: Array<RouteRecordRawExtended> = [
         component: GameStartView,
     },
     {
-        path: '/account/:accountId/map/:mapId/game/:gameId',
+        path: '/account/:accountId/game/load',
+        name: 'GameLoadView',
+        meta: {
+            title: 'Load a game',
+            layout: 'DefaultLayout',
+        },
+        component: GameLoadView,
+    },
+    {
+        path: '/account/:accountId/game/:gameId/map/:mapId',
         name: 'GameView',
         meta: {
             title: 'Game',

@@ -19,8 +19,8 @@ import { MapMakerGridPlane } from './grid-plane.ts';
 import { MapMaker } from './main.ts';
 import { ShaderManager } from '@fdd/shaders/manager.ts';
 
-import vsh from '@fdd/shaders/map-maker/landscape.vert';
-import fsh from '@fdd/shaders/map-maker/landscape.frag';
+import vsh from '@fdd/shaders/landscape/demo.vert';
+import fsh from '@fdd/shaders/landscape/demo.frag';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import {
     rotateYGeometry,

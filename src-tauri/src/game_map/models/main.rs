@@ -8,7 +8,7 @@ use crate::{
     },
     util::{
         self, b64,
-        math::{Point, Point3, UPoint, USize3},
+        math::{Point3, UPoint, USize3},
     },
 };
 
@@ -24,7 +24,7 @@ pub struct GameMap {
     pub name: String,
     pub desc: String,
     pub image: Option<String>,
-    pub hero_start_position: Point,
+    pub hero_start_position: Point3,
 }
 
 impl DBEntity for GameMap {
@@ -105,7 +105,7 @@ impl DBStorageSerializeDeserialize for GameMap {
             DB_STOREAGE_SPLIT_CHAR,
             /*[13]*/ b64::encode(&image_str),
             DB_STOREAGE_SPLIT_CHAR,
-            /*[14]*/ Point::serialize(&self.hero_start_position),
+            /*[14]*/ Point3::serialize(&self.hero_start_position),
         )
     }
 
@@ -157,7 +157,7 @@ impl DBStorageSerializeDeserialize for GameMap {
         } else {
             self.image = Some(image_str);
         }
-        self.hero_start_position = Point::deserialize(parts[14]);
+        self.hero_start_position = Point3::deserialize(parts[14]);
     }
 }
 
@@ -167,7 +167,7 @@ impl GameMap {
         desc: String,
         image: Option<String>,
         landscape: GameMapLandscape,
-        hero_start_position: Point,
+        hero_start_position: Point3,
     ) -> GameMap {
         GameMap {
             id: util::id::generate(),
@@ -190,7 +190,7 @@ impl GameMap {
             image: None,
             name: String::new(),
             landscape: GameMapLandscape::new_empty(),
-            hero_start_position: Point::new(0.0, 0.0),
+            hero_start_position: Point3::new(0.0, 0.0, 0.0),
         }
     }
 }

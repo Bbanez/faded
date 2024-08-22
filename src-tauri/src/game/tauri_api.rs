@@ -1,4 +1,8 @@
-use crate::{hero::data::get_heros, state::AppState, util::tauri_api_response::TauriResponse};
+use crate::{
+    hero::data::get_heros,
+    state::AppState,
+    util::{math::Point, tauri_api_response::TauriResponse},
+};
 
 use super::models::{main::Game, player::GamePlayer};
 
@@ -41,7 +45,14 @@ pub fn game_create(
     let game_map = state_guard.game_map_repo.items[game_map_idx].clone();
     let game = Game::new(
         map_id.to_string(),
-        GamePlayer::new(account_id.to_string(), hero, game_map.hero_start_position),
+        GamePlayer::new(
+            account_id.to_string(),
+            hero,
+            Point::new(
+                game_map.hero_start_position.x,
+                game_map.hero_start_position.z,
+            ),
+        ),
     );
     let game = state_guard.game_repo.add(game.clone());
     return match game {

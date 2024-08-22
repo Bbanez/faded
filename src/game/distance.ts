@@ -1,5 +1,5 @@
+import { Point } from '@fdd/types/rs';
 import { Object3D, Raycaster, Vector3 } from 'three';
-import { Point } from '../types/rs';
 
 export class Distance {
     static ray = new Raycaster();
@@ -7,7 +7,7 @@ export class Distance {
 
     static heightTo(point: Point, object: Object3D): number {
         if (object) {
-            this.ray.set(new Vector3(point.x, 1000, point.y), this.rayDir);
+            this.ray.set(new Vector3(point.x, 100, point.y), this.rayDir);
             const intersect = this.ray.intersectObject(object, true);
             if (intersect[0]) {
                 return intersect[0].point.y;

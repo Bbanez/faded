@@ -2,7 +2,7 @@ use crate::{
     state::AppState,
     util::{
         self,
-        math::{Point, Point3, UPoint, USize3},
+        math::{Point3, UPoint, USize3},
         tauri_api_response::TauriResponse,
     },
 };
@@ -37,7 +37,7 @@ pub fn game_map_create(
             1,
             UPoint::new(0, 0),
         ),
-        Point::new(1.0, 1.0),
+        Point3::new(1.0, 1.0, 1.0),
     ));
     match game_map {
         Ok(game_map) => TauriResponse::new(game_map),

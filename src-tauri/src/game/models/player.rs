@@ -78,9 +78,9 @@ impl GamePlayer {
     }
 
     pub fn deserialize(parts: &[&str]) -> GamePlayer {
-        let wps_parts: Vec<&str> = parts[10].split(",").collect();
+        let wps_parts: Vec<&str> = parts[12].split(",").collect();
         let mut wps: Vec<Point> = vec![];
-        if wps_parts.len() > 0 {
+        if wps_parts.len() > 1 {
             wps.push(Point {
                 x: wps_parts[0].parse().unwrap(),
                 y: wps_parts[1].parse().unwrap(),
@@ -95,8 +95,8 @@ impl GamePlayer {
             }
         }
         let mut wp: Option<Point> = None;
-        if parts[11] != "" {
-            let wp_parts: Vec<&str> = parts[11].split(",").collect();
+        if parts[13] != "" {
+            let wp_parts: Vec<&str> = parts[13].split(",").collect();
             wp = Some(Point {
                 x: wp_parts[0].parse().unwrap(),
                 y: wp_parts[1].parse().unwrap(),

@@ -7,8 +7,8 @@ import {
     Vector2,
 } from 'three';
 import { ShaderManager } from '@fdd/shaders/manager.ts';
-import gridPlaneVsh from '@fdd/shaders/map-maker/grid-plane.vert';
-import gridPlaneFsh from '@fdd/shaders/map-maker/grid-plane.frag';
+import gridPlaneVsh from '@fdd/shaders/landscape/grid-plane.vert';
+import gridPlaneFsh from '@fdd/shaders/landscape/grid-plane.frag';
 import { Linear2D, PI12, createLinear2D } from '@fdd/util/math.ts';
 import { callAndClearUnsubscribeFns, UnsubscribeFns } from '@fdd/util/sub.ts';
 import { MapMaker } from './main.ts';

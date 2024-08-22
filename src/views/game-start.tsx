@@ -84,7 +84,7 @@ export const GameStartView = defineComponent({
                                                 },
                                                 async (game) => {
                                                     await router.push(
-                                                        `/account/${route.params.accountId}/map/${selected_map.value?.id}/game/${game.id}`,
+                                                        `/account/${route.params.accountId}/game/${game.id}/map/${selected_map.value?.id}`,
                                                     );
                                                 },
                                             );

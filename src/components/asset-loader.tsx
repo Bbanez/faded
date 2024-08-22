@@ -5,14 +5,9 @@ import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 export const AssetLoaderBar = defineComponent({
     setup() {
         const loaderData = ref<AssetLoaderCallbackData>({
-            items: ['1', '2'],
-            item: {
-                name: 'test-item',
-                path: '/assets/test.gltf',
-                progress: 50,
-            },
+            items: [],
             loadedItemsCount: 1,
-            type: 'progress',
+            type: 'done',
         });
         const unsubs: UnsubscribeFns = [];
 

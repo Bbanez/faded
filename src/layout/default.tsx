@@ -79,11 +79,11 @@ export const DefaultLayout = defineComponent({
                         items.push(
                             {
                                 text: 'Start a game',
-                                href: `/account/${activeAccount.value?.id}/map`,
+                                href: `/account/${activeAccount.value?.id}/game/start`,
                             },
                             {
                                 text: 'Load a game',
-                                href: `/account/${activeAccount.value?.id}/load-game`,
+                                href: `/account/${activeAccount.value?.id}/game/load`,
                             },
                             {
                                 text: 'Map maker',
@@ -99,6 +99,15 @@ export const DefaultLayout = defineComponent({
                     break;
 
                 case 'GameStartView':
+                    {
+                        items.push({
+                            text: 'Back',
+                            href: `/account/${route.params.id}`,
+                        });
+                    }
+                    break;
+
+                case 'GameLoadView':
                     {
                         items.push({
                             text: 'Back',
