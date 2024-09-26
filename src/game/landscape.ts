@@ -8,7 +8,6 @@ import {
     Color,
     FrontSide,
     Mesh,
-    MeshBasicMaterial,
     Texture,
     Vector3,
 } from 'three';
@@ -30,6 +29,7 @@ export interface LandscapeShaderUniforms {
     uGrassNoiseTexture: Texture;
     uGrassTexture: Texture;
     uMapSize: Vector3;
+    uNavMesh: Texture;
 }
 
 export interface LandscapeChunkMesh {
@@ -59,16 +59,9 @@ export class Landscape {
         chunkMeshes: LandscapeChunkMesh[],
         setId: number,
         meshId: number,
-    ): Mesh {
+    ): Mesh | null {
         if (meshId === 0) {
-            const mesh = new Mesh(
-                new BufferGeometry(),
-                new MeshBasicMaterial({
-                    color: '#000000',
-                }),
-            );
-            mesh.name = 'air';
-            return mesh;
+            return null;
         }
         for (let i = 0; i < chunkMeshes.length; i++) {
             const meshData = chunkMeshes[i];
@@ -102,6 +95,9 @@ export class Landscape {
                 chunk.setId,
                 chunk.meshId,
             );
+            if (!mesh) {
+                continue;
+            }
             mesh.position.set(chunk.x + 0.5, chunk.y, chunk.z + 0.5);
             const meshGeo = mesh.geometry.clone();
             scaleGeometry(meshGeo, [
@@ -119,6 +115,17 @@ export class Landscape {
             mergeGeometries(displayableChunks),
             this.shader.material,
         );
+        // this.groundMesh = new Mesh(
+        //     mergeGeometries(displayableChunks),
+        //     // this.shader.material,
+        //     new MeshStandardMaterial({
+        //         color: 0xffffff,
+        //         onBeforeCompile(args) {
+        //             console.log('frag', args.fragmentShader);
+        //             console.log('vert', args.vertexShader);
+        //         },
+        //     }),
+        // );
         this.groundMesh.receiveShadow = true;
         this.water = await createWater(
             this.gameManager.gameMap.landscape.size.width,

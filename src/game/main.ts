@@ -3,6 +3,7 @@ import {
     Color,
     CubeTexture,
     DoubleSide,
+    Group,
     Material,
     Mesh,
     Scene,
@@ -20,6 +21,8 @@ import { Keyboard } from '@fdd/user-input/keyboard';
 import { Landscape, LandscapeChunkMesh } from './landscape';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { scaleGeometry } from '@fdd/util/geometry';
+import { Player, PlayerAssets } from './player';
+import { UnsubscribeFns } from '@fdd/util/sub.ts';
 
 export class GameManager {
     scene: Scene;
@@ -27,6 +30,9 @@ export class GameManager {
     camera: Camera;
     lights: Lights;
     landscape: Landscape;
+    players: Player[] = [];
+
+    private unsubs: UnsubscribeFns = [];
 
     constructor(
         public sdk: Sdk,
@@ -34,8 +40,10 @@ export class GameManager {
         public game: Game,
         public gameMap: GameMap,
         private frameTicker: boolean,
+        private navMesh: number[],
     ) {
         this.scene = new Scene();
+        // this.scene.fog = new Fog(0x000000, 1, 5);
         this.camera = new Camera(this, gameMap.hero_start_position);
         this.renderer = new Renderer(
             this,
@@ -58,6 +66,7 @@ export class GameManager {
                 this.gameMap.landscape.size.height,
                 this.gameMap.landscape.size.depth,
             ),
+            uNavMesh: this.navMeshToTexture(this.navMesh),
         });
         Mouse.init();
         Keyboard.init();
@@ -65,6 +74,25 @@ export class GameManager {
         if (this.frameTicker) {
             this.frameTick().catch((err) => console.error(err));
         }
+    }
+
+    private navMeshToTexture(navMesh: number[]): Texture {
+        const pixelData: number[] = [];
+        for (let i = 0; i < navMesh.length; i++) {
+            const item = navMesh[i] * 255;
+            if (item > 0) {
+                pixelData.push(255, 0, 0, 255);
+            } else {
+                pixelData.push(0, 0, 255, 255);
+            }
+        }
+        const pixelArr = new Uint8ClampedArray(pixelData);
+        const imageData = new ImageData(
+            pixelArr,
+            this.gameMap.landscape.size.width,
+            this.gameMap.landscape.size.depth,
+        );
+        return new Texture(imageData);
     }
 
     private async frameTick() {
@@ -94,7 +122,6 @@ export class GameManager {
                 ] = true;
             }
         }
-        const landscapeChunkMeshes: LandscapeChunkMesh[] = [];
         AssetLoader.register(
             ...Object.keys(landscapeChunkNames).map((itemName) => {
                 const itemParts = itemName.split('.');
@@ -128,6 +155,36 @@ export class GameManager {
                 path: `/assets/maps/grass_texture.jpg`,
             },
         );
+        for (let i = 0; i < this.game.players.length; i++) {
+            const player = this.game.players[i];
+            AssetLoader.register(
+                {
+                    name: `p_${i}:` + player.hero.id + ':t',
+                    path: `/assets/heros/${player.hero.id}/t.fbx`,
+                    type: 'fbx',
+                },
+                {
+                    name: `p_${i}:` + player.hero.id + ':idle',
+                    path: `/assets/heros/${player.hero.id}/idle.fbx`,
+                    type: 'fbx',
+                },
+                {
+                    name: `p_${i}:` + player.hero.id + ':run',
+                    path: `/assets/heros/${player.hero.id}/run.fbx`,
+                    type: 'fbx',
+                },
+                {
+                    name: `p_${i}:` + player.hero.id + ':death',
+                    path: `/assets/heros/${player.hero.id}/death.fbx`,
+                    type: 'fbx',
+                },
+            );
+        }
+        const landscapeChunkMeshes: LandscapeChunkMesh[] = [];
+        const playersAssets: PlayerAssets[] = [];
+        for (let i = 0; i < this.game.players.length; i++) {
+            playersAssets.push({} as never);
+        }
         const loaderUnsub = AssetLoader.onLoaded(async (item, data) => {
             if (item.name === 'skybox') {
                 this.scene.background = data as CubeTexture;
@@ -143,6 +200,15 @@ export class GameManager {
                         data as Texture,
                     );
                 }
+            } else if (item.name.startsWith('p_')) {
+                const parts = item.name.split(':');
+                const playerIdx = parseInt(parts[0].split('_')[1]);
+                playersAssets[playerIdx][parts[2] as keyof PlayerAssets] =
+                    data as Group;
+                // if (parts[0] === 'p_1') {
+                //     player1Assets[parts[2] as keyof PlayerAssets] =
+                //         data as Group;
+                // }
             } else {
                 const mesh = (data as GLTF).scene.children[0] as Mesh;
                 mesh.castShadow = true;
@@ -167,9 +233,22 @@ export class GameManager {
         if (this.landscape.water) {
             this.scene.add(this.landscape.water.mesh);
         }
+        for (let i = 0; i < this.game.players.length; i++) {
+            this.players.push(
+                new Player(
+                    this.sdk,
+                    this,
+                    this.game.players[i],
+                    playersAssets[i],
+                    i,
+                ),
+            );
+        }
+        this.camera.follow(this.players[0].assets.t.position);
+        this.scene.add(this.players[0].assets.t);
     }
 
-    desctroy() {
+    destroy() {
         Ticker.clear();
         this.lights.destroy();
         this.scene.clear();

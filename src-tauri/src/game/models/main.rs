@@ -8,7 +8,7 @@ use crate::{
     },
     util,
 };
-
+use crate::util::b64;
 use super::player::GamePlayer;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -18,7 +18,7 @@ pub struct Game {
     pub created_at: u128,
     pub updated_at: u128,
     pub map_id: String,
-    pub p1: GamePlayer,
+    pub players: Vec<GamePlayer>
 }
 
 impl DBEntity for Game {
@@ -33,6 +33,10 @@ impl DBEntity for Game {
 
 impl DBStorageSerializeDeserialize for Game {
     fn serialize(&self) -> String {
+        let mut players_str = format!("{}", b64::encode(&GamePlayer::serialize(&self.players[0])));
+        for player_idx in 1..self.players.len() {
+            players_str = format!("{}{}{}", players_str, ",", b64::encode(&GamePlayer::serialize(&self.players[player_idx])))
+        }
         format!(
             "{}{}\
             {}{}\
@@ -47,7 +51,7 @@ impl DBStorageSerializeDeserialize for Game {
             DB_STOREAGE_SPLIT_CHAR,
             /*[3]*/ self.map_id,
             DB_STOREAGE_SPLIT_CHAR,
-            /*[4]*/ GamePlayer::serialize(&self.p1)
+            /*[4]*/ players_str
         )
     }
 
@@ -57,7 +61,13 @@ impl DBStorageSerializeDeserialize for Game {
         self.created_at = parts[1].parse().unwrap();
         self.updated_at = parts[2].parse().unwrap();
         self.map_id = parts[3].to_string();
-        self.p1 = GamePlayer::deserialize(&parts[4..parts.len()]);
+        self.players = vec![];
+        let players_str: Vec<&str> = parts[4].split(",").collect();
+        for i in 0..players_str.len() {
+            let player_str_decoded = b64::decode(&players_str[i]);
+            let player_str_parts: Vec<&str> = player_str_decoded.split(DB_STOREAGE_SPLIT_CHAR).collect();
+            self.players.push(GamePlayer::deserialize(&player_str_parts));
+        }
     }
 }
 
@@ -68,17 +78,23 @@ impl Game {
             created_at: util::time::get_current_millis(),
             updated_at: util::time::get_current_millis(),
             map_id: "".to_string(),
-            p1: GamePlayer::new_empty(),
+            players: vec![GamePlayer::new_empty()],
         }
     }
 
-    pub fn new(map_id: String, p1: GamePlayer) -> Game {
+    pub fn new(map_id: String, players: Vec<GamePlayer>) -> Game {
         Game {
             id: util::id::generate(),
             created_at: util::time::get_current_millis(),
             updated_at: util::time::get_current_millis(),
             map_id,
-            p1,
+            players
+        }
+    }
+
+    pub fn on_tick(&mut self) {
+        for i in 0..self.players.len() {
+           self.players[i].on_tick();
         }
     }
 }

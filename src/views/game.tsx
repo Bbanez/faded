@@ -27,45 +27,42 @@ export const GameView = defineComponent({
                     gameId: string;
                 },
         );
-        const game = computed(() =>
-            sdk.game.store.findById(params.value.gameId),
-        );
-        const hero1 = computed(() =>
-            sdk.hero.store.findById(game.value?.p1.hero.id || ''),
-        );
+        // const game = computed(() =>
+        //     sdk.game.store.findById(params.value.gameId),
+        // );
+        // const hero1 = computed(() =>
+        //     sdk.hero.store.findById(game.value?.players[0].hero.id || ''),
+        // );
         let gameManager: GameManager = null as never;
 
         onMounted(async () => {
-            await throwable(
-                async () => {
-                    await sdk.hero.getAll();
-                    return {
-                        game: await sdk.game.get(params.value.gameId),
-                        gameMap: await sdk.gameMap.get(params.value.mapId),
-                    };
-                },
-                async (result) => {
-                    gameManager = new GameManager(
-                        sdk,
-                        gameCanvasContainer.value,
-                        result.game,
-                        result.gameMap,
-                        true,
-                    );
-                    await gameManager.initialize();
-                },
-            );
+            await throwable(async () => {
+                await sdk.hero.getAll();
+                const gamee = await sdk.game.get(params.value.gameId);
+                const gameMap = await sdk.gameMap.get(params.value.mapId);
+                const navMesh = await sdk.gameMap.navMeshMetadata(gameMap.id);
+                gameManager = new GameManager(
+                    sdk,
+                    gameCanvasContainer.value,
+                    gamee,
+                    gameMap,
+                    true,
+                    navMesh,
+                );
+                await gameManager.initialize();
+            });
             loaded.value = true;
         });
 
         onBeforeUnmount(() => {
             if (gameManager) {
-                gameManager.desctroy();
+                gameManager.destroy();
             }
         });
 
         return () => (
             <div class={`w-full h-full`}>
+                
                 {!loaded.value ? (
                     <LoaderPage show>
                         <div>Loading game ...</div>

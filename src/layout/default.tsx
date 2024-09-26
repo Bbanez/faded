@@ -51,6 +51,10 @@ export const DefaultLayout = defineComponent({
                                 text: 'Settings',
                                 href: '/settings',
                             },
+                            {
+                                text: 'Dev path finding',
+                                href: '/dev/path-finding',
+                            },
                         );
                     }
                     break;

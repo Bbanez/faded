@@ -23,7 +23,7 @@ export class Lights {
         this.sun.shadow.camera.right = -sunGroundSize;
         this.sun.shadow.camera.top = sunGroundSize / 2;
         this.sun.shadow.camera.bottom = -sunGroundSize / 2;
-        this.sun.target.position.set(30, 0, 85);
+        this.sun.target.position.set(10, 0, 10);
         this.gameManager.scene.add(this.sun);
         this.gameManager.scene.add(this.sun.target);
 

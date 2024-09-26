@@ -5,6 +5,7 @@ use crate::{
     db::storage::DB_STOREAGE_SPLIT_CHAR,
     util::{game_entiry::GameEntity, math::Point3},
 };
+use crate::util::b64;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
@@ -19,6 +20,7 @@ pub struct Hero {
     pub max_hp: f32,
     pub hp: f32,
     pub bb: Point3,
+    pub move_speed: f32,
 }
 
 impl GameEntity for Hero {
@@ -40,6 +42,7 @@ impl Hero {
             int: 0.0,
             max_hp: 0.0,
             str: 0.0,
+            move_speed: 0.0,
         }
     }
 
@@ -53,6 +56,7 @@ impl Hero {
             {}{}\
             {}{}\
             {},{},{}{}\
+            {}{}\
             {}{}\
             {}",
             /*[0]*/ hero.id,
@@ -74,9 +78,11 @@ impl Hero {
             /*[7]*/ hero.bb.y,
             /*[7]*/ hero.bb.z,
             DB_STOREAGE_SPLIT_CHAR,
-            /*[8]*/ hero.name,
+            /*[8]*/ b64::encode(&hero.name),
             DB_STOREAGE_SPLIT_CHAR,
-            /*[9]*/ hero.desc,
+            /*[9]*/ b64::encode(&hero.desc),
+            DB_STOREAGE_SPLIT_CHAR,
+            /*[10]*/ hero.move_speed,
         )
     }
 
@@ -85,8 +91,6 @@ impl Hero {
         let bb_parts: Vec<&str> = parts[7].split(",").collect();
         Hero {
             id: parts[0].to_string(),
-            name: parts[8].to_string(),
-            desc: parts[9].to_string(),
             str: parts[1].parse().unwrap(),
             agi: parts[2].parse().unwrap(),
             int: parts[3].parse().unwrap(),
@@ -98,6 +102,9 @@ impl Hero {
                 bb_parts[1].parse().unwrap(),
                 bb_parts[2].parse().unwrap(),
             ),
+            name: b64::decode(parts[8]),
+            desc: b64::decode(parts[9]),
+            move_speed: parts[10].parse().unwrap(),
         }
     }
 }

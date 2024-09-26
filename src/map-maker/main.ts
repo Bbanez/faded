@@ -52,7 +52,7 @@ export class MapMaker {
         this.frameTick().catch((err) => console.error(err));
         this.scene.add(new AxesHelper(100));
         this.scene.add(this.landscape.container);
-        // this.scene.add(this.lights.sun);
+        this.scene.add(this.lights.sun);
         this.scene.add(this.lights.ambientLight);
     }
 

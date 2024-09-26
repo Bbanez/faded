@@ -45,6 +45,7 @@ export class Water {
         );
         this.shader.setUniform('normalTexture', waterNormalTexture);
         this.mesh = new Mesh(plane, this.shader.material);
+        this.mesh.receiveShadow = true;
         this.mesh.position.set(width / 2, height, depth / 2);
     }
 

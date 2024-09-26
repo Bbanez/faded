@@ -12,6 +12,7 @@ import { GameStartView } from './views/game-start.tsx';
 import { GameLoadView } from './views/game-load.tsx';
 import { MapMakerView } from './views/map-maker.tsx';
 import { MapMakerSelectView } from './views/map-maker-select.tsx';
+import DevPathFinding from './views/dev/path-finding.tsx';
 
 export const views = {
     MapMakerView,
@@ -24,6 +25,9 @@ export const views = {
     NewAccountView,
     AccountLoadView,
     SettingsView,
+
+    DevPathFinding,
+
     P404View,
 };
 
@@ -145,6 +149,14 @@ const routes: Array<RouteRecordRawExtended> = [
             layout: 'DefaultLayout',
         },
         component: SettingsView,
+    },
+    {
+        path: '/dev/path-finding',
+        name: 'DevPathFinding',
+        meta: {
+            title: 'Dev Path Finding',
+        },
+        component: DevPathFinding,
     },
     {
         path: '/:pathMatch(.*)*',

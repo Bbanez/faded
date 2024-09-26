@@ -6,6 +6,7 @@ pub mod db;
 pub mod game;
 pub mod game_map;
 pub mod hero;
+pub mod path_finder;
 pub mod settings;
 pub mod util;
 
@@ -21,14 +22,16 @@ use account::tauri_api::{
 };
 
 use game::repo::create_game_repo;
-use game::tauri_api::{game_create, game_get, game_get_all};
+use game::tauri_api::{game_create, game_get, game_get_all, game_on_tick, game_player_move};
 use game_map::repo::create_game_map_repo;
 use game_map::tauri_api::{
     game_map_create, game_map_get, game_map_get_all, game_map_landscape_get_sets,
     game_map_landscape_set_camera, game_map_landscape_set_chunk,
-    game_map_landscape_set_selected_level, game_map_nav_mesh_metadata, game_map_save,
+    game_map_landscape_set_selected_level, game_map_nav_mesh_metadata, game_map_path_find,
+    game_map_save,
 };
 
+use path_finder::tauri_api::path_finder_a_star;
 use settings::repo::create_settings_repo;
 use settings::tauri_api::{settings_get, settings_set};
 
@@ -82,6 +85,7 @@ fn main() {
             game_map_get_all,
             game_map_get,
             game_map_create,
+            game_map_path_find,
             //
             // character_get_all,
             // character_get,
@@ -92,6 +96,10 @@ fn main() {
             game_get_all,
             game_get,
             game_create,
+            game_player_move,
+            game_on_tick,
+            //
+            path_finder_a_star,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

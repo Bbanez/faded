@@ -138,6 +138,12 @@ export class Landscape {
                 ? mergeGeometries(meshesFiltered)
                 : new BufferGeometry();
         this.mesh = new Mesh(mergedGeo, this.shader.material);
+        // this.mesh = new Mesh(
+        //     mergedGeo,
+        //     new MeshBasicMaterial({
+        //         color: 0xffffff,
+        //     }),
+        // );
         this.mesh.receiveShadow = true;
         // this.mesh.castShadow = true;
         this.container.add(this.mesh);

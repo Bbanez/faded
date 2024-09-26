@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-pub const PI: f32 = 3.1415926;
+pub const PI: f32 = std::f32::consts::PI;
 pub const PI14: f32 = PI / 4.0;
 pub const PI12: f32 = PI / 2.0;
 pub const PI13: f32 = PI / 3.0;
@@ -9,6 +9,53 @@ pub const PI32: f32 = (3.0 * PI) / 2.0;
 pub const PI34: f32 = (3.0 * PI) / 4.0;
 pub const PI54: f32 = (5.0 * PI) / 4.0;
 pub const PI74: f32 = (7.0 * PI) / 4.0;
+
+pub fn distance_between_points(start: &Point, end: &Point) -> f32 {
+    let x = (end.x - start.x).abs();
+    let y = (end.y - start.y).abs();
+    (x * x + y * y).sqrt()
+}
+
+pub fn are_points_near(point1: &Point, point2: &Point, delta: &Size) -> bool {
+    point1.x > point2.x - delta.width
+        && point1.x < point2.x + delta.width
+        && point1.y > point2.y - delta.height
+        && point1.y < point2.y + delta.height
+}
+
+pub fn get_angle(position: &Point, target: &Point) -> f32 {
+    let dx = target.x - position.x;
+    let dz = target.y - position.y;
+    let mut angle: f32 = 0.0;
+    if dx == 0.0 {
+        angle = PI12;
+        if dz < 0.0 {
+            angle = PI32;
+        }
+    } else if dz == 0.0 {
+        if dx < 0.0 {
+            angle = PI;
+        }
+    } else {
+        angle = (dz / dx).atan();
+        if dx < 0.0 && dz > 0.0 {
+            angle = PI + angle;
+        } else if dx < 0.0 && dz < 0.0 {
+            angle = PI + angle;
+        } else if dx > 0.0 && dz < 0.0 {
+            angle = 2.0 * PI + angle
+        }
+    }
+    angle
+}
+
+pub fn rad_to_deg(rad: f32) -> f32 {
+    180.0 * rad / PI
+}
+
+pub fn deg_to_rad(deg: f32) -> f32 {
+    PI * deg / 180.0
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
@@ -208,6 +255,13 @@ impl USize3 {
             depth: parts[0].parse().unwrap(),
         }
     }
+
+    pub fn to_u2(&self) -> USize {
+        USize {
+            width: self.width,
+            height: self.depth,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
@@ -233,7 +287,7 @@ impl Point {
         }
     }
 
-    pub fn to_u_point(self) -> UPoint {
+    pub fn to_u_point(&self) -> UPoint {
         UPoint::new(self.x as usize, self.y as usize)
     }
 
@@ -275,8 +329,16 @@ impl Point3 {
         }
     }
 
-    pub fn to_u_point(self) -> UPoint3 {
+    pub fn to_u_point(&self) -> UPoint3 {
         UPoint3::new(self.x as usize, self.y as usize, self.z as usize)
+    }
+
+    pub fn to_p2(&self) -> Point {
+        Point::new(self.x, self.z)
+    }
+
+    pub fn to_u2(&self) -> UPoint {
+        UPoint::new(self.x as usize, self.z as usize)
     }
 
     pub fn serialize(point: &Point3) -> String {

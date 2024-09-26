@@ -35,10 +35,15 @@ export class ShaderManager<Uniforms = unknown> {
             options = {};
         }
         this.material = new ShaderMaterial({
-            uniforms: UniformsUtils.merge([UniformsLib.lights, shaderUniforms]),
+            uniforms: UniformsUtils.merge([
+                UniformsLib.lights,
+                UniformsLib.fog,
+                shaderUniforms,
+            ]),
             fragmentShader: frag,
             vertexShader: vert,
             ...options,
+            fog: true,
         });
     }
 

@@ -1,5 +1,5 @@
-import postProcessingVert from '@fdd/shaders/post-processing.vert';
-import postProcessingFrag from '@fdd/shaders/post-processing.frag';
+import postProcessingVert from '@fdd/shaders/map-maker-post-processing.vert';
+import postProcessingFrag from '@fdd/shaders/map-maker-post-processing.frag';
 
 import {
     PCFSoftShadowMap,

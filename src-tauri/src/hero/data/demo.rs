@@ -16,5 +16,6 @@ pub fn get() -> Hero {
             y: 0.3,
             z: 0.3,
         },
+        move_speed: 0.02
     }
 }

@@ -12,7 +12,10 @@ use crate::{
     },
 };
 
-use super::landscape::{GameMapLandscape, GameMapLandscapeLite};
+use super::{
+    landscape::{GameMapLandscape, GameMapLandscapeLite},
+    landscape_chunk,
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
@@ -192,6 +195,26 @@ impl GameMap {
             landscape: GameMapLandscape::new_empty(),
             hero_start_position: Point3::new(0.0, 0.0, 0.0),
         }
+    }
+
+    pub fn get_nav_mesh(&self) -> Vec<u8> {
+        let mut nav_map: Vec<u8> = vec![];
+        for _ in 0..self.landscape.size.depth {
+            for _ in 0..self.landscape.size.width {
+                nav_map.push(0);
+            }
+        }
+        for i in 0..self.landscape.chunks.len() {
+            let chunk = self.landscape.chunks[i];
+            let walkable = landscape_chunk::get_walkable(chunk);
+            if walkable > 0 {
+                let x = landscape_chunk::get_x_pos(chunk);
+                let z = landscape_chunk::get_z_pos(chunk);
+                let nav_map_id = x as usize + z as usize * self.landscape.size.width;
+                nav_map[nav_map_id] = walkable as u8;
+            }
+        }
+        return nav_map;
     }
 }
 

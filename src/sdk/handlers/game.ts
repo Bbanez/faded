@@ -1,5 +1,5 @@
 import { api_call } from '@fdd/rust/api-call';
-import { Game } from '@fdd/types/rs';
+import { Game, GamePlayer, Point } from '@fdd/types/rs';
 import { createArrayStore } from '@fdd/util/array-store';
 import { QueueError, createQueue } from '@fdd/util/queue';
 
@@ -11,6 +11,10 @@ export class GameHandler {
             { mapId: string; accountId: string; hero1Id: string },
             Game
         >('game_create'),
+        playerMove: api_call<
+            { gameId: string; end: Point; playerIdx: number },
+            GamePlayer
+        >('game_player_move'),
     };
     private latch: { [name: string]: boolean } = {};
     private queues = {
@@ -58,5 +62,17 @@ export class GameHandler {
         });
         this.store.set(result);
         return result;
+    }
+
+    async playerMove(
+        gameId: string,
+        playerIdx: number,
+        end: Point,
+    ): Promise<GamePlayer> {
+        return await this.rust.playerMove({
+            gameId,
+            end,
+            playerIdx,
+        });
     }
 }

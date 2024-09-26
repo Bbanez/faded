@@ -1,18 +1,19 @@
-use crate::{
-    state::AppState,
-    util::{
-        self,
-        math::{Point3, UPoint, USize3},
-        tauri_api_response::TauriResponse,
-    },
-};
-
 use super::{
     data::{landscape_set_demo::get_game_map_landscape_sets, GameMapLandscapeSet},
     models::{
         landscape::GameMapLandscape,
         landscape_chunk,
         main::{GameMap, GameMapLite},
+    },
+};
+use crate::path_finder::main::a_star;
+use crate::util::math::Point;
+use crate::{
+    state::AppState,
+    util::{
+        self,
+        math::{Point3, UPoint, USize3},
+        tauri_api_response::TauriResponse,
     },
 };
 
@@ -90,14 +91,14 @@ pub fn game_map_get(state: tauri::State<AppState>, game_map_id: &str) -> TauriRe
 #[tauri::command]
 pub fn game_map_get_all(state: tauri::State<AppState>) -> TauriResponse<Vec<GameMapLite>> {
     let state_guard = state.0.lock().unwrap();
-    return TauriResponse::new(
+    TauriResponse::new(
         state_guard
             .game_map_repo
             .items
             .iter()
             .map(|m| GameMapLite::new_from_game_map(m))
             .collect(),
-    );
+    )
 }
 
 #[tauri::command]
@@ -190,26 +191,42 @@ pub fn game_map_nav_mesh_metadata(
         .iter()
         .find(|l| l.id == game_map_id)
     {
-        let mut nav_map: Vec<u8> = vec![];
-        for _ in 0..game_map.landscape.size.depth {
-            for _ in 0..game_map.landscape.size.width {
-                nav_map.push(0);
-            }
-        }
-        for i in 0..game_map.landscape.chunks.len() {
-            let chunk = game_map.landscape.chunks[i];
-            let walkable = landscape_chunk::get_walkable(chunk);
-            if walkable > 0 {
-                let x = landscape_chunk::get_x_pos(chunk);
-                let z = landscape_chunk::get_z_pos(chunk);
-                let nav_map_id = x as usize + z as usize * game_map.landscape.size.width;
-                nav_map[nav_map_id] = walkable as u8;
-            }
-        }
-        return TauriResponse::new(nav_map);
+        return TauriResponse::new(game_map.get_nav_mesh());
     }
     TauriResponse::new_error_string(
         404,
         format!("Game map with ID '{}' does not exist", game_map_id),
     )
+}
+
+#[tauri::command]
+pub fn game_map_path_find(
+    state: tauri::State<AppState>,
+    start: Point,
+    end: Point,
+    map_id: &str,
+) -> TauriResponse<Vec<UPoint>> {
+    let state_guard = state.0.lock().unwrap();
+    let game_map_opt = state_guard.game_map_repo.find_by_id(map_id.to_string());
+    match game_map_opt {
+        Some(game_map) => {
+            let nav_mesh = game_map.get_nav_mesh();
+            let start_norm = start.to_u_point();
+            let end_norm = end.to_u_point();
+            let result = a_star(
+                &start_norm,
+                &end_norm,
+                &nav_mesh,
+                &game_map.landscape.size.to_u2(),
+            );
+            match result.0 {
+                Some(path) => TauriResponse::new(path),
+                None => TauriResponse::new_error(404, "No path found"),
+            }
+        }
+        None => TauriResponse::new_error_string(
+            404,
+            format!("Game map with ID '{}' does not exist", map_id),
+        ),
+    }
 }

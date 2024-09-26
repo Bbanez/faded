@@ -4,6 +4,7 @@ import {
     GameMapLandscapeSet,
     GameMapLite,
     Point3,
+    UPoint,
     USize3,
 } from '@fdd/types/rs';
 
@@ -39,6 +40,10 @@ export class GameMapHandler {
         navMeshMetadata: api_call<{ gameMapId: string }, number[]>(
             'game_map_nav_mesh_metadata',
         ),
+        pathFind: api_call<
+            { start: UPoint; end: UPoint; mapId: string },
+            UPoint[]
+        >('game_map_path_find'),
     };
 
     private landscape_sets: GameMapLandscapeSet[] | null = null;
@@ -98,5 +103,9 @@ export class GameMapHandler {
 
     async navMeshMetadata(gameMapId: string): Promise<number[]> {
         return await this.rust.navMeshMetadata({ gameMapId });
+    }
+
+    async pathFind(mapId: string, start: UPoint, end: UPoint) {
+        return await this.rust.pathFind({ mapId, start, end });
     }
 }
