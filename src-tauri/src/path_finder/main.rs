@@ -282,6 +282,8 @@ fn resolve_path(
         }
     }
     output.reverse();
+    output.remove(0);
+    output.remove(output.len() - 1);
     output
 }
 

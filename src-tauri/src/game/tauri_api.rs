@@ -131,6 +131,12 @@ pub fn game_player_move(
             return match result.0 {
                 Some(path) => {
                     state_guard.game_repo.items[i].players[player_idx].wps = vec![];
+                    state_guard.game_repo.items[i].players[player_idx].wp = None;
+                    for k in 0..path.len() {
+                        state_guard.game_repo.items[i].players[player_idx]
+                            .wps
+                            .push(path[k].clone().to_point())
+                    }
                     if result.1 {
                         state_guard.game_repo.items[i].players[player_idx]
                             .wps

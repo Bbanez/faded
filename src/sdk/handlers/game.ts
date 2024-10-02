@@ -15,6 +15,7 @@ export class GameHandler {
             { gameId: string; end: Point; playerIdx: number },
             GamePlayer
         >('game_player_move'),
+        onTick: api_call<{ gameId: string }, Game>('game_on_tick'),
     };
     private latch: { [name: string]: boolean } = {};
     private queues = {
@@ -73,6 +74,12 @@ export class GameHandler {
             gameId,
             end,
             playerIdx,
+        });
+    }
+
+    async onTick(gameId: string): Promise<Game> {
+        return await this.rust.onTick({
+            gameId,
         });
     }
 }

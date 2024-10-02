@@ -22,7 +22,7 @@ import { Landscape, LandscapeChunkMesh } from './landscape';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { scaleGeometry } from '@fdd/util/geometry';
 import { Player, PlayerAssets } from './player';
-import { UnsubscribeFns } from '@fdd/util/sub.ts';
+import { callAndClearUnsubscribeFns, UnsubscribeFns } from '@fdd/util/sub.ts';
 
 export class GameManager {
     scene: Scene;
@@ -74,6 +74,11 @@ export class GameManager {
         if (this.frameTicker) {
             this.frameTick().catch((err) => console.error(err));
         }
+        this.unsubs.push(
+            Ticker.subscribe(async () => {
+                this.game = await this.sdk.game.onTick(this.game.id);
+            }),
+        );
     }
 
     private navMeshToTexture(navMesh: number[]): Texture {
@@ -235,13 +240,7 @@ export class GameManager {
         }
         for (let i = 0; i < this.game.players.length; i++) {
             this.players.push(
-                new Player(
-                    this.sdk,
-                    this,
-                    this.game.players[i],
-                    playersAssets[i],
-                    i,
-                ),
+                new Player(this.sdk, this, i, playersAssets[i], i),
             );
         }
         this.camera.follow(this.players[0].assets.t.position);
@@ -250,6 +249,13 @@ export class GameManager {
 
     destroy() {
         Ticker.clear();
+        while (this.players.length > 0) {
+            const player = this.players.pop();
+            if (!player) {
+                continue;
+            }
+            player.destroy();
+        }
         this.lights.destroy();
         this.scene.clear();
         this.renderer.destroy();
@@ -260,5 +266,7 @@ export class GameManager {
         Ticker.clear();
         this.frameTicker = false;
         this.landscape.destroy();
+        callAndClearUnsubscribeFns(this.unsubs);
+        this.unsubs = [];
     }
 }

@@ -1,3 +1,5 @@
+import { Point, Size } from '@fdd/types/rs';
+
 export const PI14 = Math.PI / 4;
 export const PI12 = Math.PI / 2;
 export const PI32 = (3 * Math.PI) / 2;
@@ -6,6 +8,59 @@ export const PI54 = (5 * Math.PI) / 4;
 export const PI74 = (7 * Math.PI) / 4;
 export const PI13 = Math.PI / 3;
 export const PI_2 = 2 * Math.PI;
+
+export function distanceBetweenPoints(start: Point, end: Point): number {
+    const x = Math.abs(end.x - start.x);
+    const y = Math.abs(end.y - start.y);
+    return Math.sqrt(x * x + y * y);
+}
+
+export function arePointsNear(
+    point1: Point,
+    point2: Point,
+    delta: Size,
+): boolean {
+    return (
+        point1.x > point2.x - delta.width &&
+        point1.x < point2.x + delta.width &&
+        point1.y > point2.y - delta.height &&
+        point1.y < point2.y + delta.height
+    );
+}
+
+export function getAngle(position: Point, target: Point): number {
+    const dx = target.x - position.x;
+    const dz = target.y - position.y;
+    let angle = 0.0;
+    if (dx === 0.0) {
+        angle = PI12;
+        if (dz < 0.0) {
+            angle = PI32;
+        }
+    } else if (dz === 0.0) {
+        if (dx < 0.0) {
+            angle = Math.PI;
+        }
+    } else {
+        angle = Math.atan(dz / dx);
+        if (dx < 0.0 && dz > 0.0) {
+            angle = Math.PI + angle;
+        } else if (dx < 0.0 && dz < 0.0) {
+            angle = Math.PI + angle;
+        } else if (dx > 0.0 && dz < 0.0) {
+            angle = 2.0 * Math.PI + angle;
+        }
+    }
+    return angle;
+}
+
+export function radToDeg(rad: number): number {
+    return (180.0 * rad) / Math.PI;
+}
+
+export function degToRad(deg: number): number {
+    return (Math.PI * deg) / 180.0;
+}
 
 export function getRandomFloat(min: number, max: number) {
     return Math.random() * (max - min) + min;

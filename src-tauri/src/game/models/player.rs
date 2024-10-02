@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::util::b64;
+use crate::util::math::{are_points_near, get_angle};
 use crate::{
     db::storage::DB_STOREAGE_SPLIT_CHAR,
     hero::models::main::Hero,
@@ -9,8 +11,6 @@ use crate::{
         math::{Point, Size},
     },
 };
-use crate::util::b64;
-use crate::util::math::{are_points_near, get_angle};
 
 #[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
@@ -68,8 +68,7 @@ impl GamePlayer {
             ) {
                 if self.wps.len() > 0 {
                     self.wp = Some(self.wps[0].clone());
-                    self.angle =
-                        get_angle(&self.bb.get_position(), &self.wps[0]);
+                    self.angle = get_angle(&self.bb.get_position(), &self.wps[0]);
                     self.wps.remove(0);
                 } else {
                     self.wp = None;
@@ -77,9 +76,9 @@ impl GamePlayer {
             }
         } else {
             if self.wps.len() > 0 {
-                self.wp = Some(self.wps[0].clone());
-                self.angle =
-                    get_angle(&self.bb.get_position(), &self.wps[0]);
+                let wp = self.wps[0].clone();
+                self.wp = Some(wp.clone());
+                self.angle = get_angle(&self.bb.get_position(), &wp);
                 self.wps.remove(0);
             }
         }

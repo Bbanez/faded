@@ -1,12 +1,6 @@
 import { AnimationConfigItem } from '@fdd/_game/animation';
-import { GamePlayer, Point } from '@fdd/types/rs';
-import {
-    Group,
-    Mesh,
-    MeshBasicMaterial,
-    MeshStandardMaterial,
-    PlaneGeometry,
-} from 'three';
+import { Point } from '@fdd/types/rs';
+import { Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 import { GameManager } from './main';
 import { Sdk } from '@fdd/sdk';
 import { Animation } from './animation';
@@ -40,7 +34,7 @@ export class Player {
     constructor(
         private sdk: Sdk,
         private gameManager: GameManager,
-        public gamePlayer: GamePlayer,
+        public gamePlayerIdx: number,
         public assets: PlayerAssets,
         public playerIdx: number,
     ) {
@@ -49,7 +43,8 @@ export class Player {
             this.gameManager.camera.cam,
             this.gameManager.landscape.groundMesh,
         );
-        this.assets.t.scale.set(0.01, 0.01, 0.01);
+        const scale = 0.005;
+        this.assets.t.scale.set(scale, scale, scale);
         this.assets.t.castShadow = true;
         this.animation = new Animation(this.assets.t, {
             idle: {
@@ -71,11 +66,12 @@ export class Player {
                             x: inter[0].point.x,
                             y: inter[0].point.z,
                         };
-                        this.gamePlayer = await this.sdk.game.playerMove(
-                            this.gameManager.gameMap.id,
-                            this.playerIdx,
-                            end,
-                        );
+                        this.gameManager.game.players[this.gamePlayerIdx] =
+                            await this.sdk.game.playerMove(
+                                this.gameManager.game.id,
+                                this.playerIdx,
+                                end,
+                            );
                         // const start = this.gamePlayer.bb.position;
                         // const path = await sdk.gameMap.pathFind(
                         //     this.gameManager.gameMap.id,
@@ -111,30 +107,40 @@ export class Player {
     }
 
     update(timeStep: number) {
-        this.assets.t.rotation.set(0, -this.gamePlayer.angle + PI12, 0);
+        const gamePlayer = this.gameManager.game.players[this.gamePlayerIdx];
+        this.assets.t.rotation.set(0, -gamePlayer.angle + PI12, 0);
         this.assets.t.position.set(
-            this.gamePlayer.bb.position.x,
+            gamePlayer.bb.position.x,
             Distance.heightTo(
-                this.gamePlayer.bb.position,
+                gamePlayer.bb.position,
                 this.gameManager.landscape.groundMesh,
             ),
-            this.gamePlayer.bb.position.y,
+            gamePlayer.bb.position.y,
         );
         if (this.boundingBoxG) {
             this.boundingBoxG.position.set(
-                this.gamePlayer.bb.position.x,
+                gamePlayer.bb.position.x,
                 this.assets.t.position.y + 0.2,
-                this.gamePlayer.bb.position.y,
+                gamePlayer.bb.position.y,
             );
+        }
+        const activeAnimation = this.animation.getActiveAnimation();
+        if (gamePlayer.wp) {
+            if (activeAnimation !== 'run') {
+                this.animation.play('run');
+            }
+        } else if (activeAnimation !== 'idle') {
+            this.animation.play('idle');
         }
         this.animation.mixer.update(timeStep);
     }
 
     showBb() {
+        const gamePlayer = this.gameManager.game.players[this.gamePlayerIdx];
         this.boundingBoxG = new Mesh(
             new PlaneGeometry(
-                this.gamePlayer.bb.size.width,
-                this.gamePlayer.bb.size.height,
+                gamePlayer.bb.size.width,
+                gamePlayer.bb.size.height,
             ),
             new MeshBasicMaterial({
                 color: '#ff00ff',
@@ -142,9 +148,9 @@ export class Player {
         );
         this.boundingBoxG.rotateX(-PI12);
         this.boundingBoxG.position.set(
-            this.gamePlayer.bb.position.x,
+            gamePlayer.bb.position.x,
             this.assets.t.position.y + 1.1,
-            this.gamePlayer.bb.position.y,
+            gamePlayer.bb.position.y,
         );
         this.gameManager.scene.add(this.boundingBoxG);
     }
